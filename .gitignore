@@ -1,0 +1,5 @@
+data/
+server.log
+server.err.log
+server.out.log
+*.log

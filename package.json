@@ -1,0 +1,10 @@
+{
+  "name": "munjaz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "منجز - منصة ملف الإنجاز المهني الذكي للمعلم والمعلمة",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

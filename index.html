@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>منجز | لوحة التحكم</title>
+    <link rel="stylesheet" href="styles.css?v=3" />
+  </head>
+  <body>
+    <div class="scene">
+      <main class="app-window">
+        <aside class="sidebar">
+          <div class="sidebar-logo">
+            <img src="assets/munjaz-logo-cropped.png" alt="شعار منجز" />
+            <h1>منجز</h1>
+          </div>
+          <div class="sidebar-user" id="sidebarUser" hidden>
+            <span id="userInitial">م</span>
+            <div>
+              <strong id="sidebarUserName">معلم</strong>
+              <small>جلسة نشطة</small>
+            </div>
+            <button id="logoutButton" type="button">خروج</button>
+          </div>
+          <nav>
+            <a class="active" href="#home" data-page-link="home"><span>⌂</span>الرئيسية</a>
+            <a href="#profile" data-page-link="profile"><span>○</span>بياناتي</a>
+            <a href="#calendar" data-page-link="calendar"><span>▣</span>الرزنامة</a>
+            <a href="#portfolio" data-page-link="portfolio"><span>□</span>ملف الإنجاز</a>
+            <a href="#learners" data-page-link="learners"><span>◎</span>بطاقات الطلبة</a>
+            <a href="#reports" data-page-link="reports"><span>▥</span>التقارير</a>
+            <a href="#awards" data-page-link="awards"><span>♕</span>الجوائز</a>
+            <a href="#settings" data-page-link="settings"><span>⚙</span>الإعدادات</a>
+          </nav>
+          <button class="back-button" type="button">‹</button>
+        </aside>
+
+        <section class="content">
+          <section class="view active" data-page="home">
+          <header class="top-hero">
+            <button class="login-button" id="loginButton" type="button">
+              <span class="user-line"></span>
+              <b id="loginButtonText">تسجيل الدخول</b>
+            </button>
+
+            <div class="hero-layout">
+              <div class="hero-art" aria-hidden="true">
+                <div class="doc-card"></div>
+                <div class="folder"></div>
+                <div class="coin-star">★</div>
+                <div class="leaf leaf-a"></div>
+                <div class="leaf leaf-b"></div>
+              </div>
+
+              <div class="hero-title">
+                <h2>منجز</h2>
+                <p class="gold-text">ملف الإنجاز المهني الذكي للمعلم والمعلمة</p>
+                <p>منصة ذكية تساعد المعلم والمعلمة على توثيق إنجازاتهم المهنية بسهولة واحترافية، وقياس أثر أدائهم وتحقيق التميز.</p>
+              </div>
+
+              <img class="hero-logo" src="assets/munjaz-logo-cropped.png" alt="شعار منجز" />
+            </div>
+          </header>
+
+          <section class="metrics">
+            <article><h3>إجمالي الإنجازات</h3><i class="ico trophy"></i><strong>128</strong><small>إنجاز</small></article>
+            <article><h3>الدورات والورش</h3><i class="ico board"></i><strong>24</strong><small>دورة / ورشة</small></article>
+            <article><h3>المسابقات</h3><i class="ico medal"></i><strong>15</strong><small>مسابقة</small></article>
+            <article><h3>الدروس الريادية</h3><i class="ico lesson"></i><strong>18</strong><small>درس</small></article>
+            <article><h3>البرامج الإذاعية</h3><i class="ico mic"></i><strong>32</strong><small>برنامج</small></article>
+            <article><h3>تبادل الزيارات</h3><i class="ico hands"></i><strong>11</strong><small>زيارة</small></article>
+            <article><h3>التقييم السنوي</h3><i class="ico rating"></i><strong>4.8</strong><small>من 5</small></article>
+          </section>
+
+          <section class="work-grid">
+            <div class="events panel">
+              <div class="panel-title">
+                <h3>الأحداث القادمة</h3>
+                <span>▣</span>
+              </div>
+              <ul>
+                <li><b></b><div><strong>اجتماع فني</strong><small>الأحد 12 مايو - 10:00 ص</small></div></li>
+                <li><b></b><div><strong>درس ريادي</strong><small>الإثنين 13 مايو - 11:00 ص</small></div></li>
+                <li><b></b><div><strong>فعالية مدرسية</strong><small>الثلاثاء 15 مايو - 9:00 ص</small></div></li>
+                <li><b></b><div><strong>إذاعة مدرسية</strong><small>الخميس 16 مايو - 8:40 ص</small></div></li>
+                <li><b></b><div><strong>تسليم خطة علاجية</strong><small>السبت 18 مايو - 12:00 م</small></div></li>
+                <li><b></b><div><strong>مسابقة ثقافية</strong><small>الإثنين 20 مايو - 10:00 ص</small></div></li>
+              </ul>
+            </div>
+
+            <div class="performance panel">
+              <div class="panel-title">
+                <h3>مؤشرات الأداء</h3>
+                <select><option>هذا الفصل الدراسي</option></select>
+              </div>
+              <div class="chart">
+                <div style="--h:48"><span>الورش</span></div>
+                <div style="--h:67"><span>الدروس الريادية</span></div>
+                <div style="--h:51"><span>المسابقات</span></div>
+                <div style="--h:86"><span>ساعات التنمية</span></div>
+                <div style="--h:45"><span>التكليفات</span></div>
+                <div style="--h:70"><span>الفعاليات</span></div>
+                <div style="--h:56"><span>البرامج الإذاعية</span></div>
+              </div>
+            </div>
+
+            <div class="start-card">
+              <h3>مرحباً بك في منجز 👋</h3>
+              <p>ابدأ رحلتك المهنية ووثق إنجازاتك بكل احترافية</p>
+              <div class="badge-art"></div>
+              <button type="button" data-page-button="portfolio">لنبدأ إضافة إنجاز <span>+</span></button>
+            </div>
+          </section>
+
+          <section class="quick">
+            <h3>الوصول السريع</h3>
+            <div>
+              <button data-page-button="portfolio"><i>＋</i>إضافة إنجاز</button>
+              <button data-page-button="calendar"><i>▣</i>الرزنامة</button>
+              <button data-page-button="reports"><i>▤</i>التقارير</button>
+              <button data-page-button="portfolio"><i>□</i>مكتبة النماذج</button>
+              <button data-page-button="learners"><i>◎</i>بطاقات الطلبة</button>
+              <button data-page-button="settings"><i>♙</i>مساعد ذكي</button>
+            </div>
+          </section>
+          </section>
+
+          <section class="view" data-page="profile">
+            <div class="page-head with-actions">
+              <div>
+                <p>بياناتي</p>
+                <h2>الهوية المهنية للمعلم والمعلمة</h2>
+              </div>
+              <button class="print-button" type="button" data-print="profile">تحميل / طباعة</button>
+            </div>
+            <div class="profile-dashboard printable-card" data-print-section="profile">
+              <aside class="identity-card">
+                <img src="assets/munjaz-logo-cropped.png" alt="شعار منجز" />
+                <span>بطاقة مهنية</span>
+                <h3>ملف الإنجاز الذكي</h3>
+                <p>بيانات أساسية تظهر في التقارير وملف الإنجاز النهائي.</p>
+                <div>
+                  <strong>العام الدراسي</strong>
+                  <b>1447 هـ</b>
+                </div>
+              </aside>
+              <section class="profile-form">
+                <label>اسم المعلم/ـة<input type="text" placeholder="اكتب الاسم الكامل" /></label>
+                <label>الرقم الوظيفي<input type="text" placeholder="مثال: 102458" /></label>
+                <label>التخصص<input type="text" placeholder="مثال: لغة عربية" /></label>
+                <label>المرحلة<input type="text" placeholder="مثال: المرحلة الثانوية" /></label>
+                <label>المدرسة<input type="text" placeholder="اسم المدرسة" /></label>
+                <label>القسم<input type="text" placeholder="مثال: قسم اللغة العربية" /></label>
+                <label>المنطقة التعليمية<input type="text" placeholder="مثال: العاصمة التعليمية" /></label>
+                <label>البريد الإلكتروني<input type="email" placeholder="name@example.com" /></label>
+                <label class="wide">نبذة مهنية<textarea rows="5" placeholder="اكتبي نبذة مختصرة عن خبراتك، مبادراتك، وأهدافك المهنية لهذا العام"></textarea></label>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" data-page="calendar">
+            <div class="page-head with-actions">
+              <div><p>الرزنامة</p><h2>رزنامة الأنشطة والمواعيد</h2></div>
+              <button class="print-button" type="button" data-print="calendar">تحميل / طباعة</button>
+            </div>
+            <div class="calendar-layout">
+              <section class="calendar-board">
+                <div class="calendar-top">
+                  <button id="prevMonth" type="button">السابق</button>
+                  <strong id="calendarMonthLabel">أكتوبر 2026</strong>
+                  <button id="nextMonth" type="button">التالي</button>
+                </div>
+                <div class="calendar-days">
+                  <span>الأحد</span><span>الاثنين</span><span>الثلاثاء</span><span>الأربعاء</span><span>الخميس</span><span>الجمعة</span><span>السبت</span>
+                </div>
+                <div class="calendar-cells" id="calendarCells"></div>
+              </section>
+
+              <aside class="calendar-side">
+                <details class="day-details" open>
+                  <summary>تفاصيل اليوم</summary>
+                  <h3 id="selectedDayTitle">اختر يومًا من الرزنامة</h3>
+                  <div id="selectedDayEvents" class="day-events"></div>
+                </details>
+
+                <details class="event-form" open>
+                  <summary>إضافة موعد</summary>
+                  <label>عنوان النشاط<input id="eventTitle" type="text" placeholder="مثال: اجتماع فني" /></label>
+                  <label>نوع النشاط
+                    <select id="eventType">
+                      <option value="meeting">اجتماع فني</option>
+                      <option value="lesson">درس ريادي</option>
+                      <option value="event">فعالية مدرسية</option>
+                      <option value="radio">إذاعة مدرسية</option>
+                      <option value="plan">خطة علاجية</option>
+                      <option value="competition">مسابقة</option>
+                    </select>
+                  </label>
+                  <label>التاريخ<input id="eventDate" type="date" /></label>
+                  <label>الوقت<input id="eventTime" type="time" /></label>
+                  <label>تنبيه قبل الموعد
+                    <select id="eventReminder">
+                      <option value="7">قبل أسبوع</option>
+                      <option value="3">قبل 3 أيام</option>
+                      <option value="1">قبل يوم</option>
+                    </select>
+                  </label>
+                  <label class="wide">ملاحظات أو مرفقات<textarea id="eventNotes" rows="3" placeholder="رابط، ملاحظات، أو متطلبات النشاط"></textarea></label>
+                  <button id="addCalendarEvent" type="button">إضافة إلى الرزنامة</button>
+                  <span id="calendarStatus" class="calendar-status"></span>
+                </details>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" data-page="portfolio">
+            <div class="page-head with-actions">
+              <div><p>ملف الإنجاز</p><h2>إضافة وتوثيق الإنجازات</h2></div>
+              <button class="print-button" type="button" data-print="portfolio">تحميل / طباعة</button>
+            </div>
+            <div class="portfolio-workspace">
+              <div class="portfolio-tabs">
+                <button class="active" data-portfolio-tab="meetings">الاجتماعات الفنية</button>
+                <button data-portfolio-tab="lessons">الدروس الريادية</button>
+                <button data-portfolio-tab="development">التنمية المهنية</button>
+                <button data-portfolio-tab="workshops">الورش المقدمة</button>
+                <button data-portfolio-tab="events">الفعاليات</button>
+                <button data-portfolio-tab="radio">البرامج الإذاعية</button>
+                <button data-portfolio-tab="activities">النشاط المدرسي</button>
+                <button data-portfolio-tab="values">القيم التربوية</button>
+                <button data-portfolio-tab="tasks">التكليفات</button>
+                <button data-portfolio-tab="visits">تبادل الزيارات</button>
+                <button data-portfolio-tab="competitions">المسابقات</button>
+              </div>
+
+              <div class="achievement-editor">
+                <section class="achievement-form">
+                  <div class="mini-head">
+                    <p>نموذج توثيق</p>
+                    <h3 id="portfolioTitle">اجتماع فني</h3>
+                  </div>
+                  <div class="editor-grid" id="portfolioFields">
+                    <label>عنوان الاجتماع<input id="field-0" type="text" placeholder="مثال: اجتماع تحليل نتائج الفترة" /></label>
+                    <label>التاريخ<input id="field-1" type="date" /></label>
+                    <label>الجهة أو القسم<input id="field-2" type="text" placeholder="القسم / التوجيه / الإدارة" /></label>
+                    <label class="wide">ملاحظات الاجتماع<textarea id="field-3" rows="5" placeholder="اكتبي أهم المحاور، التوصيات، ونقاط المتابعة"></textarea></label>
+                  </div>
+                  <button class="save-achievement" id="saveAchievement" type="button">حفظ الإنجاز</button>
+                  <p class="portfolio-status" id="portfolioStatus"></p>
+                </section>
+
+                <aside class="attachment-panel">
+                  <div class="mini-head">
+                    <p>المرفقات</p>
+                    <h3>الشواهد</h3>
+                  </div>
+                  <div class="upload-box">
+                    <strong>إضافة شواهد الإنجاز</strong>
+                    <span>صور، PDF، Word، فيديو، أو رابط شاهد</span>
+                    <label class="file-picker">
+                      اختيار ملفات
+                      <input id="evidenceFiles" type="file" multiple accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,video/*" />
+                    </label>
+                    <div class="link-evidence">
+                      <input id="evidenceLink" type="url" placeholder="رابط شاهد أو ملف" />
+                      <button id="addEvidenceLink" type="button">إضافة رابط</button>
+                    </div>
+                  </div>
+                  <div class="selected-evidence" id="selectedEvidence"></div>
+                  <div class="attachment-list" id="attachmentList">
+                    <span>محضر الاجتماع PDF</span>
+                    <span>صورة التوقيع</span>
+                    <span>رابط الشاهد</span>
+                  </div>
+                </aside>
+              </div>
+
+              <div class="portfolio-library">
+                <article><strong id="savedCount">0</strong><span>إنجاز محفوظ</span></article>
+                <article><strong id="attachmentCount">0</strong><span>شواهد مضافة</span></article>
+                <article><strong id="fieldCount">4</strong><span>حقول النموذج</span></article>
+              </div>
+              <div class="saved-achievements" id="savedAchievements"></div>
+            </div>
+          </section>
+
+          <section class="view" data-page="reports">
+            <div class="page-head with-actions">
+              <div>
+                <p>التقارير</p>
+                <h2>التقارير</h2>
+              </div>
+              <button class="print-button" type="button" data-print="reports">تحميل / طباعة</button>
+            </div>
+            <div class="report-grid">
+              <button class="active" type="button" data-report-type="monthly"><span>01</span><strong>تقرير شهري</strong><small>ملخص إنجازات الشهر والمواعيد والشواهد المرفوعة</small></button>
+              <button type="button" data-report-type="term"><span>02</span><strong>تقرير فصل دراسي</strong><small>متابعة أداء الفصل مع مؤشرات مختصرة ونقاط تطوير</small></button>
+              <button type="button" data-report-type="annual"><span>03</span><strong>تقرير سنوي</strong><small>حصيلة العام الدراسي كاملة بصياغة رسمية ومنظمة</small></button>
+              <button type="button" data-report-type="full"><span>04</span><strong>ملف إنجاز كامل</strong><small>نسخة شاملة تجمع الإنجازات والشواهد والرزنامة</small></button>
+            </div>
+            <section class="report-preview printable-card" id="reportPreview" data-print-section="reports">
+              <div class="report-preview-head">
+                <div>
+                  <p id="reportGeneratedAt">تم التحديث الآن</p>
+                  <h3 id="reportTitle">تقرير شهري</h3>
+                </div>
+                <button class="print-button report-print" type="button" data-print="reports">تحميل التقرير</button>
+              </div>
+              <div class="report-stats" id="reportStats"></div>
+              <div class="report-sections" id="reportSections"></div>
+            </section>
+          </section>
+
+          <section class="view" data-page="learners">
+            <div class="page-head with-actions">
+              <div><p>بطاقات الطلبة</p><h2>الدعم العلاجي والإثرائي</h2></div>
+              <button class="print-button" type="button" data-print="learners">تحميل / طباعة</button>
+            </div>
+            <div class="learner-cards">
+              <article class="learner-card struggling">
+                <div class="learner-head">
+                  <span>01</span>
+                  <div>
+                    <p>خطة علاجية</p>
+                    <h3>بطاقة متعلم متعثر</h3>
+                  </div>
+                </div>
+                <div class="learner-form">
+                  <label>اسم المتعلم<input type="text" placeholder="اسم الطالب/ـة" /></label>
+                  <label>الصف<input type="text" placeholder="مثال: العاشر" /></label>
+                  <label>المادة<select><option>اللغة العربية</option><option>الرياضيات</option><option>العلوم</option><option>اللغة الإنجليزية</option></select></label>
+                  <label class="wide">المهارة الضعيفة<textarea rows="4" placeholder="مثال: القراءة الجهرية، الهمزة المتوسطة، حل المسائل"></textarea></label>
+                </div>
+                <div class="learner-assistant">
+                  <div>
+                    <strong>مساعد أفكار للمتعلم المتعثر</strong>
+                    <span>ابحث داخل كل جزء من الخطة لتظهر أفكار علاجية جاهزة كبداية.</span>
+                  </div>
+                  <div class="idea-board">
+                    <section class="idea-topic">
+                      <h4>خطة علاجية جاهزة</h4>
+                      <label><input class="idea-search" data-idea-type="struggling" data-idea-topic="plan" type="search" placeholder="ابحث: قراءة، إملاء، مسائل" /><button class="idea-button" type="button" data-idea-type="struggling" data-idea-topic="plan">بحث</button></label>
+                      <div class="idea-results" data-idea-results="struggling-plan"><span>خطة 3 أسابيع بمهارة واحدة</span><span>هدف قصير + نشاط + قياس أسبوعي</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>أنشطة قصيرة</h4>
+                      <label><input class="idea-search" data-idea-type="struggling" data-idea-topic="activities" type="search" placeholder="ابحث: نشاط فردي، جماعي" /><button class="idea-button" type="button" data-idea-type="struggling" data-idea-topic="activities">بحث</button></label>
+                      <div class="idea-results" data-idea-results="struggling-activities"><span>بطاقات تدريب 10 دقائق</span><span>نشاط تصحيح خطأ مع زميل</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>أوراق عمل</h4>
+                      <label><input class="idea-search" data-idea-type="struggling" data-idea-topic="worksheets" type="search" placeholder="ابحث: ورقة عمل، تدريب" /><button class="idea-button" type="button" data-idea-type="struggling" data-idea-topic="worksheets">بحث</button></label>
+                      <div class="idea-results" data-idea-results="struggling-worksheets"><span>ورقة تدرج من السهل للصعب</span><span>ورقة مقارنة قبل/بعد التعلم</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>أدوات تقييم</h4>
+                      <label><input class="idea-search" data-idea-type="struggling" data-idea-topic="assessment" type="search" placeholder="ابحث: قياس، اختبار، رصد" /><button class="idea-button" type="button" data-idea-type="struggling" data-idea-topic="assessment">بحث</button></label>
+                      <div class="idea-results" data-idea-results="struggling-assessment"><span>قائمة رصد أداء</span><span>اختبار قصير قبل/بعد الخطة</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>نموذج متابعة</h4>
+                      <label><input class="idea-search" data-idea-type="struggling" data-idea-topic="followup" type="search" placeholder="ابحث: متابعة، ولي أمر" /><button class="idea-button" type="button" data-idea-type="struggling" data-idea-topic="followup">بحث</button></label>
+                      <div class="idea-results" data-idea-results="struggling-followup"><span>جدول متابعة أسبوعي</span><span>ملاحظة مختصرة لولي الأمر</span></div>
+                    </section>
+                  </div>
+                </div>
+                <div class="learner-output">
+                  <button class="suggestion-trigger active" type="button" data-suggest-type="struggling" data-suggest-topic="plan">خطة علاجية جاهزة</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="struggling" data-suggest-topic="activities">أنشطة قصيرة</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="struggling" data-suggest-topic="worksheets">أوراق عمل</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="struggling" data-suggest-topic="assessment">أدوات تقييم</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="struggling" data-suggest-topic="followup">نموذج متابعة</button>
+                </div>
+                <div class="suggestion-panel" data-suggestion-panel="struggling">
+                  <div>
+                    <p>مقترحات الخطة</p>
+                    <h4>خطة علاجية جاهزة</h4>
+                  </div>
+                  <ul>
+                    <li>خطة 3 أسابيع تركز على مهارة واحدة مع قياس أسبوعي.</li>
+                    <li>هدف قصير + نشاط تطبيقي + شاهد متابعة بسيط.</li>
+                  </ul>
+                </div>
+                <button class="mini-print" type="button" data-print="learners">تحميل البطاقة</button>
+              </article>
+
+              <article class="learner-card gifted">
+                <div class="learner-head">
+                  <span>02</span>
+                  <div>
+                    <p>خطة إثرائية</p>
+                    <h3>بطاقة متعلم موهوب</h3>
+                  </div>
+                </div>
+                <div class="learner-form">
+                  <label>اسم المتعلم<input type="text" placeholder="اسم الطالب/ـة" /></label>
+                  <label>الصف<input type="text" placeholder="مثال: العاشر" /></label>
+                  <label>المادة<select><option>اللغة العربية</option><option>الرياضيات</option><option>العلوم</option><option>التقنية</option></select></label>
+                  <label class="wide">مجال التميز<textarea rows="4" placeholder="مثال: الكتابة الإبداعية، البحث العلمي، التفكير الرياضي"></textarea></label>
+                </div>
+                <div class="learner-assistant">
+                  <div>
+                    <strong>مساعد أفكار للمتعلم الموهوب</strong>
+                    <span>ابحث داخل كل جزء من الخطة لتظهر أفكار إثرائية جاهزة كبداية.</span>
+                  </div>
+                  <div class="idea-board">
+                    <section class="idea-topic">
+                      <h4>خطة إثرائية</h4>
+                      <label><input class="idea-search" data-idea-type="gifted" data-idea-topic="plan" type="search" placeholder="ابحث: موهبة، تميز" /><button class="idea-button" type="button" data-idea-type="gifted" data-idea-topic="plan">بحث</button></label>
+                      <div class="idea-results" data-idea-results="gifted-plan"><span>خطة إثرائية بمخرجات واضحة</span><span>مسار تعلم ذاتي أسبوعي</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>مشروع بحثي</h4>
+                      <label><input class="idea-search" data-idea-type="gifted" data-idea-topic="project" type="search" placeholder="ابحث: بحث، مصادر، عرض" /><button class="idea-button" type="button" data-idea-type="gifted" data-idea-topic="project">بحث</button></label>
+                      <div class="idea-results" data-idea-results="gifted-project"><span>سؤال بحثي + مصادر موثوقة</span><span>عرض نتائج بإنفوجرافيك</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>مهام تفكير عليا</h4>
+                      <label><input class="idea-search" data-idea-type="gifted" data-idea-topic="thinking" type="search" placeholder="ابحث: تحليل، ابتكار، نقد" /><button class="idea-button" type="button" data-idea-type="gifted" data-idea-topic="thinking">بحث</button></label>
+                      <div class="idea-results" data-idea-results="gifted-thinking"><span>سؤال مفتوح متعدد الحلول</span><span>تصميم حل مبتكر لمشكلة</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>مسابقات مقترحة</h4>
+                      <label><input class="idea-search" data-idea-type="gifted" data-idea-topic="competitions" type="search" placeholder="ابحث: مسابقة، تحدي" /><button class="idea-button" type="button" data-idea-type="gifted" data-idea-topic="competitions">بحث</button></label>
+                      <div class="idea-results" data-idea-results="gifted-competitions"><span>تحدي قراءة أو بحث مصغر</span><span>مسابقة عرض شفهي قصير</span></div>
+                    </section>
+                    <section class="idea-topic">
+                      <h4>أنشطة إبداعية</h4>
+                      <label><input class="idea-search" data-idea-type="gifted" data-idea-topic="creative" type="search" placeholder="ابحث: كتابة، تصميم، إنتاج" /><button class="idea-button" type="button" data-idea-type="gifted" data-idea-topic="creative">بحث</button></label>
+                      <div class="idea-results" data-idea-results="gifted-creative"><span>إنتاج قصة أو بودكاست قصير</span><span>تصميم لوحة معرفة للدرس</span></div>
+                    </section>
+                  </div>
+                </div>
+                <div class="learner-output">
+                  <button class="suggestion-trigger active" type="button" data-suggest-type="gifted" data-suggest-topic="plan">خطة إثرائية</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="gifted" data-suggest-topic="project">مشروع بحثي</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="gifted" data-suggest-topic="thinking">مهام تفكير عليا</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="gifted" data-suggest-topic="competitions">مسابقات مقترحة</button>
+                  <button class="suggestion-trigger" type="button" data-suggest-type="gifted" data-suggest-topic="creative">أنشطة إبداعية</button>
+                </div>
+                <div class="suggestion-panel" data-suggestion-panel="gifted">
+                  <div>
+                    <p>مقترحات الخطة</p>
+                    <h4>خطة إثرائية</h4>
+                  </div>
+                  <ul>
+                    <li>مسار إثرائي أسبوعي بمخرج واضح يعرضه المتعلم في نهاية الفترة.</li>
+                    <li>اختيار مهمة متقدمة مرتبطة بالدرس مع Rubric تميز مختصر.</li>
+                  </ul>
+                </div>
+                <button class="mini-print" type="button" data-print="learners">تحميل البطاقة</button>
+              </article>
+            </div>
+          </section>
+
+          <section class="view" data-page="awards">
+            <div class="page-head"><p>الجوائز</p><h2>الجوائز والإنجازات</h2></div>
+            <div class="form-page">
+              <label>اسم الجائزة<input type="text" /></label>
+              <label>المستوى<input type="text" placeholder="مدرسي / منطقة / وزارة" /></label>
+              <label>الشهادة<input type="text" placeholder="رابط أو اسم مرفق" /></label>
+            </div>
+          </section>
+
+          <section class="view" data-page="settings">
+            <div class="page-head"><p>الإعدادات</p><h2>إعدادات المنصة والمساعد الذكي</h2></div>
+            <div class="form-page">
+              <label>اسم المنصة<input type="text" value="منجز" /></label>
+              <label>تنبيه قبل النشاط<select><option>قبل أسبوع</option><option>قبل 3 أيام</option><option>قبل يوم</option></select></label>
+              <label>المساعد الذكي<textarea rows="4" placeholder="اكتبي حالة أو طلبًا ليقترح خطة أو فعالية"></textarea></label>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="login-dialog" id="loginDialog">
+      <form class="login-card" id="loginForm">
+        <img src="assets/munjaz-logo-cropped.png" alt="شعار منجز" />
+        <h2>تسجيل الدخول</h2>
+        <p>ادخل بياناتك لبدء جلسة آمنة داخل منصة منجز.</p>
+        <label>اسم المستخدم<input id="usernameInput" type="text" autocomplete="username" placeholder="مثال: أحمد المعلم" /></label>
+        <label>كلمة المرور<input id="passwordInput" type="password" autocomplete="current-password" placeholder="4 أحرف أو أكثر" /></label>
+        <span class="login-error" id="loginError" aria-live="polite"></span>
+        <div>
+          <button value="cancel" type="button" id="cancelLogin">إلغاء</button>
+          <button class="main" value="default" type="submit">دخول</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="event-dialog" id="eventDialog">
+      <form method="dialog" class="event-card">
+        <button class="dialog-close" value="cancel" type="submit">إغلاق</button>
+        <p id="eventDialogType">تفاصيل الموعد</p>
+        <h2 id="eventDialogTitle">عنوان الموعد</h2>
+        <div class="event-dialog-meta">
+          <span id="eventDialogDate"></span>
+          <span id="eventDialogTime"></span>
+          <span id="eventDialogReminder"></span>
+        </div>
+        <div class="event-dialog-notes" id="eventDialogNotes"></div>
+      </form>
+    </dialog>
+
+    <script src="app.js?v=17"></script>
+  </body>
+</html>
