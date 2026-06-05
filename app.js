@@ -1,3 +1,20 @@
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  serverTimestamp,
+  setDoc,
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
 const loginButton = document.querySelector("#loginButton");
 const loginButtonText = document.querySelector("#loginButtonText");
 const loginDialog = document.querySelector("#loginDialog");
@@ -57,62 +74,83 @@ const eventDialogTime = document.querySelector("#eventDialogTime");
 const eventDialogReminder = document.querySelector("#eventDialogReminder");
 const eventDialogNotes = document.querySelector("#eventDialogNotes");
 const API_BASE = "";
+const HAS_LOCAL_API = ["127.0.0.1", "localhost"].includes(window.location.hostname);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC4In4JAihjxdFU45actNZWuOJ9ZFuR2j4",
+  authDomain: "monjazkw-c93a9.firebaseapp.com",
+  projectId: "monjazkw-c93a9",
+  storageBucket: "monjazkw-c93a9.firebasestorage.app",
+  messagingSenderId: "321091535375",
+  appId: "1:321091535375:web:403f4eeb0a155baea3597a",
+  measurementId: "G-5LKMT3M826",
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+
+analyticsIsSupported()
+  .then((supported) => {
+    if (supported) getAnalytics(firebaseApp);
+  })
+  .catch(() => {});
 
 const portfolioConfig = {
   meetings: {
-    title: "اجتماع فني",
-    fields: ["عنوان الاجتماع", "التاريخ", "الجهة أو القسم", "ملاحظات الاجتماع"],
-    attachments: ["محضر الاجتماع PDF", "صورة التوقيع", "ملاحظات"],
+    title: "Ø§Ø¬ØªÙ…Ø§Ø¹ ÙÙ†ÙŠ",
+    fields: ["Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø§Ø¬ØªÙ…Ø§Ø¹", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "Ø§Ù„Ø¬Ù‡Ø© Ø£Ùˆ Ø§Ù„Ù‚Ø³Ù…", "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø§Ù„Ø§Ø¬ØªÙ…Ø§Ø¹"],
+    attachments: ["Ù…Ø­Ø¶Ø± Ø§Ù„Ø§Ø¬ØªÙ…Ø§Ø¹ PDF", "ØµÙˆØ±Ø© Ø§Ù„ØªÙˆÙ‚ÙŠØ¹", "Ù…Ù„Ø§Ø­Ø¸Ø§Øª"],
   },
   lessons: {
-    title: "درس ريادي",
-    fields: ["عنوان الدرس", "المادة", "الصف", "التاريخ", "صور", "شهادة"],
-    attachments: ["صور الدرس", "خطة الدرس", "الشهادة"],
+    title: "Ø¯Ø±Ø³ Ø±ÙŠØ§Ø¯ÙŠ",
+    fields: ["Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¯Ø±Ø³", "Ø§Ù„Ù…Ø§Ø¯Ø©", "Ø§Ù„ØµÙ", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "ØµÙˆØ±", "Ø´Ù‡Ø§Ø¯Ø©"],
+    attachments: ["ØµÙˆØ± Ø§Ù„Ø¯Ø±Ø³", "Ø®Ø·Ø© Ø§Ù„Ø¯Ø±Ø³", "Ø§Ù„Ø´Ù‡Ø§Ø¯Ø©"],
   },
   development: {
-    title: "تنمية مهنية",
-    fields: ["اسم الورشة", "المدرب أو الجهة", "الساعات", "التاريخ", "الشهادة"],
-    attachments: ["شهادة الحضور", "رابط الورشة", "صور"],
+    title: "ØªÙ†Ù…ÙŠØ© Ù…Ù‡Ù†ÙŠØ©",
+    fields: ["Ø§Ø³Ù… Ø§Ù„ÙˆØ±Ø´Ø©", "Ø§Ù„Ù…Ø¯Ø±Ø¨ Ø£Ùˆ Ø§Ù„Ø¬Ù‡Ø©", "Ø§Ù„Ø³Ø§Ø¹Ø§Øª", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "Ø§Ù„Ø´Ù‡Ø§Ø¯Ø©"],
+    attachments: ["Ø´Ù‡Ø§Ø¯Ø© Ø§Ù„Ø­Ø¶ÙˆØ±", "Ø±Ø§Ø¨Ø· Ø§Ù„ÙˆØ±Ø´Ø©", "ØµÙˆØ±"],
   },
   workshops: {
-    title: "ورشة مقدمة",
-    fields: ["عنوان الورشة", "الفئة المستهدفة", "عدد الحضور", "التاريخ", "صور التنفيذ"],
-    attachments: ["الشهادة", "صور التنفيذ", "كشف الحضور"],
+    title: "ÙˆØ±Ø´Ø© Ù…Ù‚Ø¯Ù…Ø©",
+    fields: ["Ø¹Ù†ÙˆØ§Ù† Ø§Ù„ÙˆØ±Ø´Ø©", "Ø§Ù„ÙØ¦Ø© Ø§Ù„Ù…Ø³ØªÙ‡Ø¯ÙØ©", "Ø¹Ø¯Ø¯ Ø§Ù„Ø­Ø¶ÙˆØ±", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "ØµÙˆØ± Ø§Ù„ØªÙ†ÙÙŠØ°"],
+    attachments: ["Ø§Ù„Ø´Ù‡Ø§Ø¯Ø©", "ØµÙˆØ± Ø§Ù„ØªÙ†ÙÙŠØ°", "ÙƒØ´Ù Ø§Ù„Ø­Ø¶ÙˆØ±"],
   },
   events: {
-    title: "فعالية",
-    fields: ["اسم الفعالية", "نوع المشاركة", "التاريخ", "الأثر", "الشواهد"],
-    attachments: ["صور", "شهادات", "تقرير الفعالية"],
+    title: "ÙØ¹Ø§Ù„ÙŠØ©",
+    fields: ["Ø§Ø³Ù… Ø§Ù„ÙØ¹Ø§Ù„ÙŠØ©", "Ù†ÙˆØ¹ Ø§Ù„Ù…Ø´Ø§Ø±ÙƒØ©", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "Ø§Ù„Ø£Ø«Ø±", "Ø§Ù„Ø´ÙˆØ§Ù‡Ø¯"],
+    attachments: ["ØµÙˆØ±", "Ø´Ù‡Ø§Ø¯Ø§Øª", "ØªÙ‚Ø±ÙŠØ± Ø§Ù„ÙØ¹Ø§Ù„ÙŠØ©"],
   },
   radio: {
-    title: "برنامج إذاعي",
-    fields: ["عنوان البرنامج", "التاريخ", "رابط التسجيل", "المشاركون"],
-    attachments: ["صور", "رابط التسجيل", "النص الإذاعي"],
+    title: "Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¥Ø°Ø§Ø¹ÙŠ",
+    fields: ["Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ³Ø¬ÙŠÙ„", "Ø§Ù„Ù…Ø´Ø§Ø±ÙƒÙˆÙ†"],
+    attachments: ["ØµÙˆØ±", "Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ³Ø¬ÙŠÙ„", "Ø§Ù„Ù†Øµ Ø§Ù„Ø¥Ø°Ø§Ø¹ÙŠ"],
   },
   activities: {
-    title: "نشاط مدرسي",
-    fields: ["النشاط", "الهدف", "الفئة المستهدفة", "المرفقات"],
-    attachments: ["صور النشاط", "خطة النشاط", "تقرير مختصر"],
+    title: "Ù†Ø´Ø§Ø· Ù…Ø¯Ø±Ø³ÙŠ",
+    fields: ["Ø§Ù„Ù†Ø´Ø§Ø·", "Ø§Ù„Ù‡Ø¯Ù", "Ø§Ù„ÙØ¦Ø© Ø§Ù„Ù…Ø³ØªÙ‡Ø¯ÙØ©", "Ø§Ù„Ù…Ø±ÙÙ‚Ø§Øª"],
+    attachments: ["ØµÙˆØ± Ø§Ù„Ù†Ø´Ø§Ø·", "Ø®Ø·Ø© Ø§Ù„Ù†Ø´Ø§Ø·", "ØªÙ‚Ø±ÙŠØ± Ù…Ø®ØªØµØ±"],
   },
   values: {
-    title: "قيمة تربوية",
-    fields: ["القيمة", "آلية التفعيل", "التاريخ", "الأدلة"],
-    attachments: ["صور", "أدلة", "تقرير التفعيل"],
+    title: "Ù‚ÙŠÙ…Ø© ØªØ±Ø¨ÙˆÙŠØ©",
+    fields: ["Ø§Ù„Ù‚ÙŠÙ…Ø©", "Ø¢Ù„ÙŠØ© Ø§Ù„ØªÙØ¹ÙŠÙ„", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "Ø§Ù„Ø£Ø¯Ù„Ø©"],
+    attachments: ["ØµÙˆØ±", "Ø£Ø¯Ù„Ø©", "ØªÙ‚Ø±ÙŠØ± Ø§Ù„ØªÙØ¹ÙŠÙ„"],
   },
   tasks: {
-    title: "تكليف",
-    fields: ["التكليف", "الجهة", "المدة", "المرفقات"],
-    attachments: ["خطاب التكليف", "الشواهد", "التقرير"],
+    title: "ØªÙƒÙ„ÙŠÙ",
+    fields: ["Ø§Ù„ØªÙƒÙ„ÙŠÙ", "Ø§Ù„Ø¬Ù‡Ø©", "Ø§Ù„Ù…Ø¯Ø©", "Ø§Ù„Ù…Ø±ÙÙ‚Ø§Øª"],
+    attachments: ["Ø®Ø·Ø§Ø¨ Ø§Ù„ØªÙƒÙ„ÙŠÙ", "Ø§Ù„Ø´ÙˆØ§Ù‡Ø¯", "Ø§Ù„ØªÙ‚Ø±ÙŠØ±"],
   },
   visits: {
-    title: "تبادل زيارة",
-    fields: ["اسم المعلم الزائر", "المادة", "التاريخ", "نموذج الزيارة"],
-    attachments: ["نموذج الزيارة", "توقيع الحضور", "ملاحظات"],
+    title: "ØªØ¨Ø§Ø¯Ù„ Ø²ÙŠØ§Ø±Ø©",
+    fields: ["Ø§Ø³Ù… Ø§Ù„Ù…Ø¹Ù„Ù… Ø§Ù„Ø²Ø§Ø¦Ø±", "Ø§Ù„Ù…Ø§Ø¯Ø©", "Ø§Ù„ØªØ§Ø±ÙŠØ®", "Ù†Ù…ÙˆØ°Ø¬ Ø§Ù„Ø²ÙŠØ§Ø±Ø©"],
+    attachments: ["Ù†Ù…ÙˆØ°Ø¬ Ø§Ù„Ø²ÙŠØ§Ø±Ø©", "ØªÙˆÙ‚ÙŠØ¹ Ø§Ù„Ø­Ø¶ÙˆØ±", "Ù…Ù„Ø§Ø­Ø¸Ø§Øª"],
   },
   competitions: {
-    title: "مسابقة",
-    fields: ["اسم المسابقة", "المستوى", "النتيجة", "الشهادة"],
-    attachments: ["الشهادة", "صور المشاركة", "نتيجة المسابقة"],
+    title: "Ù…Ø³Ø§Ø¨Ù‚Ø©",
+    fields: ["Ø§Ø³Ù… Ø§Ù„Ù…Ø³Ø§Ø¨Ù‚Ø©", "Ø§Ù„Ù…Ø³ØªÙˆÙ‰", "Ø§Ù„Ù†ØªÙŠØ¬Ø©", "Ø§Ù„Ø´Ù‡Ø§Ø¯Ø©"],
+    attachments: ["Ø§Ù„Ø´Ù‡Ø§Ø¯Ø©", "ØµÙˆØ± Ø§Ù„Ù…Ø´Ø§Ø±ÙƒØ©", "Ù†ØªÙŠØ¬Ø© Ø§Ù„Ù…Ø³Ø§Ø¨Ù‚Ø©"],
   },
 };
 
@@ -126,36 +164,36 @@ let selectedCalendarDate = "2026-10-04";
 let calendarEvents = JSON.parse(
   localStorage.getItem("munjaz.calendarEvents") ||
     JSON.stringify([
-      { id: "e1", title: "اجتماع فني", type: "meeting", date: "2026-10-04", time: "10:00", reminder: "3", notes: "محضر الاجتماع وشواهد الحضور" },
-      { id: "e2", title: "درس ريادي", type: "lesson", date: "2026-10-09", time: "11:00", reminder: "7", notes: "خطة الدرس والصور" },
-      { id: "e3", title: "فعالية مدرسية", type: "event", date: "2026-10-12", time: "09:00", reminder: "3", notes: "تقرير الفعالية" },
-      { id: "e4", title: "إذاعة مدرسية", type: "radio", date: "2026-10-16", time: "08:40", reminder: "1", notes: "رابط التسجيل" },
-      { id: "e5", title: "تسليم خطة علاجية", type: "plan", date: "2026-10-18", time: "12:00", reminder: "1", notes: "خطة المتعلم المتعثر" },
-      { id: "e6", title: "مسابقة ثقافية", type: "competition", date: "2026-10-24", time: "10:00", reminder: "7", notes: "الشهادة والنتيجة" },
+      { id: "e1", title: "Ø§Ø¬ØªÙ…Ø§Ø¹ ÙÙ†ÙŠ", type: "meeting", date: "2026-10-04", time: "10:00", reminder: "3", notes: "Ù…Ø­Ø¶Ø± Ø§Ù„Ø§Ø¬ØªÙ…Ø§Ø¹ ÙˆØ´ÙˆØ§Ù‡Ø¯ Ø§Ù„Ø­Ø¶ÙˆØ±" },
+      { id: "e2", title: "Ø¯Ø±Ø³ Ø±ÙŠØ§Ø¯ÙŠ", type: "lesson", date: "2026-10-09", time: "11:00", reminder: "7", notes: "Ø®Ø·Ø© Ø§Ù„Ø¯Ø±Ø³ ÙˆØ§Ù„ØµÙˆØ±" },
+      { id: "e3", title: "ÙØ¹Ø§Ù„ÙŠØ© Ù…Ø¯Ø±Ø³ÙŠØ©", type: "event", date: "2026-10-12", time: "09:00", reminder: "3", notes: "ØªÙ‚Ø±ÙŠØ± Ø§Ù„ÙØ¹Ø§Ù„ÙŠØ©" },
+      { id: "e4", title: "Ø¥Ø°Ø§Ø¹Ø© Ù…Ø¯Ø±Ø³ÙŠØ©", type: "radio", date: "2026-10-16", time: "08:40", reminder: "1", notes: "Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ³Ø¬ÙŠÙ„" },
+      { id: "e5", title: "ØªØ³Ù„ÙŠÙ… Ø®Ø·Ø© Ø¹Ù„Ø§Ø¬ÙŠØ©", type: "plan", date: "2026-10-18", time: "12:00", reminder: "1", notes: "Ø®Ø·Ø© Ø§Ù„Ù…ØªØ¹Ù„Ù… Ø§Ù„Ù…ØªØ¹Ø«Ø±" },
+      { id: "e6", title: "Ù…Ø³Ø§Ø¨Ù‚Ø© Ø«Ù‚Ø§ÙÙŠØ©", type: "competition", date: "2026-10-24", time: "10:00", reminder: "7", notes: "Ø§Ù„Ø´Ù‡Ø§Ø¯Ø© ÙˆØ§Ù„Ù†ØªÙŠØ¬Ø©" },
     ]),
 );
 
 const calendarTypeLabels = {
-  meeting: "اجتماع فني",
-  lesson: "درس ريادي",
-  event: "فعالية مدرسية",
-  radio: "إذاعة مدرسية",
-  plan: "خطة علاجية",
-  competition: "مسابقة",
+  meeting: "Ø§Ø¬ØªÙ…Ø§Ø¹ ÙÙ†ÙŠ",
+  lesson: "Ø¯Ø±Ø³ Ø±ÙŠØ§Ø¯ÙŠ",
+  event: "ÙØ¹Ø§Ù„ÙŠØ© Ù…Ø¯Ø±Ø³ÙŠØ©",
+  radio: "Ø¥Ø°Ø§Ø¹Ø© Ù…Ø¯Ø±Ø³ÙŠØ©",
+  plan: "Ø®Ø·Ø© Ø¹Ù„Ø§Ø¬ÙŠØ©",
+  competition: "Ù…Ø³Ø§Ø¨Ù‚Ø©",
 };
 
 const reportLabels = {
-  monthly: "تقرير شهري",
-  term: "تقرير فصل دراسي",
-  annual: "تقرير سنوي",
-  full: "ملف إنجاز كامل",
+  monthly: "ØªÙ‚Ø±ÙŠØ± Ø´Ù‡Ø±ÙŠ",
+  term: "ØªÙ‚Ø±ÙŠØ± ÙØµÙ„ Ø¯Ø±Ø§Ø³ÙŠ",
+  annual: "ØªÙ‚Ø±ÙŠØ± Ø³Ù†ÙˆÙŠ",
+  full: "Ù…Ù„Ù Ø¥Ù†Ø¬Ø§Ø² ÙƒØ§Ù…Ù„",
 };
 
 const reportDescriptions = {
-  monthly: "يعرض ما تم توثيقه خلال الشهر المختار من إنجازات ومواعيد وشواهد.",
-  term: "يلخص إنجازات الفصل الدراسي ويبرز المجالات الأقوى ونقاط المتابعة.",
-  annual: "يعطي صورة سنوية رسمية عن الأداء المهني والأنشطة والشواهد.",
-  full: "يجمع ملف الإنجاز كاملا مع الرزنامة والمؤشرات في نسخة واحدة منظمة.",
+  monthly: "ÙŠØ¹Ø±Ø¶ Ù…Ø§ ØªÙ… ØªÙˆØ«ÙŠÙ‚Ù‡ Ø®Ù„Ø§Ù„ Ø§Ù„Ø´Ù‡Ø± Ø§Ù„Ù…Ø®ØªØ§Ø± Ù…Ù† Ø¥Ù†Ø¬Ø§Ø²Ø§Øª ÙˆÙ…ÙˆØ§Ø¹ÙŠØ¯ ÙˆØ´ÙˆØ§Ù‡Ø¯.",
+  term: "ÙŠÙ„Ø®Øµ Ø¥Ù†Ø¬Ø§Ø²Ø§Øª Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ ÙˆÙŠØ¨Ø±Ø² Ø§Ù„Ù…Ø¬Ø§Ù„Ø§Øª Ø§Ù„Ø£Ù‚ÙˆÙ‰ ÙˆÙ†Ù‚Ø§Ø· Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø©.",
+  annual: "ÙŠØ¹Ø·ÙŠ ØµÙˆØ±Ø© Ø³Ù†ÙˆÙŠØ© Ø±Ø³Ù…ÙŠØ© Ø¹Ù† Ø§Ù„Ø£Ø¯Ø§Ø¡ Ø§Ù„Ù…Ù‡Ù†ÙŠ ÙˆØ§Ù„Ø£Ù†Ø´Ø·Ø© ÙˆØ§Ù„Ø´ÙˆØ§Ù‡Ø¯.",
+  full: "ÙŠØ¬Ù…Ø¹ Ù…Ù„Ù Ø§Ù„Ø¥Ù†Ø¬Ø§Ø² ÙƒØ§Ù…Ù„Ø§ Ù…Ø¹ Ø§Ù„Ø±Ø²Ù†Ø§Ù…Ø© ÙˆØ§Ù„Ù…Ø¤Ø´Ø±Ø§Øª ÙÙŠ Ù†Ø³Ø®Ø© ÙˆØ§Ø­Ø¯Ø© Ù…Ù†Ø¸Ù…Ø©.",
 };
 
 function escapeHtml(value) {
@@ -178,7 +216,7 @@ async function apiRequest(path, options = {}) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(data.error || "تعذر الاتصال بالخادم.");
+    const error = new Error(data.error || "ØªØ¹Ø°Ø± Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø§Ø¯Ù….");
     error.status = response.status;
     throw error;
   }
@@ -194,16 +232,72 @@ function createLocalSession(name) {
   };
 }
 
+function loginNameToEmail(name) {
+  if (name.includes("@")) return name;
+  const encodedName = Array.from(name.trim() || "teacher")
+    .map((letter) => letter.charCodeAt(0).toString(36))
+    .join("")
+    .slice(0, 48);
+  return `${encodedName}@monjazkw.local`;
+}
+
+function firebaseStateRef() {
+  if (!currentUser?.id || currentUser.mode === "local") return null;
+  return doc(db, "users", currentUser.id, "private", "state");
+}
+
+async function saveRemoteState() {
+  const stateRef = firebaseStateRef();
+  if (!stateRef) return;
+  await setDoc(
+    stateRef,
+    {
+      achievements,
+      calendarEvents,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
 function persistAchievements() {
-  persistAchievements();
-  apiRequest("/api/achievements", {
-    method: "PUT",
-    body: JSON.stringify({ achievements }),
-  }).catch(() => {});
+  localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+  saveRemoteState().catch(() => {});
+  if (HAS_LOCAL_API) {
+    apiRequest("/api/achievements", {
+      method: "PUT",
+      body: JSON.stringify({ achievements }),
+    }).catch(() => {});
+  }
 }
 
 async function loadRemoteState() {
   try {
+    const stateRef = firebaseStateRef();
+    if (stateRef) {
+      const snapshot = await getDoc(stateRef);
+      if (snapshot.exists()) {
+        const state = snapshot.data();
+        achievements = Array.isArray(state.achievements) ? state.achievements : [];
+        calendarEvents = Array.isArray(state.calendarEvents) ? state.calendarEvents : calendarEvents;
+        localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+        localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
+      } else {
+        await saveRemoteState();
+      }
+      renderPortfolio(activePortfolio);
+      renderCalendar();
+      renderReport(activeReport);
+      return;
+    }
+
+    if (!HAS_LOCAL_API) {
+      renderPortfolio(activePortfolio);
+      renderCalendar();
+      renderReport(activeReport);
+      return;
+    }
+
     const state = await apiRequest("/api/state");
     if (Array.isArray(state.achievements) && state.achievements.length) {
       achievements = state.achievements;
@@ -265,66 +359,66 @@ function readFileAsDataUrl(file) {
 const ideaBank = {
   struggling: {
     plan: {
-      default: ["خطة 3 أسابيع بمهارة واحدة", "هدف قصير + نشاط + قياس أسبوعي"],
-      reading: ["خطة طلاقة قرائية يومية", "هدف فهم مقروء مع نصوص قصيرة"],
-      writing: ["خطة إملاء من قاعدة واحدة", "هدف كتابة جملة صحيحة يوميًا"],
-      math: ["خطة حل مسائل بخطوات ثابتة", "هدف إتقان مهارة حسابية واحدة"],
+      default: ["Ø®Ø·Ø© 3 Ø£Ø³Ø§Ø¨ÙŠØ¹ Ø¨Ù…Ù‡Ø§Ø±Ø© ÙˆØ§Ø­Ø¯Ø©", "Ù‡Ø¯Ù Ù‚ØµÙŠØ± + Ù†Ø´Ø§Ø· + Ù‚ÙŠØ§Ø³ Ø£Ø³Ø¨ÙˆØ¹ÙŠ"],
+      reading: ["Ø®Ø·Ø© Ø·Ù„Ø§Ù‚Ø© Ù‚Ø±Ø§Ø¦ÙŠØ© ÙŠÙˆÙ…ÙŠØ©", "Ù‡Ø¯Ù ÙÙ‡Ù… Ù…Ù‚Ø±ÙˆØ¡ Ù…Ø¹ Ù†ØµÙˆØµ Ù‚ØµÙŠØ±Ø©"],
+      writing: ["Ø®Ø·Ø© Ø¥Ù…Ù„Ø§Ø¡ Ù…Ù† Ù‚Ø§Ø¹Ø¯Ø© ÙˆØ§Ø­Ø¯Ø©", "Ù‡Ø¯Ù ÙƒØªØ§Ø¨Ø© Ø¬Ù…Ù„Ø© ØµØ­ÙŠØ­Ø© ÙŠÙˆÙ…ÙŠÙ‹Ø§"],
+      math: ["Ø®Ø·Ø© Ø­Ù„ Ù…Ø³Ø§Ø¦Ù„ Ø¨Ø®Ø·ÙˆØ§Øª Ø«Ø§Ø¨ØªØ©", "Ù‡Ø¯Ù Ø¥ØªÙ‚Ø§Ù† Ù…Ù‡Ø§Ø±Ø© Ø­Ø³Ø§Ø¨ÙŠØ© ÙˆØ§Ø­Ø¯Ø©"],
     },
     activities: {
-      default: ["بطاقات تدريب 10 دقائق", "نشاط تصحيح خطأ مع زميل"],
-      reading: ["قراءة ثنائية مع بطاقة ملاحظة", "تلخيص شفهي بعد فقرة قصيرة"],
-      writing: ["إملاء منظور ثم تصحيح ذاتي", "ترتيب كلمات لتكوين جملة"],
-      math: ["لعبة خطوات الحل", "مسائل مصورة من الحياة اليومية"],
+      default: ["Ø¨Ø·Ø§Ù‚Ø§Øª ØªØ¯Ø±ÙŠØ¨ 10 Ø¯Ù‚Ø§Ø¦Ù‚", "Ù†Ø´Ø§Ø· ØªØµØ­ÙŠØ­ Ø®Ø·Ø£ Ù…Ø¹ Ø²Ù…ÙŠÙ„"],
+      reading: ["Ù‚Ø±Ø§Ø¡Ø© Ø«Ù†Ø§Ø¦ÙŠØ© Ù…Ø¹ Ø¨Ø·Ø§Ù‚Ø© Ù…Ù„Ø§Ø­Ø¸Ø©", "ØªÙ„Ø®ÙŠØµ Ø´ÙÙ‡ÙŠ Ø¨Ø¹Ø¯ ÙÙ‚Ø±Ø© Ù‚ØµÙŠØ±Ø©"],
+      writing: ["Ø¥Ù…Ù„Ø§Ø¡ Ù…Ù†Ø¸ÙˆØ± Ø«Ù… ØªØµØ­ÙŠØ­ Ø°Ø§ØªÙŠ", "ØªØ±ØªÙŠØ¨ ÙƒÙ„Ù…Ø§Øª Ù„ØªÙƒÙˆÙŠÙ† Ø¬Ù…Ù„Ø©"],
+      math: ["Ù„Ø¹Ø¨Ø© Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø­Ù„", "Ù…Ø³Ø§Ø¦Ù„ Ù…ØµÙˆØ±Ø© Ù…Ù† Ø§Ù„Ø­ÙŠØ§Ø© Ø§Ù„ÙŠÙˆÙ…ÙŠØ©"],
     },
     worksheets: {
-      default: ["ورقة تدرج من السهل للصعب", "ورقة مقارنة قبل/بعد التعلم"],
-      reading: ["ورقة استخراج فكرة رئيسية", "ورقة مفردات ومعاني"],
-      writing: ["ورقة تصنيف الأخطاء الشائعة", "ورقة تدريب على قاعدة واحدة"],
-      math: ["ورقة مسائل بثلاث مستويات", "ورقة إكمال خطوات الحل"],
+      default: ["ÙˆØ±Ù‚Ø© ØªØ¯Ø±Ø¬ Ù…Ù† Ø§Ù„Ø³Ù‡Ù„ Ù„Ù„ØµØ¹Ø¨", "ÙˆØ±Ù‚Ø© Ù…Ù‚Ø§Ø±Ù†Ø© Ù‚Ø¨Ù„/Ø¨Ø¹Ø¯ Ø§Ù„ØªØ¹Ù„Ù…"],
+      reading: ["ÙˆØ±Ù‚Ø© Ø§Ø³ØªØ®Ø±Ø§Ø¬ ÙÙƒØ±Ø© Ø±Ø¦ÙŠØ³ÙŠØ©", "ÙˆØ±Ù‚Ø© Ù…ÙØ±Ø¯Ø§Øª ÙˆÙ…Ø¹Ø§Ù†ÙŠ"],
+      writing: ["ÙˆØ±Ù‚Ø© ØªØµÙ†ÙŠÙ Ø§Ù„Ø£Ø®Ø·Ø§Ø¡ Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©", "ÙˆØ±Ù‚Ø© ØªØ¯Ø±ÙŠØ¨ Ø¹Ù„Ù‰ Ù‚Ø§Ø¹Ø¯Ø© ÙˆØ§Ø­Ø¯Ø©"],
+      math: ["ÙˆØ±Ù‚Ø© Ù…Ø³Ø§Ø¦Ù„ Ø¨Ø«Ù„Ø§Ø« Ù…Ø³ØªÙˆÙŠØ§Øª", "ÙˆØ±Ù‚Ø© Ø¥ÙƒÙ…Ø§Ù„ Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø­Ù„"],
     },
     assessment: {
-      default: ["قائمة رصد أداء", "اختبار قصير قبل/بعد الخطة"],
-      reading: ["سلم طلاقة قرائية", "بطاقة فهم مقروء من 5 أسئلة"],
-      writing: ["Rubric إملاء مبسط", "سجل أخطاء متكررة"],
-      math: ["اختبار مهارة من 6 مسائل", "بطاقة تحقق من خطوات الحل"],
+      default: ["Ù‚Ø§Ø¦Ù…Ø© Ø±ØµØ¯ Ø£Ø¯Ø§Ø¡", "Ø§Ø®ØªØ¨Ø§Ø± Ù‚ØµÙŠØ± Ù‚Ø¨Ù„/Ø¨Ø¹Ø¯ Ø§Ù„Ø®Ø·Ø©"],
+      reading: ["Ø³Ù„Ù… Ø·Ù„Ø§Ù‚Ø© Ù‚Ø±Ø§Ø¦ÙŠØ©", "Ø¨Ø·Ø§Ù‚Ø© ÙÙ‡Ù… Ù…Ù‚Ø±ÙˆØ¡ Ù…Ù† 5 Ø£Ø³Ø¦Ù„Ø©"],
+      writing: ["Rubric Ø¥Ù…Ù„Ø§Ø¡ Ù…Ø¨Ø³Ø·", "Ø³Ø¬Ù„ Ø£Ø®Ø·Ø§Ø¡ Ù…ØªÙƒØ±Ø±Ø©"],
+      math: ["Ø§Ø®ØªØ¨Ø§Ø± Ù…Ù‡Ø§Ø±Ø© Ù…Ù† 6 Ù…Ø³Ø§Ø¦Ù„", "Ø¨Ø·Ø§Ù‚Ø© ØªØ­Ù‚Ù‚ Ù…Ù† Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø­Ù„"],
     },
     followup: {
-      default: ["جدول متابعة أسبوعي", "ملاحظة مختصرة لولي الأمر"],
-      reading: ["سجل قراءة منزلية", "متابعة عدد الكلمات الصحيحة"],
-      writing: ["سجل أخطاء إملائية متكررة", "متابعة واجب قصير أسبوعي"],
-      math: ["متابعة إتقان كل خطوة", "رسم بياني للتحسن"],
+      default: ["Ø¬Ø¯ÙˆÙ„ Ù…ØªØ§Ø¨Ø¹Ø© Ø£Ø³Ø¨ÙˆØ¹ÙŠ", "Ù…Ù„Ø§Ø­Ø¸Ø© Ù…Ø®ØªØµØ±Ø© Ù„ÙˆÙ„ÙŠ Ø§Ù„Ø£Ù…Ø±"],
+      reading: ["Ø³Ø¬Ù„ Ù‚Ø±Ø§Ø¡Ø© Ù…Ù†Ø²Ù„ÙŠØ©", "Ù…ØªØ§Ø¨Ø¹Ø© Ø¹Ø¯Ø¯ Ø§Ù„ÙƒÙ„Ù…Ø§Øª Ø§Ù„ØµØ­ÙŠØ­Ø©"],
+      writing: ["Ø³Ø¬Ù„ Ø£Ø®Ø·Ø§Ø¡ Ø¥Ù…Ù„Ø§Ø¦ÙŠØ© Ù…ØªÙƒØ±Ø±Ø©", "Ù…ØªØ§Ø¨Ø¹Ø© ÙˆØ§Ø¬Ø¨ Ù‚ØµÙŠØ± Ø£Ø³Ø¨ÙˆØ¹ÙŠ"],
+      math: ["Ù…ØªØ§Ø¨Ø¹Ø© Ø¥ØªÙ‚Ø§Ù† ÙƒÙ„ Ø®Ø·ÙˆØ©", "Ø±Ø³Ù… Ø¨ÙŠØ§Ù†ÙŠ Ù„Ù„ØªØ­Ø³Ù†"],
     },
   },
   gifted: {
     plan: {
-      default: ["خطة إثرائية بمخرجات واضحة", "مسار تعلم ذاتي أسبوعي"],
-      research: ["خطة بحث بسؤال مركزي", "مسار قراءة مصادر وتحليلها"],
-      writing: ["خطة كتابة إبداعية متدرجة", "ملف نصوص قصيرة مع تغذية راجعة"],
-      thinking: ["خطة تحديات تفكير عليا", "مسار حل مشكلات مفتوحة"],
+      default: ["Ø®Ø·Ø© Ø¥Ø«Ø±Ø§Ø¦ÙŠØ© Ø¨Ù…Ø®Ø±Ø¬Ø§Øª ÙˆØ§Ø¶Ø­Ø©", "Ù…Ø³Ø§Ø± ØªØ¹Ù„Ù… Ø°Ø§ØªÙŠ Ø£Ø³Ø¨ÙˆØ¹ÙŠ"],
+      research: ["Ø®Ø·Ø© Ø¨Ø­Ø« Ø¨Ø³Ø¤Ø§Ù„ Ù…Ø±ÙƒØ²ÙŠ", "Ù…Ø³Ø§Ø± Ù‚Ø±Ø§Ø¡Ø© Ù…ØµØ§Ø¯Ø± ÙˆØªØ­Ù„ÙŠÙ„Ù‡Ø§"],
+      writing: ["Ø®Ø·Ø© ÙƒØªØ§Ø¨Ø© Ø¥Ø¨Ø¯Ø§Ø¹ÙŠØ© Ù…ØªØ¯Ø±Ø¬Ø©", "Ù…Ù„Ù Ù†ØµÙˆØµ Ù‚ØµÙŠØ±Ø© Ù…Ø¹ ØªØºØ°ÙŠØ© Ø±Ø§Ø¬Ø¹Ø©"],
+      thinking: ["Ø®Ø·Ø© ØªØ­Ø¯ÙŠØ§Øª ØªÙÙƒÙŠØ± Ø¹Ù„ÙŠØ§", "Ù…Ø³Ø§Ø± Ø­Ù„ Ù…Ø´ÙƒÙ„Ø§Øª Ù…ÙØªÙˆØ­Ø©"],
     },
     project: {
-      default: ["سؤال بحثي + مصادر موثوقة", "عرض نتائج بإنفوجرافيك"],
-      research: ["مقابلة قصيرة وجمع بيانات", "ملخص بحث من صفحة واحدة"],
-      writing: ["مجلة صفية مصغرة", "مقال رأي مدعوم بأدلة"],
-      thinking: ["مشروع حل مشكلة مدرسية", "نموذج أولي لفكرة مبتكرة"],
+      default: ["Ø³Ø¤Ø§Ù„ Ø¨Ø­Ø«ÙŠ + Ù…ØµØ§Ø¯Ø± Ù…ÙˆØ«ÙˆÙ‚Ø©", "Ø¹Ø±Ø¶ Ù†ØªØ§Ø¦Ø¬ Ø¨Ø¥Ù†ÙÙˆØ¬Ø±Ø§ÙÙŠÙƒ"],
+      research: ["Ù…Ù‚Ø§Ø¨Ù„Ø© Ù‚ØµÙŠØ±Ø© ÙˆØ¬Ù…Ø¹ Ø¨ÙŠØ§Ù†Ø§Øª", "Ù…Ù„Ø®Øµ Ø¨Ø­Ø« Ù…Ù† ØµÙØ­Ø© ÙˆØ§Ø­Ø¯Ø©"],
+      writing: ["Ù…Ø¬Ù„Ø© ØµÙÙŠØ© Ù…ØµØºØ±Ø©", "Ù…Ù‚Ø§Ù„ Ø±Ø£ÙŠ Ù…Ø¯Ø¹ÙˆÙ… Ø¨Ø£Ø¯Ù„Ø©"],
+      thinking: ["Ù…Ø´Ø±ÙˆØ¹ Ø­Ù„ Ù…Ø´ÙƒÙ„Ø© Ù…Ø¯Ø±Ø³ÙŠØ©", "Ù†Ù…ÙˆØ°Ø¬ Ø£ÙˆÙ„ÙŠ Ù„ÙÙƒØ±Ø© Ù…Ø¨ØªÙƒØ±Ø©"],
     },
     thinking: {
-      default: ["سؤال مفتوح متعدد الحلول", "تصميم حل مبتكر لمشكلة"],
-      research: ["تحليل مصدرين ومقارنة النتائج", "بناء فرضية واختبارها"],
-      writing: ["نقد نص وإعادة بنائه", "كتابة نهاية بديلة مبررة"],
-      thinking: ["مقارنة وتحليل موقف", "تصميم قرار مع تبرير الأدلة"],
+      default: ["Ø³Ø¤Ø§Ù„ Ù…ÙØªÙˆØ­ Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ø­Ù„ÙˆÙ„", "ØªØµÙ…ÙŠÙ… Ø­Ù„ Ù…Ø¨ØªÙƒØ± Ù„Ù…Ø´ÙƒÙ„Ø©"],
+      research: ["ØªØ­Ù„ÙŠÙ„ Ù…ØµØ¯Ø±ÙŠÙ† ÙˆÙ…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ù†ØªØ§Ø¦Ø¬", "Ø¨Ù†Ø§Ø¡ ÙØ±Ø¶ÙŠØ© ÙˆØ§Ø®ØªØ¨Ø§Ø±Ù‡Ø§"],
+      writing: ["Ù†Ù‚Ø¯ Ù†Øµ ÙˆØ¥Ø¹Ø§Ø¯Ø© Ø¨Ù†Ø§Ø¦Ù‡", "ÙƒØªØ§Ø¨Ø© Ù†Ù‡Ø§ÙŠØ© Ø¨Ø¯ÙŠÙ„Ø© Ù…Ø¨Ø±Ø±Ø©"],
+      thinking: ["Ù…Ù‚Ø§Ø±Ù†Ø© ÙˆØªØ­Ù„ÙŠÙ„ Ù…ÙˆÙ‚Ù", "ØªØµÙ…ÙŠÙ… Ù‚Ø±Ø§Ø± Ù…Ø¹ ØªØ¨Ø±ÙŠØ± Ø§Ù„Ø£Ø¯Ù„Ø©"],
     },
     competitions: {
-      default: ["تحدي قراءة أو بحث مصغر", "مسابقة عرض شفهي قصير"],
-      research: ["مسابقة ملصق علمي", "تحدي عرض نتائج البحث"],
-      writing: ["مسابقة قصة قصيرة", "تحدي مقال رأي"],
-      thinking: ["مسابقة حل مشكلات", "تحدي مناظرة مصغرة"],
+      default: ["ØªØ­Ø¯ÙŠ Ù‚Ø±Ø§Ø¡Ø© Ø£Ùˆ Ø¨Ø­Ø« Ù…ØµØºØ±", "Ù…Ø³Ø§Ø¨Ù‚Ø© Ø¹Ø±Ø¶ Ø´ÙÙ‡ÙŠ Ù‚ØµÙŠØ±"],
+      research: ["Ù…Ø³Ø§Ø¨Ù‚Ø© Ù…Ù„ØµÙ‚ Ø¹Ù„Ù…ÙŠ", "ØªØ­Ø¯ÙŠ Ø¹Ø±Ø¶ Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ø¨Ø­Ø«"],
+      writing: ["Ù…Ø³Ø§Ø¨Ù‚Ø© Ù‚ØµØ© Ù‚ØµÙŠØ±Ø©", "ØªØ­Ø¯ÙŠ Ù…Ù‚Ø§Ù„ Ø±Ø£ÙŠ"],
+      thinking: ["Ù…Ø³Ø§Ø¨Ù‚Ø© Ø­Ù„ Ù…Ø´ÙƒÙ„Ø§Øª", "ØªØ­Ø¯ÙŠ Ù…Ù†Ø§Ø¸Ø±Ø© Ù…ØµØºØ±Ø©"],
     },
     creative: {
-      default: ["إنتاج قصة أو بودكاست قصير", "تصميم لوحة معرفة للدرس"],
-      research: ["فيديو دقيقة يلخص نتيجة", "خريطة مفاهيم تفاعلية"],
-      writing: ["نشرة أدبية مصغرة", "سيناريو تمثيلي للمفهوم"],
-      thinking: ["تصميم لعبة تعليمية", "ابتكار أداة شرح للزملاء"],
+      default: ["Ø¥Ù†ØªØ§Ø¬ Ù‚ØµØ© Ø£Ùˆ Ø¨ÙˆØ¯ÙƒØ§Ø³Øª Ù‚ØµÙŠØ±", "ØªØµÙ…ÙŠÙ… Ù„ÙˆØ­Ø© Ù…Ø¹Ø±ÙØ© Ù„Ù„Ø¯Ø±Ø³"],
+      research: ["ÙÙŠØ¯ÙŠÙˆ Ø¯Ù‚ÙŠÙ‚Ø© ÙŠÙ„Ø®Øµ Ù†ØªÙŠØ¬Ø©", "Ø®Ø±ÙŠØ·Ø© Ù…ÙØ§Ù‡ÙŠÙ… ØªÙØ§Ø¹Ù„ÙŠØ©"],
+      writing: ["Ù†Ø´Ø±Ø© Ø£Ø¯Ø¨ÙŠØ© Ù…ØµØºØ±Ø©", "Ø³ÙŠÙ†Ø§Ø±ÙŠÙˆ ØªÙ…Ø«ÙŠÙ„ÙŠ Ù„Ù„Ù…ÙÙ‡ÙˆÙ…"],
+      thinking: ["ØªØµÙ…ÙŠÙ… Ù„Ø¹Ø¨Ø© ØªØ¹Ù„ÙŠÙ…ÙŠØ©", "Ø§Ø¨ØªÙƒØ§Ø± Ø£Ø¯Ø§Ø© Ø´Ø±Ø­ Ù„Ù„Ø²Ù…Ù„Ø§Ø¡"],
     },
   },
 };
@@ -332,46 +426,46 @@ const ideaBank = {
 const suggestionBank = {
   struggling: {
     plan: {
-      title: "خطة علاجية جاهزة",
-      ideas: ["اختيار مهارة واحدة فقط لمدة 3 أسابيع مع هدف قابل للقياس.", "تقسيم الخطة إلى: تمهيد قصير، تدريب موجه، تطبيق فردي، قياس أسبوعي."],
+      title: "Ø®Ø·Ø© Ø¹Ù„Ø§Ø¬ÙŠØ© Ø¬Ø§Ù‡Ø²Ø©",
+      ideas: ["Ø§Ø®ØªÙŠØ§Ø± Ù…Ù‡Ø§Ø±Ø© ÙˆØ§Ø­Ø¯Ø© ÙÙ‚Ø· Ù„Ù…Ø¯Ø© 3 Ø£Ø³Ø§Ø¨ÙŠØ¹ Ù…Ø¹ Ù‡Ø¯Ù Ù‚Ø§Ø¨Ù„ Ù„Ù„Ù‚ÙŠØ§Ø³.", "ØªÙ‚Ø³ÙŠÙ… Ø§Ù„Ø®Ø·Ø© Ø¥Ù„Ù‰: ØªÙ…Ù‡ÙŠØ¯ Ù‚ØµÙŠØ±ØŒ ØªØ¯Ø±ÙŠØ¨ Ù…ÙˆØ¬Ù‡ØŒ ØªØ·Ø¨ÙŠÙ‚ ÙØ±Ø¯ÙŠØŒ Ù‚ÙŠØ§Ø³ Ø£Ø³Ø¨ÙˆØ¹ÙŠ."],
     },
     activities: {
-      title: "أنشطة قصيرة",
-      ideas: ["نشاط بطاقات سريع: يختار المتعلم بطاقة ويطبق المهارة في 5 دقائق.", "نشاط زميل داعم: حل سؤال قصير ثم مقارنة الإجابة وتصحيح الخطأ."],
+      title: "Ø£Ù†Ø´Ø·Ø© Ù‚ØµÙŠØ±Ø©",
+      ideas: ["Ù†Ø´Ø§Ø· Ø¨Ø·Ø§Ù‚Ø§Øª Ø³Ø±ÙŠØ¹: ÙŠØ®ØªØ§Ø± Ø§Ù„Ù…ØªØ¹Ù„Ù… Ø¨Ø·Ø§Ù‚Ø© ÙˆÙŠØ·Ø¨Ù‚ Ø§Ù„Ù…Ù‡Ø§Ø±Ø© ÙÙŠ 5 Ø¯Ù‚Ø§Ø¦Ù‚.", "Ù†Ø´Ø§Ø· Ø²Ù…ÙŠÙ„ Ø¯Ø§Ø¹Ù…: Ø­Ù„ Ø³Ø¤Ø§Ù„ Ù‚ØµÙŠØ± Ø«Ù… Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© ÙˆØªØµØ­ÙŠØ­ Ø§Ù„Ø®Ø·Ø£."],
     },
     worksheets: {
-      title: "أوراق عمل",
-      ideas: ["ورقة عمل متدرجة: سؤال سهل، متوسط، ثم سؤال تطبيقي.", "ورقة أخطاء شائعة يحدد فيها المتعلم الخطأ ويكتب التصحيح."],
+      title: "Ø£ÙˆØ±Ø§Ù‚ Ø¹Ù…Ù„",
+      ideas: ["ÙˆØ±Ù‚Ø© Ø¹Ù…Ù„ Ù…ØªØ¯Ø±Ø¬Ø©: Ø³Ø¤Ø§Ù„ Ø³Ù‡Ù„ØŒ Ù…ØªÙˆØ³Ø·ØŒ Ø«Ù… Ø³Ø¤Ø§Ù„ ØªØ·Ø¨ÙŠÙ‚ÙŠ.", "ÙˆØ±Ù‚Ø© Ø£Ø®Ø·Ø§Ø¡ Ø´Ø§Ø¦Ø¹Ø© ÙŠØ­Ø¯Ø¯ ÙÙŠÙ‡Ø§ Ø§Ù„Ù…ØªØ¹Ù„Ù… Ø§Ù„Ø®Ø·Ø£ ÙˆÙŠÙƒØªØ¨ Ø§Ù„ØªØµØ­ÙŠØ­."],
     },
     assessment: {
-      title: "أدوات تقييم",
-      ideas: ["قائمة رصد من 4 مؤشرات: يفهم، يطبق، يصحح، ينجز باستقلالية.", "اختبار قبلي وبعدي من 5 أسئلة لقياس أثر الخطة بوضوح."],
+      title: "Ø£Ø¯ÙˆØ§Øª ØªÙ‚ÙŠÙŠÙ…",
+      ideas: ["Ù‚Ø§Ø¦Ù…Ø© Ø±ØµØ¯ Ù…Ù† 4 Ù…Ø¤Ø´Ø±Ø§Øª: ÙŠÙÙ‡Ù…ØŒ ÙŠØ·Ø¨Ù‚ØŒ ÙŠØµØ­Ø­ØŒ ÙŠÙ†Ø¬Ø² Ø¨Ø§Ø³ØªÙ‚Ù„Ø§Ù„ÙŠØ©.", "Ø§Ø®ØªØ¨Ø§Ø± Ù‚Ø¨Ù„ÙŠ ÙˆØ¨Ø¹Ø¯ÙŠ Ù…Ù† 5 Ø£Ø³Ø¦Ù„Ø© Ù„Ù‚ÙŠØ§Ø³ Ø£Ø«Ø± Ø§Ù„Ø®Ø·Ø© Ø¨ÙˆØ¶ÙˆØ­."],
     },
     followup: {
-      title: "نموذج متابعة",
-      ideas: ["جدول أسبوعي يسجل المهارة، النشاط، مستوى الإتقان، والخطوة القادمة.", "ملاحظة مختصرة لولي الأمر تتضمن ما تحسن وما يحتاج تدريبًا منزليًا."],
+      title: "Ù†Ù…ÙˆØ°Ø¬ Ù…ØªØ§Ø¨Ø¹Ø©",
+      ideas: ["Ø¬Ø¯ÙˆÙ„ Ø£Ø³Ø¨ÙˆØ¹ÙŠ ÙŠØ³Ø¬Ù„ Ø§Ù„Ù…Ù‡Ø§Ø±Ø©ØŒ Ø§Ù„Ù†Ø´Ø§Ø·ØŒ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø¥ØªÙ‚Ø§Ù†ØŒ ÙˆØ§Ù„Ø®Ø·ÙˆØ© Ø§Ù„Ù‚Ø§Ø¯Ù…Ø©.", "Ù…Ù„Ø§Ø­Ø¸Ø© Ù…Ø®ØªØµØ±Ø© Ù„ÙˆÙ„ÙŠ Ø§Ù„Ø£Ù…Ø± ØªØªØ¶Ù…Ù† Ù…Ø§ ØªØ­Ø³Ù† ÙˆÙ…Ø§ ÙŠØ­ØªØ§Ø¬ ØªØ¯Ø±ÙŠØ¨Ù‹Ø§ Ù…Ù†Ø²Ù„ÙŠÙ‹Ø§."],
     },
   },
   gifted: {
     plan: {
-      title: "خطة إثرائية",
-      ideas: ["مسار إثرائي أسبوعي ينتهي بمنتج واضح: عرض، ملف، نموذج، أو حل مبتكر.", "ربط الخطة بمعيار تميز: عمق الفكرة، جودة الدليل، وطريقة العرض."],
+      title: "Ø®Ø·Ø© Ø¥Ø«Ø±Ø§Ø¦ÙŠØ©",
+      ideas: ["Ù…Ø³Ø§Ø± Ø¥Ø«Ø±Ø§Ø¦ÙŠ Ø£Ø³Ø¨ÙˆØ¹ÙŠ ÙŠÙ†ØªÙ‡ÙŠ Ø¨Ù…Ù†ØªØ¬ ÙˆØ§Ø¶Ø­: Ø¹Ø±Ø¶ØŒ Ù…Ù„ÙØŒ Ù†Ù…ÙˆØ°Ø¬ØŒ Ø£Ùˆ Ø­Ù„ Ù…Ø¨ØªÙƒØ±.", "Ø±Ø¨Ø· Ø§Ù„Ø®Ø·Ø© Ø¨Ù…Ø¹ÙŠØ§Ø± ØªÙ…ÙŠØ²: Ø¹Ù…Ù‚ Ø§Ù„ÙÙƒØ±Ø©ØŒ Ø¬ÙˆØ¯Ø© Ø§Ù„Ø¯Ù„ÙŠÙ„ØŒ ÙˆØ·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¹Ø±Ø¶."],
     },
     project: {
-      title: "مشروع بحثي",
-      ideas: ["سؤال بحثي صغير يجمع فيه المتعلم مصدرين ويقارن بينهما.", "عرض نتيجة البحث في صفحة واحدة أو إنفوجرافيك مختصر."],
+      title: "Ù…Ø´Ø±ÙˆØ¹ Ø¨Ø­Ø«ÙŠ",
+      ideas: ["Ø³Ø¤Ø§Ù„ Ø¨Ø­Ø«ÙŠ ØµØºÙŠØ± ÙŠØ¬Ù…Ø¹ ÙÙŠÙ‡ Ø§Ù„Ù…ØªØ¹Ù„Ù… Ù…ØµØ¯Ø±ÙŠÙ† ÙˆÙŠÙ‚Ø§Ø±Ù† Ø¨ÙŠÙ†Ù‡Ù…Ø§.", "Ø¹Ø±Ø¶ Ù†ØªÙŠØ¬Ø© Ø§Ù„Ø¨Ø­Ø« ÙÙŠ ØµÙØ­Ø© ÙˆØ§Ø­Ø¯Ø© Ø£Ùˆ Ø¥Ù†ÙÙˆØ¬Ø±Ø§ÙÙŠÙƒ Ù…Ø®ØªØµØ±."],
     },
     thinking: {
-      title: "مهام تفكير عليا",
-      ideas: ["سؤال مفتوح له أكثر من حل مع طلب تبرير الحل الأفضل.", "مهمة تحليل موقف ثم اقتراح حل مبتكر قابل للتطبيق."],
+      title: "Ù…Ù‡Ø§Ù… ØªÙÙƒÙŠØ± Ø¹Ù„ÙŠØ§",
+      ideas: ["Ø³Ø¤Ø§Ù„ Ù…ÙØªÙˆØ­ Ù„Ù‡ Ø£ÙƒØ«Ø± Ù…Ù† Ø­Ù„ Ù…Ø¹ Ø·Ù„Ø¨ ØªØ¨Ø±ÙŠØ± Ø§Ù„Ø­Ù„ Ø§Ù„Ø£ÙØ¶Ù„.", "Ù…Ù‡Ù…Ø© ØªØ­Ù„ÙŠÙ„ Ù…ÙˆÙ‚Ù Ø«Ù… Ø§Ù‚ØªØ±Ø§Ø­ Ø­Ù„ Ù…Ø¨ØªÙƒØ± Ù‚Ø§Ø¨Ù„ Ù„Ù„ØªØ·Ø¨ÙŠÙ‚."],
     },
     competitions: {
-      title: "مسابقات مقترحة",
-      ideas: ["تحدي عرض شفهي لمدة دقيقتين عن فكرة تعلمها المتعلم بعمق.", "مسابقة منتج إبداعي: قصة، نموذج، ملصق علمي، أو عرض رقمي."],
+      title: "Ù…Ø³Ø§Ø¨Ù‚Ø§Øª Ù…Ù‚ØªØ±Ø­Ø©",
+      ideas: ["ØªØ­Ø¯ÙŠ Ø¹Ø±Ø¶ Ø´ÙÙ‡ÙŠ Ù„Ù…Ø¯Ø© Ø¯Ù‚ÙŠÙ‚ØªÙŠÙ† Ø¹Ù† ÙÙƒØ±Ø© ØªØ¹Ù„Ù…Ù‡Ø§ Ø§Ù„Ù…ØªØ¹Ù„Ù… Ø¨Ø¹Ù…Ù‚.", "Ù…Ø³Ø§Ø¨Ù‚Ø© Ù…Ù†ØªØ¬ Ø¥Ø¨Ø¯Ø§Ø¹ÙŠ: Ù‚ØµØ©ØŒ Ù†Ù…ÙˆØ°Ø¬ØŒ Ù…Ù„ØµÙ‚ Ø¹Ù„Ù…ÙŠØŒ Ø£Ùˆ Ø¹Ø±Ø¶ Ø±Ù‚Ù…ÙŠ."],
     },
     creative: {
-      title: "أنشطة إبداعية",
-      ideas: ["إنتاج قصة قصيرة أو بودكاست يشرح مفهومًا دراسيًا.", "تصميم لوحة معرفة أو لعبة تعليمية تساعد الزملاء على فهم الدرس."],
+      title: "Ø£Ù†Ø´Ø·Ø© Ø¥Ø¨Ø¯Ø§Ø¹ÙŠØ©",
+      ideas: ["Ø¥Ù†ØªØ§Ø¬ Ù‚ØµØ© Ù‚ØµÙŠØ±Ø© Ø£Ùˆ Ø¨ÙˆØ¯ÙƒØ§Ø³Øª ÙŠØ´Ø±Ø­ Ù…ÙÙ‡ÙˆÙ…Ù‹Ø§ Ø¯Ø±Ø§Ø³ÙŠÙ‹Ø§.", "ØªØµÙ…ÙŠÙ… Ù„ÙˆØ­Ø© Ù…Ø¹Ø±ÙØ© Ø£Ùˆ Ù„Ø¹Ø¨Ø© ØªØ¹Ù„ÙŠÙ…ÙŠØ© ØªØ³Ø§Ø¹Ø¯ Ø§Ù„Ø²Ù…Ù„Ø§Ø¡ Ø¹Ù„Ù‰ ÙÙ‡Ù… Ø§Ù„Ø¯Ø±Ø³."],
     },
   },
 };
@@ -385,12 +479,12 @@ function updateAuthUI() {
     const name = currentUser.name;
     loginButtonText.textContent = name;
     sidebarUserName.textContent = name;
-    userInitial.textContent = name.trim().charAt(0) || "م";
+    userInitial.textContent = name.trim().charAt(0) || "Ù…";
     loginButton.classList.add("logged");
     return;
   }
 
-  loginButtonText.textContent = "تسجيل الدخول";
+  loginButtonText.textContent = "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„";
   loginButton.classList.remove("logged");
 }
 
@@ -403,29 +497,63 @@ function openLogin() {
 
 async function loginUser(name, password) {
   try {
-    const data = await apiRequest("/api/login", {
-      method: "POST",
-      body: JSON.stringify({ name, password }),
-    });
-    currentUser = data.user;
+    const email = loginNameToEmail(name);
+    let credential;
+    try {
+      credential = await signInWithEmailAndPassword(auth, email, password);
+    } catch {
+      credential = await createUserWithEmailAndPassword(auth, email, password);
+    }
+    currentUser = {
+      id: credential.user.uid,
+      name,
+      email,
+      loginAt: new Date().toISOString(),
+    };
+    localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
+    updateAuthUI();
+    loginDialog.close();
+    await saveRemoteState();
+    await loadRemoteState();
   } catch (error) {
-    if (error.status === 400 || error.status === 401) {
-      loginError.textContent = error.message || "تعذر تسجيل الدخول.";
+    if (HAS_LOCAL_API) {
+      try {
+        const data = await apiRequest("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ name, password }),
+        });
+        currentUser = data.user;
+        localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
+        updateAuthUI();
+        loginDialog.close();
+        await loadRemoteState();
+        return;
+      } catch (apiError) {
+        loginError.textContent = apiError.message || "تعذر تسجيل الدخول.";
+        return;
+      }
+    }
+
+    if (error.code === "auth/email-already-in-use" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+      loginError.textContent = "البيانات غير صحيحة أو الحساب موجود بكلمة مرور مختلفة.";
       return;
     }
-    currentUser = createLocalSession(name);
+
+    if (error.code === "auth/operation-not-allowed") {
+      loginError.textContent = "فعلي Email/Password من Firebase Authentication أولاً.";
+      return;
+    }
+
+    loginError.textContent = "تعذر الاتصال بفايربيس. تأكدي من تفعيل Authentication و Firestore.";
   }
-  localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
-  updateAuthUI();
-  loginDialog.close();
 }
 
 function logoutUser() {
   currentUser = null;
   localStorage.removeItem("munjaz.user");
   updateAuthUI();
+  signOut(auth).catch(() => {});
 }
-
 function formatDateKey(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -440,10 +568,13 @@ function formatArabicDate(dateKey) {
 
 function saveCalendarEvents() {
   localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
-  apiRequest("/api/calendar-events", {
-    method: "PUT",
-    body: JSON.stringify({ calendarEvents }),
-  }).catch(() => {});
+  saveRemoteState().catch(() => {});
+  if (HAS_LOCAL_API) {
+    apiRequest("/api/calendar-events", {
+      method: "PUT",
+      body: JSON.stringify({ calendarEvents }),
+    }).catch(() => {});
+  }
 }
 
 function getEventsForDate(dateKey) {
@@ -457,7 +588,7 @@ function renderSelectedDay() {
   const dayEvents = getEventsForDate(selectedCalendarDate);
 
   if (!dayEvents.length) {
-    selectedDayEvents.innerHTML = '<div class="empty-day">لا توجد مواعيد في هذا اليوم.</div>';
+    selectedDayEvents.innerHTML = '<div class="empty-day">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ÙˆØ§Ø¹ÙŠØ¯ ÙÙŠ Ù‡Ø°Ø§ Ø§Ù„ÙŠÙˆÙ….</div>';
     return;
   }
 
@@ -467,11 +598,11 @@ function renderSelectedDay() {
         <article class="${event.type}">
           <div>
             <strong>${escapeHtml(event.title)}</strong>
-            <span>${calendarTypeLabels[event.type]} • ${event.time || "بدون وقت"}</span>
+            <span>${calendarTypeLabels[event.type]} â€¢ ${event.time || "Ø¨Ø¯ÙˆÙ† ÙˆÙ‚Øª"}</span>
           </div>
-          <p>${escapeHtml(event.notes || "بدون ملاحظات")}</p>
-          <small>تنبيه: قبل ${event.reminder} ${event.reminder === "1" ? "يوم" : "أيام"}</small>
-          <button type="button" data-delete-event="${event.id}">حذف</button>
+          <p>${escapeHtml(event.notes || "Ø¨Ø¯ÙˆÙ† Ù…Ù„Ø§Ø­Ø¸Ø§Øª")}</p>
+          <small>ØªÙ†Ø¨ÙŠÙ‡: Ù‚Ø¨Ù„ ${event.reminder} ${event.reminder === "1" ? "ÙŠÙˆÙ…" : "Ø£ÙŠØ§Ù…"}</small>
+          <button type="button" data-delete-event="${event.id}">Ø­Ø°Ù</button>
         </article>
       `,
     )
@@ -482,12 +613,12 @@ function openEventDialog(id) {
   const event = calendarEvents.find((item) => item.id === id);
   if (!event) return;
 
-  eventDialogType.textContent = calendarTypeLabels[event.type] || "تفاصيل الموعد";
+  eventDialogType.textContent = calendarTypeLabels[event.type] || "ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…ÙˆØ¹Ø¯";
   eventDialogTitle.textContent = event.title;
   eventDialogDate.textContent = formatArabicDate(event.date);
-  eventDialogTime.textContent = event.time ? `الوقت: ${event.time}` : "بدون وقت محدد";
-  eventDialogReminder.textContent = `تنبيه قبل ${event.reminder} ${event.reminder === "1" ? "يوم" : "أيام"}`;
-  eventDialogNotes.textContent = event.notes || "لا توجد ملاحظات أو مرفقات.";
+  eventDialogTime.textContent = event.time ? `Ø§Ù„ÙˆÙ‚Øª: ${event.time}` : "Ø¨Ø¯ÙˆÙ† ÙˆÙ‚Øª Ù…Ø­Ø¯Ø¯";
+  eventDialogReminder.textContent = `ØªÙ†Ø¨ÙŠÙ‡ Ù‚Ø¨Ù„ ${event.reminder} ${event.reminder === "1" ? "ÙŠÙˆÙ…" : "Ø£ÙŠØ§Ù…"}`;
+  eventDialogNotes.textContent = event.notes || "Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø£Ùˆ Ù…Ø±ÙÙ‚Ø§Øª.";
   eventDialog.showModal();
 }
 
@@ -533,7 +664,7 @@ function addCalendarEventItem() {
   const date = eventDate.value || selectedCalendarDate;
 
   if (!title) {
-    calendarStatus.textContent = "اكتب عنوان النشاط أولًا.";
+    calendarStatus.textContent = "Ø§ÙƒØªØ¨ Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ù†Ø´Ø§Ø· Ø£ÙˆÙ„Ù‹Ø§.";
     calendarStatus.classList.add("error");
     eventTitle.focus();
     return;
@@ -554,7 +685,7 @@ function addCalendarEventItem() {
   eventTitle.value = "";
   eventTime.value = "";
   eventNotes.value = "";
-  calendarStatus.textContent = "تمت إضافة الموعد إلى الرزنامة.";
+  calendarStatus.textContent = "ØªÙ…Øª Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø¥Ù„Ù‰ Ø§Ù„Ø±Ø²Ù†Ø§Ù…Ø©.";
   calendarStatus.classList.remove("error");
   saveCalendarEvents();
   renderCalendar();
@@ -582,13 +713,13 @@ loginForm.addEventListener("submit", async (event) => {
   const password = passwordInput.value.trim();
 
   if (!name) {
-    loginError.textContent = "اكتب اسم المستخدم أولًا.";
+    loginError.textContent = "Ø§ÙƒØªØ¨ Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£ÙˆÙ„Ù‹Ø§.";
     usernameInput.focus();
     return;
   }
 
-  if (password.length < 4) {
-    loginError.textContent = "كلمة المرور يجب أن تكون 4 أحرف أو أكثر.";
+  if (password.length < 6) {
+    loginError.textContent = "كلمة المرور يجب أن تكون 6 أحرف أو أكثر.";
     passwordInput.focus();
     return;
   }
@@ -630,8 +761,8 @@ function renderPortfolio(tabKey = activePortfolio) {
 
   portfolioFields.innerHTML = config.fields
     .map((field, index) => {
-      const isLong = field.includes("ملاحظات") || field.includes("الأثر") || field.includes("آلية") || field.includes("المرفقات");
-      const input = field.includes("التاريخ")
+      const isLong = field.includes("Ù…Ù„Ø§Ø­Ø¸Ø§Øª") || field.includes("Ø§Ù„Ø£Ø«Ø±") || field.includes("Ø¢Ù„ÙŠØ©") || field.includes("Ø§Ù„Ù…Ø±ÙÙ‚Ø§Øª");
+      const input = field.includes("Ø§Ù„ØªØ§Ø±ÙŠØ®")
         ? `<input id="field-${index}" type="date" />`
         : isLong
           ? `<textarea id="field-${index}" rows="5" placeholder="${field}"></textarea>`
@@ -653,7 +784,7 @@ function renderSelectedEvidence() {
   attachmentCount.textContent = currentEvidence.length;
 
   if (!currentEvidence.length) {
-    selectedEvidence.innerHTML = '<p>لا توجد شواهد مضافة بعد.</p>';
+    selectedEvidence.innerHTML = '<p>Ù„Ø§ ØªÙˆØ¬Ø¯ Ø´ÙˆØ§Ù‡Ø¯ Ù…Ø¶Ø§ÙØ© Ø¨Ø¹Ø¯.</p>';
     return;
   }
 
@@ -661,9 +792,9 @@ function renderSelectedEvidence() {
     .map(
       (item, index) => `
         <span>
-          <b>${item.kind === "link" ? "رابط" : "ملف"}</b>
+          <b>${item.kind === "link" ? "Ø±Ø§Ø¨Ø·" : "Ù…Ù„Ù"}</b>
           ${escapeHtml(item.name)}
-          <button type="button" data-remove-evidence="${index}">حذف</button>
+          <button type="button" data-remove-evidence="${index}">Ø­Ø°Ù</button>
         </span>
       `,
     )
@@ -675,7 +806,7 @@ function renderSavedAchievements() {
   savedCount.textContent = filtered.length;
 
   if (!filtered.length) {
-    savedAchievements.innerHTML = '<div class="empty-saved">لا توجد إنجازات محفوظة في هذا القسم بعد.</div>';
+    savedAchievements.innerHTML = '<div class="empty-saved">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ù†Ø¬Ø§Ø²Ø§Øª Ù…Ø­ÙÙˆØ¸Ø© ÙÙŠ Ù‡Ø°Ø§ Ø§Ù„Ù‚Ø³Ù… Ø¨Ø¹Ø¯.</div>';
     return;
   }
 
@@ -685,12 +816,12 @@ function renderSavedAchievements() {
         <article>
           <div class="saved-achievement-head">
             <strong>${escapeHtml(item.title)}</strong>
-            <button type="button" data-delete-achievement="${item.id}">حذف</button>
+            <button type="button" data-delete-achievement="${item.id}">Ø­Ø°Ù</button>
           </div>
-          <span>${item.date || "بدون تاريخ"} • ${portfolioConfig[item.type]?.title || "إنجاز"}</span>
+          <span>${item.date || "Ø¨Ø¯ÙˆÙ† ØªØ§Ø±ÙŠØ®"} â€¢ ${portfolioConfig[item.type]?.title || "Ø¥Ù†Ø¬Ø§Ø²"}</span>
           <p>${escapeHtml(item.summary)}</p>
           <div class="saved-evidence">
-            ${(item.evidence || []).map(renderEvidenceItem).join("") || "<em>بدون مرفقات</em>"}
+            ${(item.evidence || []).map(renderEvidenceItem).join("") || "<em>Ø¨Ø¯ÙˆÙ† Ù…Ø±ÙÙ‚Ø§Øª</em>"}
           </div>
         </article>
       `,
@@ -699,25 +830,25 @@ function renderSavedAchievements() {
 }
 
 function renderEvidenceItem(evidence) {
-  const label = `${evidence.kind === "link" ? "رابط" : "ملف"}: ${escapeHtml(evidence.name)}`;
+  const label = `${evidence.kind === "link" ? "Ø±Ø§Ø¨Ø·" : "Ù…Ù„Ù"}: ${escapeHtml(evidence.name)}`;
   if (evidence.kind === "link" && evidence.url) {
     return `<a href="${escapeHtml(evidence.url)}" target="_blank" rel="noopener">${label}</a>`;
   }
   if (evidence.dataUrl) {
     return `<a href="${evidence.dataUrl}" download="${escapeHtml(evidence.name)}">${label}</a>`;
   }
-  return `<em>${label} - محفوظ كاسم فقط</em>`;
+  return `<em>${label} - Ù…Ø­ÙÙˆØ¸ ÙƒØ§Ø³Ù… ÙÙ‚Ø·</em>`;
 }
 
 function saveAchievement() {
   const config = portfolioConfig[activePortfolio];
   const values = config.fields.map((_, index) => document.querySelector(`#field-${index}`)?.value.trim() || "");
   const title = values.find(Boolean) || config.title;
-  const dateIndex = config.fields.findIndex((field) => field.includes("التاريخ"));
+  const dateIndex = config.fields.findIndex((field) => field.includes("Ø§Ù„ØªØ§Ø±ÙŠØ®"));
   const date = dateIndex >= 0 ? values[dateIndex] : "";
 
   if (!values.some(Boolean) && !currentEvidence.length) {
-    portfolioStatus.textContent = "أضف بيانات أو شواهد قبل حفظ الإنجاز.";
+    portfolioStatus.textContent = "Ø£Ø¶Ù Ø¨ÙŠØ§Ù†Ø§Øª Ø£Ùˆ Ø´ÙˆØ§Ù‡Ø¯ Ù‚Ø¨Ù„ Ø­ÙØ¸ Ø§Ù„Ø¥Ù†Ø¬Ø§Ø².";
     portfolioStatus.classList.add("error");
     return;
   }
@@ -727,7 +858,7 @@ function saveAchievement() {
     type: activePortfolio,
     title,
     date,
-    summary: values.filter(Boolean).slice(1, 4).join(" - ") || "تم حفظ إنجاز جديد.",
+    summary: values.filter(Boolean).slice(1, 4).join(" - ") || "ØªÙ… Ø­ÙØ¸ Ø¥Ù†Ø¬Ø§Ø² Ø¬Ø¯ÙŠØ¯.",
     evidence: currentEvidence,
     createdAt: new Date().toISOString(),
   });
@@ -735,7 +866,7 @@ function saveAchievement() {
   persistAchievements();
   currentEvidence = [];
   renderSelectedEvidence();
-  portfolioStatus.textContent = "تم حفظ الإنجاز وإضافته إلى ملف الإنجاز.";
+  portfolioStatus.textContent = "ØªÙ… Ø­ÙØ¸ Ø§Ù„Ø¥Ù†Ø¬Ø§Ø² ÙˆØ¥Ø¶Ø§ÙØªÙ‡ Ø¥Ù„Ù‰ Ù…Ù„Ù Ø§Ù„Ø¥Ù†Ø¬Ø§Ø².";
   portfolioStatus.classList.remove("error");
   config.fields.forEach((_, index) => {
     const field = document.querySelector(`#field-${index}`);
@@ -800,20 +931,20 @@ function renderReport(type = activeReport) {
   const filteredAchievements = achievements.filter((item) => isInReportRange(item, type));
   const filteredEvents = calendarEvents.filter((item) => isInReportRange(item, type));
   const evidenceCount = filteredAchievements.reduce((total, item) => total + (item.evidence?.length || 0), 0);
-  const portfolioTotals = countBy(filteredAchievements, (item) => portfolioConfig[item.type]?.title || "إنجاز آخر");
-  const eventTotals = countBy(filteredEvents, (item) => calendarTypeLabels[item.type] || "موعد");
-  const strongestArea = Object.entries(portfolioTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "لم يحدد بعد";
+  const portfolioTotals = countBy(filteredAchievements, (item) => portfolioConfig[item.type]?.title || "Ø¥Ù†Ø¬Ø§Ø² Ø¢Ø®Ø±");
+  const eventTotals = countBy(filteredEvents, (item) => calendarTypeLabels[item.type] || "Ù…ÙˆØ¹Ø¯");
+  const strongestArea = Object.entries(portfolioTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "Ù„Ù… ÙŠØ­Ø¯Ø¯ Ø¨Ø¹Ø¯";
   const monthName = calendarDate.toLocaleDateString("ar", { month: "long", year: "numeric" });
   const generatedAt = new Date().toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" });
 
-  reportTitle.textContent = `${reportLabels[type]} - ${type === "monthly" ? monthName : "العام الدراسي"}`;
-  reportGeneratedAt.textContent = `آخر تحديث: ${generatedAt}`;
+  reportTitle.textContent = `${reportLabels[type]} - ${type === "monthly" ? monthName : "Ø§Ù„Ø¹Ø§Ù… Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ"}`;
+  reportGeneratedAt.textContent = `Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: ${generatedAt}`;
 
   reportStats.innerHTML = [
-    ["إجمالي الإنجازات", filteredAchievements.length, "إنجاز"],
-    ["الشواهد المرفوعة", evidenceCount, "ملف / رابط"],
-    ["مواعيد الرزنامة", filteredEvents.length, "موعد"],
-    ["أقوى مجال", strongestArea, "حسب التوثيق"],
+    ["Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¥Ù†Ø¬Ø§Ø²Ø§Øª", filteredAchievements.length, "Ø¥Ù†Ø¬Ø§Ø²"],
+    ["Ø§Ù„Ø´ÙˆØ§Ù‡Ø¯ Ø§Ù„Ù…Ø±ÙÙˆØ¹Ø©", evidenceCount, "Ù…Ù„Ù / Ø±Ø§Ø¨Ø·"],
+    ["Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ø±Ø²Ù†Ø§Ù…Ø©", filteredEvents.length, "Ù…ÙˆØ¹Ø¯"],
+    ["Ø£Ù‚ÙˆÙ‰ Ù…Ø¬Ø§Ù„", strongestArea, "Ø­Ø³Ø¨ Ø§Ù„ØªÙˆØ«ÙŠÙ‚"],
   ]
     .map(
       ([label, value, note]) => `
@@ -838,37 +969,37 @@ function renderReport(type = activeReport) {
 
   reportSections.innerHTML = `
     <article class="report-summary">
-      <h4>ملخص التقرير</h4>
+      <h4>Ù…Ù„Ø®Øµ Ø§Ù„ØªÙ‚Ø±ÙŠØ±</h4>
       <p>${reportDescriptions[type]}</p>
-      <p>تم رصد ${filteredAchievements.length} إنجاز، و${filteredEvents.length} موعد في الرزنامة، مع ${evidenceCount} شاهد محفوظ داخل المنصة.</p>
+      <p>ØªÙ… Ø±ØµØ¯ ${filteredAchievements.length} Ø¥Ù†Ø¬Ø§Ø²ØŒ Ùˆ${filteredEvents.length} Ù…ÙˆØ¹Ø¯ ÙÙŠ Ø§Ù„Ø±Ø²Ù†Ø§Ù…Ø©ØŒ Ù…Ø¹ ${evidenceCount} Ø´Ø§Ù‡Ø¯ Ù…Ø­ÙÙˆØ¸ Ø¯Ø§Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ©.</p>
     </article>
     <article>
-      <h4>توزيع ملف الإنجاز</h4>
-      ${portfolioList ? `<ul class="report-bars">${portfolioList}</ul>` : '<p class="report-empty">لا توجد إنجازات محفوظة ضمن هذا النطاق.</p>'}
+      <h4>ØªÙˆØ²ÙŠØ¹ Ù…Ù„Ù Ø§Ù„Ø¥Ù†Ø¬Ø§Ø²</h4>
+      ${portfolioList ? `<ul class="report-bars">${portfolioList}</ul>` : '<p class="report-empty">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ù†Ø¬Ø§Ø²Ø§Øª Ù…Ø­ÙÙˆØ¸Ø© Ø¶Ù…Ù† Ù‡Ø°Ø§ Ø§Ù„Ù†Ø·Ø§Ù‚.</p>'}
     </article>
     <article>
-      <h4>توزيع الرزنامة</h4>
-      ${eventList ? `<ul class="report-bars">${eventList}</ul>` : '<p class="report-empty">لا توجد مواعيد مسجلة ضمن هذا النطاق.</p>'}
+      <h4>ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ø±Ø²Ù†Ø§Ù…Ø©</h4>
+      ${eventList ? `<ul class="report-bars">${eventList}</ul>` : '<p class="report-empty">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ÙˆØ§Ø¹ÙŠØ¯ Ù…Ø³Ø¬Ù„Ø© Ø¶Ù…Ù† Ù‡Ø°Ø§ Ø§Ù„Ù†Ø·Ø§Ù‚.</p>'}
     </article>
     <article>
-      <h4>آخر الإنجازات</h4>
+      <h4>Ø¢Ø®Ø± Ø§Ù„Ø¥Ù†Ø¬Ø§Ø²Ø§Øª</h4>
       ${renderMiniList(
         filteredAchievements.slice(0, 4),
-        "ابدأ بإضافة إنجاز من صفحة ملف الإنجاز ليظهر هنا.",
-        (item) => `<li><span>${escapeHtml(item.title)}</span><small>${item.date || "بدون تاريخ"} - ${portfolioConfig[item.type]?.title || "إنجاز"}</small></li>`,
+        "Ø§Ø¨Ø¯Ø£ Ø¨Ø¥Ø¶Ø§ÙØ© Ø¥Ù†Ø¬Ø§Ø² Ù…Ù† ØµÙØ­Ø© Ù…Ù„Ù Ø§Ù„Ø¥Ù†Ø¬Ø§Ø² Ù„ÙŠØ¸Ù‡Ø± Ù‡Ù†Ø§.",
+        (item) => `<li><span>${escapeHtml(item.title)}</span><small>${item.date || "Ø¨Ø¯ÙˆÙ† ØªØ§Ø±ÙŠØ®"} - ${portfolioConfig[item.type]?.title || "Ø¥Ù†Ø¬Ø§Ø²"}</small></li>`,
       )}
     </article>
     <article>
-      <h4>المواعيد القادمة</h4>
+      <h4>Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ù‚Ø§Ø¯Ù…Ø©</h4>
       ${renderMiniList(
         filteredEvents.slice(0, 5),
-        "أضف موعدا في الرزنامة ليظهر ضمن التقرير.",
-        (item) => `<li><span>${escapeHtml(item.title)}</span><small>${formatArabicDate(item.date)} - ${item.time || "بدون وقت"}</small></li>`,
+        "Ø£Ø¶Ù Ù…ÙˆØ¹Ø¯Ø§ ÙÙŠ Ø§Ù„Ø±Ø²Ù†Ø§Ù…Ø© Ù„ÙŠØ¸Ù‡Ø± Ø¶Ù…Ù† Ø§Ù„ØªÙ‚Ø±ÙŠØ±.",
+        (item) => `<li><span>${escapeHtml(item.title)}</span><small>${formatArabicDate(item.date)} - ${item.time || "Ø¨Ø¯ÙˆÙ† ÙˆÙ‚Øª"}</small></li>`,
       )}
     </article>
     <article class="report-summary">
-      <h4>توصية مهنية</h4>
-      <p>لجعل الملف أقوى عند التقديم، أرفق شاهدا واحدا على الأقل لكل إنجاز، ووازن بين التنمية المهنية، الدروس الريادية، والأنشطة المدرسية.</p>
+      <h4>ØªÙˆØµÙŠØ© Ù…Ù‡Ù†ÙŠØ©</h4>
+      <p>Ù„Ø¬Ø¹Ù„ Ø§Ù„Ù…Ù„Ù Ø£Ù‚ÙˆÙ‰ Ø¹Ù†Ø¯ Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…ØŒ Ø£Ø±ÙÙ‚ Ø´Ø§Ù‡Ø¯Ø§ ÙˆØ§Ø­Ø¯Ø§ Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„ Ù„ÙƒÙ„ Ø¥Ù†Ø¬Ø§Ø²ØŒ ÙˆÙˆØ§Ø²Ù† Ø¨ÙŠÙ† Ø§Ù„ØªÙ†Ù…ÙŠØ© Ø§Ù„Ù…Ù‡Ù†ÙŠØ©ØŒ Ø§Ù„Ø¯Ø±ÙˆØ³ Ø§Ù„Ø±ÙŠØ§Ø¯ÙŠØ©ØŒ ÙˆØ§Ù„Ø£Ù†Ø´Ø·Ø© Ø§Ù„Ù…Ø¯Ø±Ø³ÙŠØ©.</p>
     </article>
   `;
 }
@@ -893,12 +1024,12 @@ function addEvidenceUrl() {
 }
 
 function getIdeaKey(query) {
-  if (query.includes("قراءة") || query.includes("فهم") || query.includes("طلاقة")) return "reading";
-  if (query.includes("كتابة") || query.includes("إملاء") || query.includes("إبداع")) return "writing";
-  if (query.includes("رياض") || query.includes("مسائل") || query.includes("حل")) return "math";
-  if (query.includes("تقييم") || query.includes("قياس") || query.includes("أداة") || query.includes("اداة")) return "assessment";
-  if (query.includes("تفكير") || query.includes("عليا") || query.includes("تحليل") || query.includes("ابتكار")) return "thinking";
-  if (query.includes("بحث") || query.includes("مشروع") || query.includes("مصادر")) return "research";
+  if (query.includes("Ù‚Ø±Ø§Ø¡Ø©") || query.includes("ÙÙ‡Ù…") || query.includes("Ø·Ù„Ø§Ù‚Ø©")) return "reading";
+  if (query.includes("ÙƒØªØ§Ø¨Ø©") || query.includes("Ø¥Ù…Ù„Ø§Ø¡") || query.includes("Ø¥Ø¨Ø¯Ø§Ø¹")) return "writing";
+  if (query.includes("Ø±ÙŠØ§Ø¶") || query.includes("Ù…Ø³Ø§Ø¦Ù„") || query.includes("Ø­Ù„")) return "math";
+  if (query.includes("ØªÙ‚ÙŠÙŠÙ…") || query.includes("Ù‚ÙŠØ§Ø³") || query.includes("Ø£Ø¯Ø§Ø©") || query.includes("Ø§Ø¯Ø§Ø©")) return "assessment";
+  if (query.includes("ØªÙÙƒÙŠØ±") || query.includes("Ø¹Ù„ÙŠØ§") || query.includes("ØªØ­Ù„ÙŠÙ„") || query.includes("Ø§Ø¨ØªÙƒØ§Ø±")) return "thinking";
+  if (query.includes("Ø¨Ø­Ø«") || query.includes("Ù…Ø´Ø±ÙˆØ¹") || query.includes("Ù…ØµØ§Ø¯Ø±")) return "research";
   return "default";
 }
 
@@ -1042,6 +1173,20 @@ portfolioTabs.forEach((tab) => {
 
 document.querySelector("#saveAchievement").addEventListener("click", saveAchievement);
 
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+  const savedUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
+  currentUser = {
+    id: user.uid,
+    name: savedUser?.id === user.uid ? savedUser.name : user.email,
+    email: user.email,
+    loginAt: new Date().toISOString(),
+  };
+  localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
+  updateAuthUI();
+  await loadRemoteState();
+});
+
 const initialPage = window.location.hash.replace("#", "") || "home";
 if (document.querySelector(`[data-page="${initialPage}"]`)) {
   showPage(initialPage);
@@ -1053,3 +1198,4 @@ eventDate.value = selectedCalendarDate;
 renderCalendar();
 renderReport();
 loadRemoteState();
+
