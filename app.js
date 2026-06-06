@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import {
   doc,
@@ -252,6 +253,10 @@ async function saveRemoteState() {
   await setDoc(
     stateRef,
     {
+      profile: {
+        name: currentUser.name,
+        email: currentUser.email,
+      },
       achievements,
       calendarEvents,
       updatedAt: serverTimestamp(),
@@ -522,6 +527,10 @@ async function loginUser(name, password) {
       email,
       loginAt: new Date().toISOString(),
     };
+
+    if (credential.user.displayName !== name) {
+      await updateProfile(credential.user, { displayName: name }).catch(() => {});
+    }
   } catch (error) {
     if (["auth/email-already-in-use", "auth/wrong-password"].includes(error.code)) {
       loginError.textContent = "البيانات غير صحيحة أو الحساب موجود بكلمة مرور مختلفة.";
@@ -728,7 +737,7 @@ loginForm.addEventListener("submit", async (event) => {
   }
 
   if (password.length < 6) {
-    loginError.textContent = "كلمة المرور يجب أن تكون 6 أحرف أو أكثر.";
+    loginError.textContent = "الرقم السري يجب أن يكون 6 أحرف أو أرقام أو أكثر.";
     passwordInput.focus();
     return;
   }
@@ -1194,7 +1203,7 @@ onAuthStateChanged(auth, async (user) => {
   const storedUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
   currentUser = {
     id: user.uid,
-    name: storedUser?.name || user.email?.split("@")[0] || "معلم",
+    name: storedUser?.name || user.displayName || user.email?.split("@")[0] || "معلم",
     email: user.email,
     loginAt: storedUser?.loginAt || new Date().toISOString(),
   };
