@@ -22,6 +22,7 @@ const loginDialog = document.querySelector("#loginDialog");
 const loginForm = document.querySelector("#loginForm");
 const usernameInput = document.querySelector("#usernameInput");
 const passwordInput = document.querySelector("#passwordInput");
+const passwordLabel = passwordInput.closest("label");
 const loginError = document.querySelector("#loginError");
 const cancelLogin = document.querySelector("#cancelLogin");
 const sidebarUser = document.querySelector("#sidebarUser");
@@ -500,6 +501,10 @@ function updateAuthUI() {
 }
 
 function openLogin() {
+  if (passwordLabel?.firstChild) {
+    passwordLabel.firstChild.nodeValue = "الرقم السري";
+  }
+  passwordInput.placeholder = "6 أحرف أو أرقام أو أكثر";
   loginError.textContent = "";
   passwordInput.value = "";
   loginDialog.showModal();
