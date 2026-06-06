@@ -3056,3 +3056,20 @@ body {
     min-height: 42px;
   }
 }
+.seo-links {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding: 18px;
+  font-size: 14px;
+}
+
+.seo-links a {
+  color: var(--navy);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.seo-links a:hover {
+  color: var(--gold);
+}
