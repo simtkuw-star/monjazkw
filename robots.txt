@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://monjazkw.com/sitemap.xml
