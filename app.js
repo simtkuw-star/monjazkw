@@ -17,6 +17,13 @@ import {
   setDoc,
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import {
+  deleteObject,
+  getDownloadURL,
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
 const loginButton = document.querySelector("#loginButton");
 const loginButtonText = document.querySelector("#loginButtonText");
@@ -93,6 +100,7 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
 analyticsIsSupported()
   .then((supported) => {
@@ -438,41 +446,37 @@ async function loadRemoteState() {
   }
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve) => {
-    if (file.size > 1800000) {
-      resolve({
-        kind: "file",
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        stored: false,
-      });
-      return;
-    }
+function makeStorageFileName(file) {
+  const cleanName = file.name.replace(/[^\w.\-\u0600-\u06ff]+/g, "-").slice(-90);
+  return `${Date.now()}-${crypto.randomUUID()}-${cleanName}`;
+}
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      resolve({
-        kind: "file",
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        dataUrl: reader.result,
-        stored: true,
-      });
-    };
-    reader.onerror = () => {
-      resolve({
-        kind: "file",
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        stored: false,
-      });
-    };
-    reader.readAsDataURL(file);
+async function uploadEvidenceFile(file) {
+  if (!currentUser?.id || currentUser.mode === "local") {
+    throw new Error("سجلي الدخول قبل رفع المرفقات.");
+  }
+
+  const path = `users/${currentUser.id}/evidence/${makeStorageFileName(file)}`;
+  const fileRef = storageRef(storage, path);
+  const snapshot = await uploadBytes(fileRef, file, {
+    contentType: file.type || "application/octet-stream",
   });
+  const url = await getDownloadURL(snapshot.ref);
+
+  return {
+    kind: "file",
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    url,
+    storagePath: path,
+    stored: true,
+  };
+}
+
+async function deleteEvidenceFile(evidence) {
+  if (!evidence?.storagePath) return;
+  await deleteObject(storageRef(storage, evidence.storagePath)).catch(() => {});
 }
 
 const ideaBank = {
@@ -966,6 +970,9 @@ function renderEvidenceItem(evidence) {
   if (evidence.kind === "link" && evidence.url) {
     return `<a href="${escapeHtml(evidence.url)}" target="_blank" rel="noopener">${label}</a>`;
   }
+  if (evidence.url) {
+    return `<a href="${escapeHtml(evidence.url)}" target="_blank" rel="noopener">${label}</a>`;
+  }
   if (evidence.dataUrl) {
     return `<a href="${evidence.dataUrl}" download="${escapeHtml(evidence.name)}">${label}</a>`;
   }
@@ -1008,7 +1015,9 @@ function saveAchievement() {
   renderReport(activeReport);
 }
 
-function deleteAchievement(id) {
+async function deleteAchievement(id) {
+  const achievement = achievements.find((item) => item.id === id);
+  await Promise.all((achievement?.evidence || []).map(deleteEvidenceFile));
   achievements = achievements.filter((item) => item.id !== id);
   persistAchievements();
   renderSavedAchievements();
@@ -1137,9 +1146,25 @@ function renderReport(type = activeReport) {
 }
 
 async function addEvidenceFiles(files) {
-  const evidence = await Promise.all([...files].map(readFileAsDataUrl));
-  currentEvidence.push(...evidence);
-  renderSelectedEvidence();
+  if (!files.length) return;
+  if (!currentUser) {
+    portfolioStatus.textContent = "سجلي الدخول قبل رفع المرفقات.";
+    portfolioStatus.classList.add("error");
+    return;
+  }
+
+  portfolioStatus.textContent = "جاري رفع المرفقات...";
+  portfolioStatus.classList.remove("error");
+
+  try {
+    const evidence = await Promise.all([...files].map(uploadEvidenceFile));
+    currentEvidence.push(...evidence);
+    portfolioStatus.textContent = "تم رفع المرفقات وربطها بالإنجاز.";
+    renderSelectedEvidence();
+  } catch (error) {
+    portfolioStatus.textContent = "تعذر رفع المرفقات. تأكدي من تفعيل Firebase Storage ونشر قواعد التخزين.";
+    portfolioStatus.classList.add("error");
+  }
 }
 
 function addEvidenceUrl() {
@@ -1230,10 +1255,11 @@ evidenceLink.addEventListener("keydown", (event) => {
   }
 });
 
-selectedEvidence.addEventListener("click", (event) => {
+selectedEvidence.addEventListener("click", async (event) => {
   const index = event.target.dataset.removeEvidence;
   if (index === undefined) return;
-  currentEvidence.splice(Number(index), 1);
+  const [removed] = currentEvidence.splice(Number(index), 1);
+  await deleteEvidenceFile(removed);
   renderSelectedEvidence();
 });
 
