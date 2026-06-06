@@ -17,13 +17,6 @@ import {
   setDoc,
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-import {
-  deleteObject,
-  getDownloadURL,
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
 const loginButton = document.querySelector("#loginButton");
 const loginButtonText = document.querySelector("#loginButtonText");
@@ -100,7 +93,6 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp);
 
 analyticsIsSupported()
   .then((supported) => {
@@ -446,37 +438,41 @@ async function loadRemoteState() {
   }
 }
 
-function makeStorageFileName(file) {
-  const cleanName = file.name.replace(/[^\w.\-\u0600-\u06ff]+/g, "-").slice(-90);
-  return `${Date.now()}-${crypto.randomUUID()}-${cleanName}`;
-}
+function readEvidenceFile(file) {
+  return new Promise((resolve) => {
+    if (file.size > 900000) {
+      resolve({
+        kind: "file",
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        stored: false,
+      });
+      return;
+    }
 
-async function uploadEvidenceFile(file) {
-  if (!currentUser?.id || currentUser.mode === "local") {
-    throw new Error("سجلي الدخول قبل رفع المرفقات.");
-  }
-
-  const path = `users/${currentUser.id}/evidence/${makeStorageFileName(file)}`;
-  const fileRef = storageRef(storage, path);
-  const snapshot = await uploadBytes(fileRef, file, {
-    contentType: file.type || "application/octet-stream",
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        kind: "file",
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        dataUrl: reader.result,
+        stored: true,
+      });
+    };
+    reader.onerror = () => {
+      resolve({
+        kind: "file",
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        stored: false,
+      });
+    };
+    reader.readAsDataURL(file);
   });
-  const url = await getDownloadURL(snapshot.ref);
-
-  return {
-    kind: "file",
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    url,
-    storagePath: path,
-    stored: true,
-  };
-}
-
-async function deleteEvidenceFile(evidence) {
-  if (!evidence?.storagePath) return;
-  await deleteObject(storageRef(storage, evidence.storagePath)).catch(() => {});
 }
 
 const ideaBank = {
@@ -1015,9 +1011,7 @@ function saveAchievement() {
   renderReport(activeReport);
 }
 
-async function deleteAchievement(id) {
-  const achievement = achievements.find((item) => item.id === id);
-  await Promise.all((achievement?.evidence || []).map(deleteEvidenceFile));
+function deleteAchievement(id) {
   achievements = achievements.filter((item) => item.id !== id);
   persistAchievements();
   renderSavedAchievements();
@@ -1153,16 +1147,19 @@ async function addEvidenceFiles(files) {
     return;
   }
 
-  portfolioStatus.textContent = "جاري رفع المرفقات...";
+  portfolioStatus.textContent = "جاري تجهيز المرفقات...";
   portfolioStatus.classList.remove("error");
 
   try {
-    const evidence = await Promise.all([...files].map(uploadEvidenceFile));
+    const evidence = await Promise.all([...files].map(readEvidenceFile));
     currentEvidence.push(...evidence);
-    portfolioStatus.textContent = "تم رفع المرفقات وربطها بالإنجاز.";
+    const largeFiles = evidence.filter((item) => !item.stored).length;
+    portfolioStatus.textContent = largeFiles
+      ? "تمت إضافة المرفقات. الملفات الكبيرة تحفظ كاسم فقط بدون محتوى لتجنب الترقية المدفوعة."
+      : "تمت إضافة المرفقات وربطها بالإنجاز.";
     renderSelectedEvidence();
   } catch (error) {
-    portfolioStatus.textContent = "تعذر رفع المرفقات. تأكدي من تفعيل Firebase Storage ونشر قواعد التخزين.";
+    portfolioStatus.textContent = "تعذر تجهيز المرفقات. جربي ملفاً أصغر أو أضيفي رابطاً.";
     portfolioStatus.classList.add("error");
   }
 }
@@ -1258,8 +1255,7 @@ evidenceLink.addEventListener("keydown", (event) => {
 selectedEvidence.addEventListener("click", async (event) => {
   const index = event.target.dataset.removeEvidence;
   if (index === undefined) return;
-  const [removed] = currentEvidence.splice(Number(index), 1);
-  await deleteEvidenceFile(removed);
+  currentEvidence.splice(Number(index), 1);
   renderSelectedEvidence();
 });
 
