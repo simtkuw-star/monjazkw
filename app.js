@@ -70,6 +70,11 @@ const eventReminder = document.querySelector("#eventReminder");
 const eventNotes = document.querySelector("#eventNotes");
 const addCalendarEvent = document.querySelector("#addCalendarEvent");
 const calendarStatus = document.querySelector("#calendarStatus");
+const excellentDaysGrid = document.querySelector("#excellentDaysGrid");
+const excellentDaysCount = document.querySelector("#excellentDaysCount");
+const excellentDaysProgress = document.querySelector("#excellentDaysProgress");
+const markNextExcellentDay = document.querySelector("#markNextExcellentDay");
+const clearExcellentDays = document.querySelector("#clearExcellentDays");
 const eventDialog = document.querySelector("#eventDialog");
 const eventDialogType = document.querySelector("#eventDialogType");
 const eventDialogTitle = document.querySelector("#eventDialogTitle");
@@ -176,11 +181,14 @@ let calendarEvents = JSON.parse(
       { id: "e6", title: "مسابقة ثقافية", type: "competition", date: "2026-10-24", time: "10:00", reminder: "7", notes: "الشهادة والنتيجة" },
     ]),
 );
+let excellentDays = JSON.parse(localStorage.getItem("munjaz.excellentDays") || "[]");
 
 achievements = cleanStoredData(achievements);
 calendarEvents = cleanStoredData(calendarEvents);
+excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
+localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
 
 const calendarTypeLabels = {
   meeting: "اجتماع فني",
@@ -338,6 +346,7 @@ async function saveRemoteState() {
     {
       email: currentUser.email,
       name: currentUser.name,
+      excellentDays,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -377,6 +386,10 @@ async function loadRemoteState() {
           name: profile.name || currentUser.name,
           email: profile.email || currentUser.email,
         };
+        if (Array.isArray(profile.excellentDays)) {
+          excellentDays = profile.excellentDays.map(Number).filter((day) => day >= 1 && day <= 140);
+          localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
+        }
         localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
         updateAuthUI();
       }
@@ -405,6 +418,7 @@ async function loadRemoteState() {
     } catch {}
     renderPortfolio(activePortfolio);
     renderCalendar();
+    renderExcellentDays();
     renderReport(activeReport);
     return;
   }
@@ -412,6 +426,7 @@ async function loadRemoteState() {
   if (!HAS_LOCAL_API) {
     renderPortfolio(activePortfolio);
     renderCalendar();
+    renderExcellentDays();
     renderReport(activeReport);
     return;
   }
@@ -430,10 +445,12 @@ async function loadRemoteState() {
     }
     renderPortfolio(activePortfolio);
     renderCalendar();
+    renderExcellentDays();
     renderReport(activeReport);
   } catch {
     renderPortfolio(activePortfolio);
     renderCalendar();
+    renderExcellentDays();
     renderReport(activeReport);
   }
 }
@@ -707,6 +724,37 @@ function saveCalendarEvents() {
       body: JSON.stringify({ calendarEvents }),
     }).catch(() => {});
   }
+}
+
+function saveExcellentDays() {
+  excellentDays = [...new Set(excellentDays.map(Number))]
+    .filter((day) => day >= 1 && day <= 140)
+    .sort((a, b) => a - b);
+  localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
+  saveRemoteState().catch(() => {});
+}
+
+function renderExcellentDays() {
+  if (!excellentDaysGrid) return;
+
+  const selected = new Set(excellentDays);
+  excellentDaysCount.textContent = selected.size;
+  excellentDaysProgress.style.width = `${Math.min(100, (selected.size / 140) * 100)}%`;
+
+  excellentDaysGrid.innerHTML = Array.from({ length: 140 }, (_, index) => {
+    const day = index + 1;
+    return `<button class="${selected.has(day) ? "active" : ""}" type="button" data-excellent-day="${day}" aria-pressed="${selected.has(day)}">${day}</button>`;
+  }).join("");
+}
+
+function toggleExcellentDay(day) {
+  if (excellentDays.includes(day)) {
+    excellentDays = excellentDays.filter((item) => item !== day);
+  } else {
+    excellentDays.push(day);
+  }
+  saveExcellentDays();
+  renderExcellentDays();
 }
 
 function getEventsForDate(dateKey) {
@@ -1301,6 +1349,24 @@ selectedDayEvents.addEventListener("click", (event) => {
 
 addCalendarEvent.addEventListener("click", addCalendarEventItem);
 
+excellentDaysGrid?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-excellent-day]");
+  if (!button) return;
+  toggleExcellentDay(Number(button.dataset.excellentDay));
+});
+
+markNextExcellentDay?.addEventListener("click", () => {
+  const nextDay = Array.from({ length: 140 }, (_, index) => index + 1).find((day) => !excellentDays.includes(day));
+  if (!nextDay) return;
+  toggleExcellentDay(nextDay);
+});
+
+clearExcellentDays?.addEventListener("click", () => {
+  excellentDays = [];
+  saveExcellentDays();
+  renderExcellentDays();
+});
+
 ideaSearches.forEach((input) => {
   input.addEventListener("input", (event) => renderIdeas(input.dataset.ideaType, event));
   input.addEventListener("keydown", (event) => {
@@ -1350,5 +1416,6 @@ onAuthStateChanged(auth, async (user) => {
 renderPortfolio();
 eventDate.value = selectedCalendarDate;
 renderCalendar();
+renderExcellentDays();
 renderReport();
 loadRemoteState();

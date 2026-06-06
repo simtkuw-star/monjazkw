@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
   </head>
   <body>
     <div class="scene">
@@ -241,6 +241,28 @@
                 </details>
               </aside>
             </div>
+
+            <section class="excellent-days-panel" data-print-section="excellent-days">
+              <div class="excellent-days-head">
+                <div>
+                  <p>الأعمال الممتازة</p>
+                  <h3>متابعة الأيام الفعلية</h3>
+                  <span>حددي الأيام المنجزة حتى الوصول إلى 140 يوم فعلي.</span>
+                </div>
+                <div class="excellent-days-count">
+                  <strong id="excellentDaysCount">0</strong>
+                  <small>من 140 يوم</small>
+                </div>
+              </div>
+              <div class="excellent-progress" aria-hidden="true">
+                <span id="excellentDaysProgress"></span>
+              </div>
+              <div class="excellent-days-actions">
+                <button id="markNextExcellentDay" type="button">تعليم اليوم التالي</button>
+                <button id="clearExcellentDays" type="button">مسح التحديد</button>
+              </div>
+              <div class="excellent-days-grid" id="excellentDaysGrid" aria-label="أيام الأعمال الممتازة من 1 إلى 140"></div>
+            </section>
           </section>
 
           <section class="view" data-page="portfolio">
@@ -538,6 +560,6 @@
       <a href="teacher-portfolio-kuwait.html">ملف إنجاز المعلم في الكويت</a>
     </footer>
 
-    <script type="module" src="app.js?v=27"></script>
+    <script type="module" src="app.js?v=28"></script>
   </body>
 </html>
