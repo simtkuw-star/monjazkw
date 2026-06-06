@@ -6,7 +6,6 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-  updateProfile,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import {
   doc,
@@ -288,15 +287,6 @@ function createLocalSession(name) {
   };
 }
 
-function loginNameToEmail(name) {
-  if (name.includes("@")) return name;
-  const encodedName = Array.from(name.trim() || "teacher")
-    .map((letter) => letter.charCodeAt(0).toString(36))
-    .join("")
-    .slice(0, 48);
-  return `${encodedName}@monjazkw.local`;
-}
-
 function firebaseStateRef() {
   if (!currentUser?.id || currentUser.mode === "local") return null;
   return doc(db, "users", currentUser.id, "private", "state");
@@ -556,6 +546,13 @@ function updateAuthUI() {
 }
 
 function openLogin() {
+  const emailLabel = usernameInput.closest("label");
+  if (emailLabel?.firstChild) {
+    emailLabel.firstChild.nodeValue = "البريد الإلكتروني";
+  }
+  usernameInput.type = "email";
+  usernameInput.autocomplete = "email";
+  usernameInput.placeholder = "example@moe.edu.kw";
   if (passwordLabel?.firstChild) {
     passwordLabel.firstChild.nodeValue = "الرقم السري";
   }
@@ -566,9 +563,8 @@ function openLogin() {
   window.setTimeout(() => usernameInput.focus(), 80);
 }
 
-async function loginUser(name, password) {
+async function loginUser(email, password) {
   try {
-    const email = loginNameToEmail(name);
     let credential;
 
     try {
@@ -583,14 +579,10 @@ async function loginUser(name, password) {
 
     currentUser = {
       id: credential.user.uid,
-      name,
+      name: email,
       email,
       loginAt: new Date().toISOString(),
     };
-
-    if (credential.user.displayName !== name) {
-      await updateProfile(credential.user, { displayName: name }).catch(() => {});
-    }
   } catch (error) {
     if (["auth/email-already-in-use", "auth/wrong-password"].includes(error.code)) {
       loginError.textContent = "البيانات غير صحيحة أو الحساب موجود بكلمة مرور مختلفة.";
@@ -606,7 +598,7 @@ async function loginUser(name, password) {
       try {
         const data = await apiRequest("/api/login", {
           method: "POST",
-          body: JSON.stringify({ name, password }),
+          body: JSON.stringify({ name: email, password }),
         });
         currentUser = data.user;
       } catch {
@@ -787,11 +779,11 @@ loginButton.addEventListener("click", () => {
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const name = usernameInput.value.trim();
+  const email = usernameInput.value.trim();
   const password = passwordInput.value.trim();
 
-  if (!name) {
-    loginError.textContent = "اكتب اسم المستخدم أولًا.";
+  if (!email || !email.includes("@")) {
+    loginError.textContent = "اكتب البريد الإلكتروني بشكل صحيح.";
     usernameInput.focus();
     return;
   }
@@ -802,7 +794,7 @@ loginForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  await loginUser(name, password);
+  await loginUser(email, password);
 });
 
 cancelLogin.addEventListener("click", () => {
