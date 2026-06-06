@@ -3223,3 +3223,25 @@ body {
     grid-template-columns: repeat(7, minmax(28px, 1fr));
   }
 }
+.sidebar {
+  grid-template-rows: auto auto auto auto !important;
+  align-content: start;
+}
+
+.sidebar-user {
+  align-self: start;
+  margin-top: 8px;
+}
+
+.sidebar-user button {
+  margin-top: 10px;
+}
+
+.sidebar nav {
+  align-self: start;
+}
+
+.back-button {
+  align-self: start;
+  margin-top: 12px;
+}
