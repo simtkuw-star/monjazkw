@@ -9,7 +9,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/private/{docId} {
+    match /users/{userId}/{section}/{docId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
@@ -20,4 +20,9 @@ service cloud.firestore {
 }
 ```
 
-هذه القواعد تجعل كل مستخدم يرى ويحفظ بياناته فقط.
+هذه القواعد تجعل كل مستخدم يرى ويحفظ بياناته فقط، وتسمح بأقسام منظمة مثل:
+
+- `profile`
+- `achievements`
+- `calendarEvents`
+- `private` للبيانات القديمة أثناء النقل فقط

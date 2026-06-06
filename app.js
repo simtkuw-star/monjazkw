@@ -8,11 +8,14 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   serverTimestamp,
   setDoc,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const loginButton = document.querySelector("#loginButton");
@@ -287,27 +290,61 @@ function createLocalSession(name) {
   };
 }
 
-function firebaseStateRef() {
+function getRemoteRefs() {
   if (!currentUser?.id || currentUser.mode === "local") return null;
-  return doc(db, "users", currentUser.id, "private", "state");
+  return {
+    profile: doc(db, "users", currentUser.id, "profile", "main"),
+    achievements: collection(db, "users", currentUser.id, "achievements"),
+    calendarEvents: collection(db, "users", currentUser.id, "calendarEvents"),
+    legacyState: doc(db, "users", currentUser.id, "private", "state"),
+  };
+}
+
+async function syncRemoteCollection(batch, collectionRef, items) {
+  const cleanItems = cleanStoredData(items).map((item) => ({
+    ...item,
+    id: String(item.id || crypto.randomUUID()),
+  }));
+  const nextIds = new Set(cleanItems.map((item) => item.id));
+  const existingDocs = await getDocs(collectionRef);
+
+  existingDocs.forEach((snapshot) => {
+    if (!nextIds.has(snapshot.id)) {
+      batch.delete(snapshot.ref);
+    }
+  });
+
+  cleanItems.forEach((item) => {
+    batch.set(
+      doc(collectionRef, item.id),
+      {
+        ...item,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  });
+
+  return cleanItems;
 }
 
 async function saveRemoteState() {
-  const stateRef = firebaseStateRef();
-  if (!stateRef) return;
-  await setDoc(
-    stateRef,
+  const refs = getRemoteRefs();
+  if (!refs) return;
+
+  const batch = writeBatch(db);
+  batch.set(
+    refs.profile,
     {
-      profile: {
-        name: currentUser.name,
-        email: currentUser.email,
-      },
-      achievements,
-      calendarEvents,
+      email: currentUser.email,
+      name: currentUser.name,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
   );
+  achievements = await syncRemoteCollection(batch, refs.achievements, achievements);
+  calendarEvents = await syncRemoteCollection(batch, refs.calendarEvents, calendarEvents);
+  await batch.commit();
 }
 
 function persistAchievements() {
@@ -322,24 +359,49 @@ function persistAchievements() {
 }
 
 async function loadRemoteState() {
-  const stateRef = firebaseStateRef();
-  if (stateRef) {
+  const refs = getRemoteRefs();
+  if (refs) {
     try {
-      const snapshot = await getDoc(stateRef);
-      if (snapshot.exists()) {
-        const state = cleanStoredData(snapshot.data());
-        if (Array.isArray(state.achievements)) {
-          achievements = state.achievements;
-          localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+      const [profileSnapshot, achievementsSnapshot, calendarSnapshot] = await Promise.all([
+        getDoc(refs.profile),
+        getDocs(refs.achievements),
+        getDocs(refs.calendarEvents),
+      ]);
+      const remoteAchievements = achievementsSnapshot.docs.map((snapshot) => cleanStoredData(snapshot.data()));
+      const remoteCalendarEvents = calendarSnapshot.docs.map((snapshot) => cleanStoredData(snapshot.data()));
+
+      if (profileSnapshot.exists()) {
+        const profile = cleanStoredData(profileSnapshot.data());
+        currentUser = {
+          ...currentUser,
+          name: profile.name || currentUser.name,
+          email: profile.email || currentUser.email,
+        };
+        localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
+        updateAuthUI();
+      }
+
+      if (remoteAchievements.length || remoteCalendarEvents.length) {
+        let legacyState = null;
+        if (!remoteAchievements.length || !remoteCalendarEvents.length) {
+          const legacySnapshot = await getDoc(refs.legacyState);
+          legacyState = legacySnapshot.exists() ? cleanStoredData(legacySnapshot.data()) : null;
         }
-        if (Array.isArray(state.calendarEvents)) {
-          calendarEvents = state.calendarEvents;
-          localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
-        }
+        achievements = remoteAchievements.length ? remoteAchievements : legacyState?.achievements || achievements;
+        calendarEvents = remoteCalendarEvents.length ? remoteCalendarEvents : legacyState?.calendarEvents || calendarEvents;
         await saveRemoteState();
       } else {
+        const legacySnapshot = await getDoc(refs.legacyState);
+        if (legacySnapshot.exists()) {
+          const legacyState = cleanStoredData(legacySnapshot.data());
+          if (Array.isArray(legacyState.achievements)) achievements = legacyState.achievements;
+          if (Array.isArray(legacyState.calendarEvents)) calendarEvents = legacyState.calendarEvents;
+        }
         await saveRemoteState();
       }
+
+      localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+      localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
     } catch {}
     renderPortfolio(activePortfolio);
     renderCalendar();
