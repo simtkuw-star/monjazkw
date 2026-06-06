@@ -175,6 +175,11 @@ let calendarEvents = JSON.parse(
     ]),
 );
 
+achievements = cleanStoredData(achievements);
+calendarEvents = cleanStoredData(calendarEvents);
+localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
+
 const calendarTypeLabels = {
   meeting: "اجتماع فني",
   lesson: "درس ريادي",
@@ -205,6 +210,55 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function repairMojibake(value) {
+  if (typeof value !== "string" || !/[ØÙÃÂâ]/.test(value)) return value;
+
+  const cp1252Bytes = {
+    "€": 0x80,
+    "‚": 0x82,
+    "ƒ": 0x83,
+    "„": 0x84,
+    "…": 0x85,
+    "†": 0x86,
+    "‡": 0x87,
+    "ˆ": 0x88,
+    "‰": 0x89,
+    "Š": 0x8a,
+    "‹": 0x8b,
+    "Œ": 0x8c,
+    "Ž": 0x8e,
+    "‘": 0x91,
+    "’": 0x92,
+    "“": 0x93,
+    "”": 0x94,
+    "•": 0x95,
+    "–": 0x96,
+    "—": 0x97,
+    "˜": 0x98,
+    "™": 0x99,
+    "š": 0x9a,
+    "›": 0x9b,
+    "œ": 0x9c,
+    "ž": 0x9e,
+    "Ÿ": 0x9f,
+  };
+
+  try {
+    const bytes = Uint8Array.from(Array.from(value), (letter) => cp1252Bytes[letter] ?? (letter.charCodeAt(0) & 255));
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes).replaceAll("•", " - ");
+  } catch {
+    return value.replaceAll("â€¢", " - ");
+  }
+}
+
+function cleanStoredData(value) {
+  if (Array.isArray(value)) return value.map(cleanStoredData);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cleanStoredData(item)]));
+  }
+  return repairMojibake(value);
 }
 
 async function apiRequest(path, options = {}) {
@@ -283,7 +337,7 @@ async function loadRemoteState() {
     try {
       const snapshot = await getDoc(stateRef);
       if (snapshot.exists()) {
-        const state = snapshot.data();
+        const state = cleanStoredData(snapshot.data());
         if (Array.isArray(state.achievements)) {
           achievements = state.achievements;
           localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
@@ -292,6 +346,7 @@ async function loadRemoteState() {
           calendarEvents = state.calendarEvents;
           localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
         }
+        await saveRemoteState();
       } else {
         await saveRemoteState();
       }
@@ -312,11 +367,11 @@ async function loadRemoteState() {
   try {
     const state = await apiRequest("/api/state");
     if (Array.isArray(state.achievements) && state.achievements.length) {
-      achievements = state.achievements;
+      achievements = cleanStoredData(state.achievements);
       localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
     }
     if (Array.isArray(state.calendarEvents) && state.calendarEvents.length) {
-      calendarEvents = state.calendarEvents;
+      calendarEvents = cleanStoredData(state.calendarEvents);
       localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
     } else if (calendarEvents.length) {
       saveCalendarEvents();
