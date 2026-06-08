@@ -75,13 +75,18 @@ const excellentDaysCount = document.querySelector("#excellentDaysCount");
 const excellentDaysProgress = document.querySelector("#excellentDaysProgress");
 const markNextExcellentDay = document.querySelector("#markNextExcellentDay");
 const clearExcellentDays = document.querySelector("#clearExcellentDays");
+const sickLeaveTerm = document.querySelector("#sickLeaveTerm");
 const sickLeaveDate = document.querySelector("#sickLeaveDate");
 const addSickLeaveDay = document.querySelector("#addSickLeaveDay");
 const sickLeaveList = document.querySelector("#sickLeaveList");
 const sickLeaveUsed = document.querySelector("#sickLeaveUsed");
 const sickLeaveRemaining = document.querySelector("#sickLeaveRemaining");
-const casualLeaveTermOne = document.querySelector("#casualLeaveTermOne");
-const casualLeaveTermTwo = document.querySelector("#casualLeaveTermTwo");
+const casualLeaveTerm = document.querySelector("#casualLeaveTerm");
+const casualLeaveTermDays = document.querySelector("#casualLeaveTermDays");
+const casualSelectedLabel = document.querySelector("#casualSelectedLabel");
+const casualSelectedRemaining = document.querySelector("#casualSelectedRemaining");
+const casualTermOneCount = document.querySelector("#casualTermOneCount");
+const casualTermTwoCount = document.querySelector("#casualTermTwoCount");
 const totalLeaveDays = document.querySelector("#totalLeaveDays");
 const eventDialog = document.querySelector("#eventDialog");
 const eventDialogType = document.querySelector("#eventDialogType");
@@ -319,6 +324,7 @@ function normalizeLeaveStats(raw = {}) {
       id: record?.id || `sick-${Date.now()}-${index}`,
       date,
       dayName: record?.dayName || getArabicWeekday(date),
+      term: record?.term === "term2" ? "term2" : "term1",
     });
   });
 
@@ -801,10 +807,12 @@ function saveExcellentDays() {
 }
 
 function saveLeaveStats() {
+  const selectedCasualTerm = casualLeaveTerm?.value === "term2" ? "term2" : "term1";
+  const selectedCasualDays = Math.min(CASUAL_LEAVE_TERM_LIMIT, Math.max(0, Number(casualLeaveTermDays?.value) || 0));
   leaveStats = normalizeLeaveStats({
     ...leaveStats,
-    casualTermOne: Math.min(CASUAL_LEAVE_TERM_LIMIT, Math.max(0, Number(casualLeaveTermOne?.value) || 0)),
-    casualTermTwo: Math.min(CASUAL_LEAVE_TERM_LIMIT, Math.max(0, Number(casualLeaveTermTwo?.value) || 0)),
+    casualTermOne: selectedCasualTerm === "term1" ? selectedCasualDays : leaveStats.casualTermOne,
+    casualTermTwo: selectedCasualTerm === "term2" ? selectedCasualDays : leaveStats.casualTermTwo,
   });
   localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
   saveRemoteState().catch(() => {});
@@ -831,6 +839,7 @@ function addSickLeaveRecord() {
     id: crypto.randomUUID(),
     date,
     dayName: getArabicWeekday(date),
+    term: sickLeaveTerm?.value === "term2" ? "term2" : "term1",
   });
   if (sickLeaveDate) sickLeaveDate.value = "";
   if (calendarStatus) calendarStatus.textContent = "تمت إضافة يوم طبي.";
@@ -843,31 +852,38 @@ function removeSickLeaveRecord(recordId) {
 }
 
 function renderLeaveStats() {
-  if (!casualLeaveTermOne || !casualLeaveTermTwo || !totalLeaveDays) return;
+  if (!casualLeaveTermDays || !totalLeaveDays) return;
   leaveStats = normalizeLeaveStats(leaveStats);
   const sickCount = leaveStats.sickRecords.length;
   const casualTotal = leaveStats.casualTermOne + leaveStats.casualTermTwo;
+  const selectedSickTerm = sickLeaveTerm?.value === "term2" ? "term2" : "term1";
+  const selectedCasualTerm = casualLeaveTerm?.value === "term2" ? "term2" : "term1";
+  const selectedCasualValue = selectedCasualTerm === "term1" ? leaveStats.casualTermOne : leaveStats.casualTermTwo;
   if (sickLeaveUsed) sickLeaveUsed.textContent = sickCount;
   if (sickLeaveRemaining) sickLeaveRemaining.textContent = Math.max(0, SICK_LEAVE_LIMIT - sickCount);
-  casualLeaveTermOne.value = leaveStats.casualTermOne;
-  casualLeaveTermTwo.value = leaveStats.casualTermTwo;
+  if (casualSelectedLabel) casualSelectedLabel.textContent = selectedCasualTerm === "term1" ? "أيام الكورس الأول" : "أيام الكورس الثاني";
+  if (casualLeaveTermDays) casualLeaveTermDays.value = selectedCasualValue;
+  if (casualSelectedRemaining) casualSelectedRemaining.textContent = Math.max(0, CASUAL_LEAVE_TERM_LIMIT - selectedCasualValue);
+  if (casualTermOneCount) casualTermOneCount.textContent = leaveStats.casualTermOne;
+  if (casualTermTwoCount) casualTermTwoCount.textContent = leaveStats.casualTermTwo;
   totalLeaveDays.textContent = sickCount + casualTotal;
   if (sickLeaveList) {
-    sickLeaveList.innerHTML = leaveStats.sickRecords.length
-      ? leaveStats.sickRecords
+    const visibleSickRecords = leaveStats.sickRecords.filter((record) => (record.term === "term2" ? "term2" : "term1") === selectedSickTerm);
+    sickLeaveList.innerHTML = visibleSickRecords.length
+      ? visibleSickRecords
           .map(
             (record) => `
               <article>
                 <div>
                   <strong>${escapeHtml(record.dayName || getArabicWeekday(record.date) || "يوم طبي")}</strong>
-                  <span>${escapeHtml(formatLeaveDate(record.date))}</span>
+                  <span>${escapeHtml(formatLeaveDate(record.date))} - ${record.term === "term2" ? "الكورس الثاني" : "الكورس الأول"}</span>
                 </div>
                 <button type="button" data-remove-sick-leave="${escapeHtml(record.id)}">حذف</button>
               </article>
             `,
           )
           .join("")
-      : '<p>لا توجد طبيات مسجلة.</p>';
+      : `<p>لا توجد طبيات مسجلة في ${selectedSickTerm === "term2" ? "الكورس الثاني" : "الكورس الأول"}.</p>`;
   }
 }
 
@@ -1505,9 +1521,9 @@ clearExcellentDays?.addEventListener("click", () => {
   renderExcellentDays();
 });
 
-[casualLeaveTermOne, casualLeaveTermTwo].forEach((input) => {
-  input?.addEventListener("input", saveLeaveStats);
-});
+casualLeaveTerm?.addEventListener("change", renderLeaveStats);
+casualLeaveTermDays?.addEventListener("input", saveLeaveStats);
+sickLeaveTerm?.addEventListener("change", renderLeaveStats);
 addSickLeaveDay?.addEventListener("click", addSickLeaveRecord);
 sickLeaveList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-remove-sick-leave]");

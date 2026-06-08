@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=10" />
+    <link rel="stylesheet" href="styles.css?v=11" />
   </head>
   <body>
     <div class="scene">
@@ -261,16 +261,23 @@
                 <button id="markNextExcellentDay" type="button">تعليم اليوم التالي</button>
                 <button id="clearExcellentDays" type="button">مسح التحديد</button>
               </div>
-              <div class="leave-summary">
-                <section class="sick-leave-card">
-                  <div class="sick-leave-head">
+              <div class="leave-summary leave-cards-grid">
+                <section class="leave-card sick-leave-card">
+                  <div class="leave-card-top">
                     <div>
-                      <span>الإجازة المرضية</span>
-                      <strong>سجل الطبيات للسنة الدراسية</strong>
-                      <small>الكورسان مجموعهما 15 يوم</small>
+                      <span>الإجازة الطبية</span>
+                      <strong>سجل الطبيات</strong>
+                      <small>15 يوم للسنة الدراسية كاملة</small>
                     </div>
                     <b><span id="sickLeaveUsed">0</span><small>من 15</small></b>
                   </div>
+                  <label class="leave-select-row">
+                    <span>الكورس</span>
+                    <select id="sickLeaveTerm">
+                      <option value="term1">الكورس الأول</option>
+                      <option value="term2">الكورس الثاني</option>
+                    </select>
+                  </label>
                   <div class="sick-leave-entry">
                     <label>
                       <span>تاريخ الطبية</span>
@@ -278,36 +285,44 @@
                     </label>
                     <button id="addSickLeaveDay" type="button">إضافة يوم</button>
                   </div>
+                  <div class="leave-card-meta">
+                    <span>المتبقي من الطبيات</span>
+                    <strong id="sickLeaveRemaining">15</strong>
+                  </div>
                   <div class="sick-leave-list" id="sickLeaveList"></div>
                 </section>
 
-                <div class="leave-side-cards">
-                  <article class="leave-metric-card">
-                    <span>المتبقي من الطبيات</span>
-                    <strong id="sickLeaveRemaining">15</strong>
-                    <small>يوم متاح</small>
-                  </article>
-                  <section class="leave-metric-card casual-leave-card">
-                    <span>الإجازة العرضية</span>
-                    <div class="casual-term-grid">
-                      <label>
-                        <small>الكورس الأول</small>
-                        <input id="casualLeaveTermOne" type="number" min="0" max="2" inputmode="numeric" value="0" />
-                        <em>من 2</em>
-                      </label>
-                      <label>
-                        <small>الكورس الثاني</small>
-                        <input id="casualLeaveTermTwo" type="number" min="0" max="2" inputmode="numeric" value="0" />
-                        <em>من 2</em>
-                      </label>
+                <section class="leave-card casual-leave-card">
+                  <div class="leave-card-top">
+                    <div>
+                      <span>الإجازة العرضية</span>
+                      <strong>متابعة العرضي</strong>
+                      <small>لكل كورس يومين فقط</small>
                     </div>
-                  </section>
-                  <article class="leave-metric-card leave-total-card">
-                    <span>إجمالي الغياب المسجل</span>
-                    <strong id="totalLeaveDays">0</strong>
-                    <small>طبية + عرضية</small>
-                  </article>
-                </div>
+                    <b><span id="totalLeaveDays">0</span><small>إجمالي</small></b>
+                  </div>
+                  <label class="leave-select-row">
+                    <span>الكورس</span>
+                    <select id="casualLeaveTerm">
+                      <option value="term1">الكورس الأول</option>
+                      <option value="term2">الكورس الثاني</option>
+                    </select>
+                  </label>
+                  <div class="casual-term-control">
+                    <label>
+                      <span id="casualSelectedLabel">أيام الكورس الأول</span>
+                      <input id="casualLeaveTermDays" type="number" min="0" max="2" inputmode="numeric" value="0" />
+                    </label>
+                    <article>
+                      <span>المتبقي</span>
+                      <strong id="casualSelectedRemaining">2</strong>
+                    </article>
+                  </div>
+                  <div class="casual-term-summary">
+                    <article><span>الكورس الأول</span><strong id="casualTermOneCount">0</strong><small>من 2</small></article>
+                    <article><span>الكورس الثاني</span><strong id="casualTermTwoCount">0</strong><small>من 2</small></article>
+                  </div>
+                </section>
               </div>
               <div class="excellent-days-grid" id="excellentDaysGrid" aria-label="أيام الأعمال الممتازة من 1 إلى 140"></div>
             </section>
@@ -608,6 +623,6 @@
       <a href="teacher-portfolio-kuwait.html">ملف إنجاز المعلم في الكويت</a>
     </footer>
 
-    <script type="module" src="app.js?v=31"></script>
+    <script type="module" src="app.js?v=32"></script>
   </body>
 </html>

@@ -3492,6 +3492,202 @@ body {
   background: linear-gradient(145deg, var(--brand-navy), #263752);
 }
 
+.leave-cards-grid {
+  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  align-items: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.leave-card {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 12px;
+  min-height: 300px;
+  padding: 18px;
+  border: 1px solid rgba(30, 42, 68, 0.1);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16px 34px rgba(30, 42, 68, 0.08);
+}
+
+.leave-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.leave-card-top div {
+  display: grid;
+  gap: 4px;
+}
+
+.leave-card-top span,
+.leave-select-row span,
+.casual-term-control span,
+.leave-card-meta span,
+.casual-term-summary span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.leave-card-top strong {
+  color: var(--brand-navy);
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.leave-card-top small,
+.casual-term-summary small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.leave-card-top > b {
+  display: grid;
+  place-items: center;
+  min-width: 78px;
+  min-height: 72px;
+  border-radius: 18px;
+  color: white;
+  background: linear-gradient(145deg, var(--brand-navy), #273957);
+  box-shadow: 0 14px 26px rgba(30, 42, 68, 0.16);
+}
+
+.leave-card-top > b span {
+  color: white;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.leave-card-top > b small {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+}
+
+.leave-select-row {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 14px;
+  background: #f5f7f8;
+}
+
+.leave-select-row select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #dfe6ec;
+  border-radius: 12px;
+  color: var(--brand-navy);
+  background: white;
+  font: inherit;
+  font-weight: 950;
+  padding: 0 12px;
+}
+
+.leave-card .sick-leave-entry {
+  grid-column: auto;
+  grid-row: auto;
+  padding: 0;
+}
+
+.leave-card .sick-leave-list {
+  grid-column: auto;
+  grid-template-columns: 1fr;
+  max-height: 128px;
+}
+
+.leave-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(77, 182, 172, 0.22);
+  border-radius: 14px;
+  background: rgba(77, 182, 172, 0.08);
+}
+
+.leave-card-meta strong {
+  min-width: 54px;
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(145deg, var(--brand-teal), #2c756f);
+  font-size: 1.25rem;
+}
+
+.casual-leave-card .leave-card-top > b {
+  background: linear-gradient(145deg, var(--brand-gold), #d4b03b);
+}
+
+.casual-term-control {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) 116px;
+  gap: 10px;
+}
+
+.casual-term-control label,
+.casual-term-control article {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid #e1e7ec;
+  border-radius: 15px;
+  background: #f8fafb;
+}
+
+.casual-term-control input,
+.casual-term-control strong {
+  min-height: 46px;
+  border: 0;
+  border-radius: 13px;
+  color: var(--brand-navy);
+  background: white;
+  text-align: center;
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 950;
+}
+
+.casual-term-control strong {
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(145deg, var(--brand-navy), #273957);
+}
+
+.casual-term-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-self: end;
+}
+
+.casual-term-summary article {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  border-radius: 15px;
+  background: rgba(250, 247, 238, 0.85);
+}
+
+.casual-term-summary strong {
+  color: var(--brand-navy);
+  font-size: 1.3rem;
+  font-weight: 950;
+}
+
 @media (max-width: 900px) {
   .excellent-days-head {
     align-items: stretch;
@@ -3519,6 +3715,10 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .leave-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
   .excellent-days-grid {
     grid-template-columns: repeat(20, minmax(20px, 1fr));
   }
@@ -3536,6 +3736,9 @@ body {
   .sick-leave-entry,
   .sick-leave-list,
   .leave-side-cards,
+  .leave-select-row,
+  .casual-term-control,
+  .casual-term-summary,
   .casual-term-grid {
     grid-template-columns: 1fr;
   }
