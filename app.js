@@ -75,7 +75,11 @@ const excellentDaysCount = document.querySelector("#excellentDaysCount");
 const excellentDaysProgress = document.querySelector("#excellentDaysProgress");
 const markNextExcellentDay = document.querySelector("#markNextExcellentDay");
 const clearExcellentDays = document.querySelector("#clearExcellentDays");
-const sickLeaveDays = document.querySelector("#sickLeaveDays");
+const sickLeaveDate = document.querySelector("#sickLeaveDate");
+const addSickLeaveDay = document.querySelector("#addSickLeaveDay");
+const sickLeaveList = document.querySelector("#sickLeaveList");
+const sickLeaveUsed = document.querySelector("#sickLeaveUsed");
+const sickLeaveRemaining = document.querySelector("#sickLeaveRemaining");
 const casualLeaveDays = document.querySelector("#casualLeaveDays");
 const totalLeaveDays = document.querySelector("#totalLeaveDays");
 const eventDialog = document.querySelector("#eventDialog");
@@ -185,16 +189,13 @@ let calendarEvents = JSON.parse(
     ]),
 );
 let excellentDays = JSON.parse(localStorage.getItem("munjaz.excellentDays") || "[]");
-let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sick":0,"casual":0}');
+const SICK_LEAVE_LIMIT = 15;
+let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sickRecords":[],"casual":0}');
 
 achievements = cleanStoredData(achievements);
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
-leaveStats = cleanStoredData(leaveStats);
-leaveStats = {
-  sick: Math.max(0, Number(leaveStats.sick) || 0),
-  casual: Math.max(0, Number(leaveStats.casual) || 0),
-};
+leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
 localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
@@ -279,6 +280,49 @@ function cleanStoredData(value) {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cleanStoredData(item)]));
   }
   return repairMojibake(value);
+}
+
+function getArabicWeekday(dateKey) {
+  if (!dateKey) return "";
+  const date = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("ar", { weekday: "long" });
+}
+
+function formatLeaveDate(dateKey) {
+  if (!dateKey) return "بدون تاريخ";
+  const date = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return date.toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function normalizeLeaveStats(raw = {}) {
+  const legacySickCount = Math.min(SICK_LEAVE_LIMIT, Math.max(0, Number(raw.sick) || 0));
+  const legacyRecords = Array.from({ length: legacySickCount }, (_, index) => ({
+    id: `legacy-${index + 1}`,
+    date: "",
+    dayName: "",
+  }));
+  const records = Array.isArray(raw.sickRecords) ? raw.sickRecords : legacyRecords;
+  const uniqueRecords = [];
+  const seen = new Set();
+
+  records.forEach((record, index) => {
+    const date = typeof record?.date === "string" ? record.date : "";
+    const key = date || `legacy-${index + 1}`;
+    if (seen.has(key) || uniqueRecords.length >= SICK_LEAVE_LIMIT) return;
+    seen.add(key);
+    uniqueRecords.push({
+      id: record?.id || `sick-${Date.now()}-${index}`,
+      date,
+      dayName: record?.dayName || getArabicWeekday(date),
+    });
+  });
+
+  return {
+    sickRecords: uniqueRecords,
+    casual: Math.max(0, Number(raw.casual) || 0),
+  };
 }
 
 async function apiRequest(path, options = {}) {
@@ -402,10 +446,7 @@ async function loadRemoteState() {
           localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
         }
         if (profile.leaveStats && typeof profile.leaveStats === "object") {
-          leaveStats = {
-            sick: Math.max(0, Number(profile.leaveStats.sick) || 0),
-            casual: Math.max(0, Number(profile.leaveStats.casual) || 0),
-          };
+          leaveStats = normalizeLeaveStats(profile.leaveStats);
           localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
         }
         localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
@@ -699,7 +740,7 @@ async function loginUser(email, password) {
         });
         currentUser = data.user;
       } catch {
-        currentUser = createLocalSession(name);
+        currentUser = createLocalSession(email);
       }
     } else {
       loginError.textContent = "تعذر الاتصال بفايربيس. تأكدي من تفعيل Authentication و Firestore.";
@@ -753,20 +794,71 @@ function saveExcellentDays() {
 }
 
 function saveLeaveStats() {
-  leaveStats = {
-    sick: Math.max(0, Number(sickLeaveDays?.value) || 0),
+  leaveStats = normalizeLeaveStats({
+    ...leaveStats,
     casual: Math.max(0, Number(casualLeaveDays?.value) || 0),
-  };
+  });
   localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
   saveRemoteState().catch(() => {});
   renderLeaveStats();
 }
 
+function addSickLeaveRecord() {
+  const date = sickLeaveDate?.value || "";
+  if (!date) {
+    if (calendarStatus) calendarStatus.textContent = "اختر تاريخ الطبية أولاً.";
+    return;
+  }
+  leaveStats = normalizeLeaveStats(leaveStats);
+  if (leaveStats.sickRecords.some((record) => record.date === date)) {
+    if (calendarStatus) calendarStatus.textContent = "هذا اليوم مسجل مسبقاً في الطبيات.";
+    return;
+  }
+  if (leaveStats.sickRecords.length >= SICK_LEAVE_LIMIT) {
+    if (calendarStatus) calendarStatus.textContent = "تم الوصول للحد السنوي للطبيات: 15 يوم.";
+    return;
+  }
+
+  leaveStats.sickRecords.push({
+    id: crypto.randomUUID(),
+    date,
+    dayName: getArabicWeekday(date),
+  });
+  if (sickLeaveDate) sickLeaveDate.value = "";
+  if (calendarStatus) calendarStatus.textContent = "تمت إضافة يوم طبي.";
+  saveLeaveStats();
+}
+
+function removeSickLeaveRecord(recordId) {
+  leaveStats.sickRecords = leaveStats.sickRecords.filter((record) => record.id !== recordId);
+  saveLeaveStats();
+}
+
 function renderLeaveStats() {
-  if (!sickLeaveDays || !casualLeaveDays || !totalLeaveDays) return;
-  sickLeaveDays.value = leaveStats.sick;
+  if (!casualLeaveDays || !totalLeaveDays) return;
+  leaveStats = normalizeLeaveStats(leaveStats);
+  const sickCount = leaveStats.sickRecords.length;
+  if (sickLeaveUsed) sickLeaveUsed.textContent = sickCount;
+  if (sickLeaveRemaining) sickLeaveRemaining.textContent = Math.max(0, SICK_LEAVE_LIMIT - sickCount);
   casualLeaveDays.value = leaveStats.casual;
-  totalLeaveDays.textContent = leaveStats.sick + leaveStats.casual;
+  totalLeaveDays.textContent = sickCount + leaveStats.casual;
+  if (sickLeaveList) {
+    sickLeaveList.innerHTML = leaveStats.sickRecords.length
+      ? leaveStats.sickRecords
+          .map(
+            (record) => `
+              <article>
+                <div>
+                  <strong>${escapeHtml(record.dayName || getArabicWeekday(record.date) || "يوم طبي")}</strong>
+                  <span>${escapeHtml(formatLeaveDate(record.date))}</span>
+                </div>
+                <button type="button" data-remove-sick-leave="${escapeHtml(record.id)}">حذف</button>
+              </article>
+            `,
+          )
+          .join("")
+      : '<p>لا توجد طبيات مسجلة.</p>';
+  }
 }
 
 function renderExcellentDays() {
@@ -1403,8 +1495,12 @@ clearExcellentDays?.addEventListener("click", () => {
   renderExcellentDays();
 });
 
-[sickLeaveDays, casualLeaveDays].forEach((input) => {
-  input?.addEventListener("input", saveLeaveStats);
+casualLeaveDays?.addEventListener("input", saveLeaveStats);
+addSickLeaveDay?.addEventListener("click", addSickLeaveRecord);
+sickLeaveList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-sick-leave]");
+  if (!button) return;
+  removeSickLeaveRecord(button.dataset.removeSickLeave);
 });
 
 ideaSearches.forEach((input) => {
