@@ -80,7 +80,8 @@ const addSickLeaveDay = document.querySelector("#addSickLeaveDay");
 const sickLeaveList = document.querySelector("#sickLeaveList");
 const sickLeaveUsed = document.querySelector("#sickLeaveUsed");
 const sickLeaveRemaining = document.querySelector("#sickLeaveRemaining");
-const casualLeaveDays = document.querySelector("#casualLeaveDays");
+const casualLeaveTermOne = document.querySelector("#casualLeaveTermOne");
+const casualLeaveTermTwo = document.querySelector("#casualLeaveTermTwo");
 const totalLeaveDays = document.querySelector("#totalLeaveDays");
 const eventDialog = document.querySelector("#eventDialog");
 const eventDialogType = document.querySelector("#eventDialogType");
@@ -190,6 +191,7 @@ let calendarEvents = JSON.parse(
 );
 let excellentDays = JSON.parse(localStorage.getItem("munjaz.excellentDays") || "[]");
 const SICK_LEAVE_LIMIT = 15;
+const CASUAL_LEAVE_TERM_LIMIT = 2;
 let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sickRecords":[],"casual":0}');
 
 achievements = cleanStoredData(achievements);
@@ -298,6 +300,7 @@ function formatLeaveDate(dateKey) {
 
 function normalizeLeaveStats(raw = {}) {
   const legacySickCount = Math.min(SICK_LEAVE_LIMIT, Math.max(0, Number(raw.sick) || 0));
+  const legacyCasual = Math.max(0, Number(raw.casual) || 0);
   const legacyRecords = Array.from({ length: legacySickCount }, (_, index) => ({
     id: `legacy-${index + 1}`,
     date: "",
@@ -321,7 +324,11 @@ function normalizeLeaveStats(raw = {}) {
 
   return {
     sickRecords: uniqueRecords,
-    casual: Math.max(0, Number(raw.casual) || 0),
+    casualTermOne: Math.min(CASUAL_LEAVE_TERM_LIMIT, Math.max(0, Number(raw.casualTermOne ?? Math.min(legacyCasual, 2)) || 0)),
+    casualTermTwo: Math.min(
+      CASUAL_LEAVE_TERM_LIMIT,
+      Math.max(0, Number(raw.casualTermTwo ?? Math.max(0, legacyCasual - 2)) || 0),
+    ),
   };
 }
 
@@ -796,7 +803,8 @@ function saveExcellentDays() {
 function saveLeaveStats() {
   leaveStats = normalizeLeaveStats({
     ...leaveStats,
-    casual: Math.max(0, Number(casualLeaveDays?.value) || 0),
+    casualTermOne: Math.min(CASUAL_LEAVE_TERM_LIMIT, Math.max(0, Number(casualLeaveTermOne?.value) || 0)),
+    casualTermTwo: Math.min(CASUAL_LEAVE_TERM_LIMIT, Math.max(0, Number(casualLeaveTermTwo?.value) || 0)),
   });
   localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
   saveRemoteState().catch(() => {});
@@ -835,13 +843,15 @@ function removeSickLeaveRecord(recordId) {
 }
 
 function renderLeaveStats() {
-  if (!casualLeaveDays || !totalLeaveDays) return;
+  if (!casualLeaveTermOne || !casualLeaveTermTwo || !totalLeaveDays) return;
   leaveStats = normalizeLeaveStats(leaveStats);
   const sickCount = leaveStats.sickRecords.length;
+  const casualTotal = leaveStats.casualTermOne + leaveStats.casualTermTwo;
   if (sickLeaveUsed) sickLeaveUsed.textContent = sickCount;
   if (sickLeaveRemaining) sickLeaveRemaining.textContent = Math.max(0, SICK_LEAVE_LIMIT - sickCount);
-  casualLeaveDays.value = leaveStats.casual;
-  totalLeaveDays.textContent = sickCount + leaveStats.casual;
+  casualLeaveTermOne.value = leaveStats.casualTermOne;
+  casualLeaveTermTwo.value = leaveStats.casualTermTwo;
+  totalLeaveDays.textContent = sickCount + casualTotal;
   if (sickLeaveList) {
     sickLeaveList.innerHTML = leaveStats.sickRecords.length
       ? leaveStats.sickRecords
@@ -1495,7 +1505,9 @@ clearExcellentDays?.addEventListener("click", () => {
   renderExcellentDays();
 });
 
-casualLeaveDays?.addEventListener("input", saveLeaveStats);
+[casualLeaveTermOne, casualLeaveTermTwo].forEach((input) => {
+  input?.addEventListener("input", saveLeaveStats);
+});
 addSickLeaveDay?.addEventListener("click", addSickLeaveRecord);
 sickLeaveList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-remove-sick-leave]");
