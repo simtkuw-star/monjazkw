@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=7" />
   </head>
   <body>
     <div class="scene">
@@ -260,6 +260,20 @@
               <div class="excellent-days-actions">
                 <button id="markNextExcellentDay" type="button">تعليم اليوم التالي</button>
                 <button id="clearExcellentDays" type="button">مسح التحديد</button>
+              </div>
+              <div class="leave-summary">
+                <label>
+                  <span>الأيام الطبية بالكورس</span>
+                  <input id="sickLeaveDays" type="number" min="0" max="140" inputmode="numeric" value="0" />
+                </label>
+                <label>
+                  <span>الإجازة العرضية بالكورس</span>
+                  <input id="casualLeaveDays" type="number" min="0" max="140" inputmode="numeric" value="0" />
+                </label>
+                <article>
+                  <span>إجمالي الغياب المسجل</span>
+                  <strong id="totalLeaveDays">0</strong>
+                </article>
               </div>
               <div class="excellent-days-grid" id="excellentDaysGrid" aria-label="أيام الأعمال الممتازة من 1 إلى 140"></div>
             </section>
@@ -560,6 +574,6 @@
       <a href="teacher-portfolio-kuwait.html">ملف إنجاز المعلم في الكويت</a>
     </footer>
 
-    <script type="module" src="app.js?v=28"></script>
+    <script type="module" src="app.js?v=29"></script>
   </body>
 </html>

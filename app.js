@@ -75,6 +75,9 @@ const excellentDaysCount = document.querySelector("#excellentDaysCount");
 const excellentDaysProgress = document.querySelector("#excellentDaysProgress");
 const markNextExcellentDay = document.querySelector("#markNextExcellentDay");
 const clearExcellentDays = document.querySelector("#clearExcellentDays");
+const sickLeaveDays = document.querySelector("#sickLeaveDays");
+const casualLeaveDays = document.querySelector("#casualLeaveDays");
+const totalLeaveDays = document.querySelector("#totalLeaveDays");
 const eventDialog = document.querySelector("#eventDialog");
 const eventDialogType = document.querySelector("#eventDialogType");
 const eventDialogTitle = document.querySelector("#eventDialogTitle");
@@ -182,13 +185,20 @@ let calendarEvents = JSON.parse(
     ]),
 );
 let excellentDays = JSON.parse(localStorage.getItem("munjaz.excellentDays") || "[]");
+let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sick":0,"casual":0}');
 
 achievements = cleanStoredData(achievements);
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
+leaveStats = cleanStoredData(leaveStats);
+leaveStats = {
+  sick: Math.max(0, Number(leaveStats.sick) || 0),
+  casual: Math.max(0, Number(leaveStats.casual) || 0),
+};
 localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
+localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
 
 const calendarTypeLabels = {
   meeting: "اجتماع فني",
@@ -347,6 +357,7 @@ async function saveRemoteState() {
       email: currentUser.email,
       name: currentUser.name,
       excellentDays,
+      leaveStats,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -389,6 +400,13 @@ async function loadRemoteState() {
         if (Array.isArray(profile.excellentDays)) {
           excellentDays = profile.excellentDays.map(Number).filter((day) => day >= 1 && day <= 140);
           localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
+        }
+        if (profile.leaveStats && typeof profile.leaveStats === "object") {
+          leaveStats = {
+            sick: Math.max(0, Number(profile.leaveStats.sick) || 0),
+            casual: Math.max(0, Number(profile.leaveStats.casual) || 0),
+          };
+          localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
         }
         localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
         updateAuthUI();
@@ -734,12 +752,30 @@ function saveExcellentDays() {
   saveRemoteState().catch(() => {});
 }
 
+function saveLeaveStats() {
+  leaveStats = {
+    sick: Math.max(0, Number(sickLeaveDays?.value) || 0),
+    casual: Math.max(0, Number(casualLeaveDays?.value) || 0),
+  };
+  localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
+  saveRemoteState().catch(() => {});
+  renderLeaveStats();
+}
+
+function renderLeaveStats() {
+  if (!sickLeaveDays || !casualLeaveDays || !totalLeaveDays) return;
+  sickLeaveDays.value = leaveStats.sick;
+  casualLeaveDays.value = leaveStats.casual;
+  totalLeaveDays.textContent = leaveStats.sick + leaveStats.casual;
+}
+
 function renderExcellentDays() {
   if (!excellentDaysGrid) return;
 
   const selected = new Set(excellentDays);
   excellentDaysCount.textContent = selected.size;
   excellentDaysProgress.style.width = `${Math.min(100, (selected.size / 140) * 100)}%`;
+  renderLeaveStats();
 
   excellentDaysGrid.innerHTML = Array.from({ length: 140 }, (_, index) => {
     const day = index + 1;
@@ -1365,6 +1401,10 @@ clearExcellentDays?.addEventListener("click", () => {
   excellentDays = [];
   saveExcellentDays();
   renderExcellentDays();
+});
+
+[sickLeaveDays, casualLeaveDays].forEach((input) => {
+  input?.addEventListener("input", saveLeaveStats);
 });
 
 ideaSearches.forEach((input) => {
