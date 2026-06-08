@@ -2324,7 +2324,7 @@ body {
 
 .profile-dashboard {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr) 260px;
   gap: 18px;
   align-items: stretch;
 }
@@ -2440,6 +2440,95 @@ body {
 
 .profile-form .wide {
   grid-column: 1 / -1;
+}
+
+.qr-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(201, 162, 39, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 249, 0.94));
+  box-shadow: 0 16px 36px rgba(30, 42, 68, 0.07);
+}
+
+.qr-card span {
+  color: var(--brand-gold);
+  font-size: 0.85rem;
+  font-weight: 950;
+}
+
+.qr-card h3 {
+  margin: 2px 0 0;
+  color: var(--brand-navy);
+  font-size: 1.25rem;
+}
+
+.qr-card p,
+.qr-card small {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 800;
+}
+
+.qr-card img {
+  width: 100%;
+  max-width: 190px;
+  aspect-ratio: 1;
+  justify-self: center;
+  padding: 12px;
+  border: 1px solid rgba(30, 42, 68, 0.1);
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 14px 24px rgba(30, 42, 68, 0.08);
+}
+
+.qr-card label {
+  display: grid;
+  gap: 7px;
+}
+
+.qr-card input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(30, 42, 68, 0.12);
+  border-radius: 13px;
+  padding: 11px;
+  color: var(--brand-navy);
+  background: white;
+  direction: ltr;
+  text-align: left;
+  font-weight: 800;
+}
+
+.qr-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.qr-actions button,
+.qr-actions a {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  border: 0;
+  border-radius: 13px;
+  color: white;
+  background: var(--brand-navy);
+  font: inherit;
+  font-weight: 950;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.qr-actions a {
+  color: var(--brand-navy);
+  background: #eef2f5;
 }
 
 .report-grid {

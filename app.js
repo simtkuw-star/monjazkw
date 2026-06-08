@@ -34,6 +34,11 @@ const logoutButton = document.querySelector("#logoutButton");
 const pageLinks = document.querySelectorAll("[data-page-link]");
 const pageButtons = document.querySelectorAll("[data-page-button]");
 const printButtons = document.querySelectorAll("[data-print]");
+const portfolioQr = document.querySelector("#portfolioQr");
+const portfolioQrLink = document.querySelector("#portfolioQrLink");
+const copyQrLink = document.querySelector("#copyQrLink");
+const downloadQrLink = document.querySelector("#downloadQrLink");
+const qrStatus = document.querySelector("#qrStatus");
 const reportButtons = document.querySelectorAll("[data-report-type]");
 const reportTitle = document.querySelector("#reportTitle");
 const reportGeneratedAt = document.querySelector("#reportGeneratedAt");
@@ -694,6 +699,15 @@ function updateAuthUI() {
 
   loginButtonText.textContent = "تسجيل الدخول";
   loginButton.classList.remove("logged");
+}
+
+function renderPortfolioQr() {
+  if (!portfolioQr || !portfolioQrLink || !downloadQrLink) return;
+  const qrTarget = "https://monjazkw.com/#portfolio";
+  const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(qrTarget)}`;
+  portfolioQr.src = qrImage;
+  portfolioQrLink.value = qrTarget;
+  downloadQrLink.href = qrImage;
 }
 
 function openLogin() {
@@ -1436,6 +1450,18 @@ printButtons.forEach((button) => {
   });
 });
 
+copyQrLink?.addEventListener("click", async () => {
+  const value = portfolioQrLink?.value || "https://monjazkw.com/#portfolio";
+  try {
+    await navigator.clipboard.writeText(value);
+    if (qrStatus) qrStatus.textContent = "تم نسخ الرابط.";
+  } catch {
+    portfolioQrLink?.select();
+    document.execCommand("copy");
+    if (qrStatus) qrStatus.textContent = "تم نسخ الرابط.";
+  }
+});
+
 reportButtons.forEach((button) => {
   button.addEventListener("click", () => renderReport(button.dataset.reportType));
 });
@@ -1563,6 +1589,7 @@ if (document.querySelector(`[data-page="${initialPage}"]`)) {
 }
 
 updateAuthUI();
+renderPortfolioQr();
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
