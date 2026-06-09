@@ -2442,6 +2442,34 @@ body {
   grid-column: 1 / -1;
 }
 
+.profile-save-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.profile-save-row button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 18px;
+  color: white;
+  background: var(--brand-navy);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 12px 22px rgba(30, 42, 68, 0.12);
+}
+
+.profile-save-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
 .qr-card {
   display: grid;
   align-content: start;

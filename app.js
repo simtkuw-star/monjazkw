@@ -34,6 +34,19 @@ const logoutButton = document.querySelector("#logoutButton");
 const pageLinks = document.querySelectorAll("[data-page-link]");
 const pageButtons = document.querySelectorAll("[data-page-button]");
 const printButtons = document.querySelectorAll("[data-print]");
+const profileInputs = {
+  fullName: document.querySelector("#profileFullName"),
+  employeeId: document.querySelector("#profileEmployeeId"),
+  specialty: document.querySelector("#profileSpecialty"),
+  stage: document.querySelector("#profileStage"),
+  school: document.querySelector("#profileSchool"),
+  department: document.querySelector("#profileDepartment"),
+  district: document.querySelector("#profileDistrict"),
+  email: document.querySelector("#profileEmail"),
+  bio: document.querySelector("#profileBio"),
+};
+const saveProfileDetailsButton = document.querySelector("#saveProfileDetails");
+const profileSaveStatus = document.querySelector("#profileSaveStatus");
 const portfolioQr = document.querySelector("#portfolioQr");
 const portfolioQrLink = document.querySelector("#portfolioQrLink");
 const copyQrLink = document.querySelector("#copyQrLink");
@@ -185,6 +198,7 @@ let activePortfolio = "meetings";
 let activeReport = "monthly";
 let achievements = JSON.parse(localStorage.getItem("munjaz.achievements") || "[]");
 let currentUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
+let profileDetails = JSON.parse(localStorage.getItem("munjaz.profileDetails") || "{}");
 let currentEvidence = [];
 let calendarDate = new Date(2026, 9, 1);
 let selectedCalendarDate = "2026-10-04";
@@ -205,10 +219,12 @@ const CASUAL_LEAVE_TERM_LIMIT = 2;
 let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sickRecords":[],"casual":0}');
 
 achievements = cleanStoredData(achievements);
+profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
 localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
 localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
@@ -292,6 +308,20 @@ function cleanStoredData(value) {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cleanStoredData(item)]));
   }
   return repairMojibake(value);
+}
+
+function normalizeProfileDetails(raw = {}) {
+  return {
+    fullName: String(raw.fullName || ""),
+    employeeId: String(raw.employeeId || ""),
+    specialty: String(raw.specialty || ""),
+    stage: String(raw.stage || ""),
+    school: String(raw.school || ""),
+    department: String(raw.department || ""),
+    district: String(raw.district || ""),
+    email: String(raw.email || ""),
+    bio: String(raw.bio || ""),
+  };
 }
 
 function getArabicWeekday(dateKey) {
@@ -418,6 +448,7 @@ async function saveRemoteState() {
     {
       email: currentUser.email,
       name: currentUser.name,
+      profileDetails,
       excellentDays,
       leaveStats,
       updatedAt: serverTimestamp(),
@@ -466,6 +497,11 @@ async function loadRemoteState() {
         if (profile.leaveStats && typeof profile.leaveStats === "object") {
           leaveStats = normalizeLeaveStats(profile.leaveStats);
           localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
+        }
+        if (profile.profileDetails && typeof profile.profileDetails === "object") {
+          profileDetails = normalizeProfileDetails(profile.profileDetails);
+          localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
+          renderProfileDetails();
         }
         localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
         updateAuthUI();
@@ -699,6 +735,37 @@ function updateAuthUI() {
 
   loginButtonText.textContent = "تسجيل الدخول";
   loginButton.classList.remove("logged");
+}
+
+function renderProfileDetails() {
+  Object.entries(profileInputs).forEach(([key, input]) => {
+    if (input) input.value = profileDetails[key] || (key === "email" ? currentUser?.email || "" : "");
+  });
+}
+
+async function saveProfileDetails() {
+  profileDetails = normalizeProfileDetails(
+    Object.fromEntries(Object.entries(profileInputs).map(([key, input]) => [key, input?.value?.trim() || ""])),
+  );
+  localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
+
+  if (profileDetails.fullName && currentUser) {
+    currentUser = {
+      ...currentUser,
+      name: profileDetails.fullName,
+      email: profileDetails.email || currentUser.email,
+    };
+    localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
+    updateAuthUI();
+  }
+
+  if (profileSaveStatus) profileSaveStatus.textContent = currentUser ? "جاري الحفظ..." : "تم الحفظ على هذا الجهاز.";
+  try {
+    await saveRemoteState();
+    if (profileSaveStatus) profileSaveStatus.textContent = currentUser ? "تم حفظ البيانات في فايربيز." : "تم الحفظ على هذا الجهاز.";
+  } catch {
+    if (profileSaveStatus) profileSaveStatus.textContent = "تم الحفظ محلياً، وتعذر الحفظ في فايربيز حالياً.";
+  }
 }
 
 function renderPortfolioQr() {
@@ -1462,6 +1529,8 @@ copyQrLink?.addEventListener("click", async () => {
   }
 });
 
+saveProfileDetailsButton?.addEventListener("click", saveProfileDetails);
+
 reportButtons.forEach((button) => {
   button.addEventListener("click", () => renderReport(button.dataset.reportType));
 });
@@ -1589,6 +1658,7 @@ if (document.querySelector(`[data-page="${initialPage}"]`)) {
 }
 
 updateAuthUI();
+renderProfileDetails();
 renderPortfolioQr();
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
@@ -1602,6 +1672,7 @@ onAuthStateChanged(auth, async (user) => {
   };
   localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
   updateAuthUI();
+  renderProfileDetails();
   await loadRemoteState();
 });
 renderPortfolio();

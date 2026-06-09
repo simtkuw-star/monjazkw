@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=12" />
+    <link rel="stylesheet" href="styles.css?v=13" />
   </head>
   <body>
     <div class="scene">
@@ -175,15 +175,19 @@
                 </div>
               </aside>
               <section class="profile-form">
-                <label>اسم المعلم/ـة<input type="text" placeholder="اكتب الاسم الكامل" /></label>
-                <label>الرقم الوظيفي<input type="text" placeholder="مثال: 102458" /></label>
-                <label>التخصص<input type="text" placeholder="مثال: لغة عربية" /></label>
-                <label>المرحلة<input type="text" placeholder="مثال: المرحلة الثانوية" /></label>
-                <label>المدرسة<input type="text" placeholder="اسم المدرسة" /></label>
-                <label>القسم<input type="text" placeholder="مثال: قسم اللغة العربية" /></label>
-                <label>المنطقة التعليمية<input type="text" placeholder="مثال: العاصمة التعليمية" /></label>
-                <label>البريد الإلكتروني<input type="email" placeholder="name@example.com" /></label>
-                <label class="wide">نبذة مهنية<textarea rows="5" placeholder="اكتبي نبذة مختصرة عن خبراتك، مبادراتك، وأهدافك المهنية لهذا العام"></textarea></label>
+                <label>اسم المعلم/ـة<input id="profileFullName" type="text" placeholder="اكتب الاسم الكامل" /></label>
+                <label>الرقم الوظيفي<input id="profileEmployeeId" type="text" placeholder="مثال: 102458" /></label>
+                <label>التخصص<input id="profileSpecialty" type="text" placeholder="مثال: لغة عربية" /></label>
+                <label>المرحلة<input id="profileStage" type="text" placeholder="مثال: المرحلة الثانوية" /></label>
+                <label>المدرسة<input id="profileSchool" type="text" placeholder="اسم المدرسة" /></label>
+                <label>القسم<input id="profileDepartment" type="text" placeholder="مثال: قسم اللغة العربية" /></label>
+                <label>المنطقة التعليمية<input id="profileDistrict" type="text" placeholder="مثال: العاصمة التعليمية" /></label>
+                <label>البريد الإلكتروني<input id="profileEmail" type="email" placeholder="name@example.com" /></label>
+                <label class="wide">نبذة مهنية<textarea id="profileBio" rows="5" placeholder="اكتب نبذة مختصرة عن خبراتك، مبادراتك، وأهدافك المهنية لهذا العام"></textarea></label>
+                <div class="profile-save-row">
+                  <button id="saveProfileDetails" type="button">حفظ بياناتي</button>
+                  <span id="profileSaveStatus"></span>
+                </div>
               </section>
               <aside class="qr-card">
                 <div>
@@ -640,6 +644,6 @@
       <a href="teacher-portfolio-kuwait.html">ملف إنجاز المعلم في الكويت</a>
     </footer>
 
-    <script type="module" src="app.js?v=33"></script>
+    <script type="module" src="app.js?v=34"></script>
   </body>
 </html>
