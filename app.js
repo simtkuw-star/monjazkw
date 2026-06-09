@@ -800,6 +800,8 @@ async function saveProfileDetails() {
   }
 }
 
+const QR_LOGO_SRC = "assets/munjaz-logo-cropped.png";
+
 function createQrDataUrl(text, size = 260) {
   if (!window.QRCode) return "";
   const holder = document.createElement("div");
@@ -814,6 +816,54 @@ function createQrDataUrl(text, size = 260) {
   const canvas = holder.querySelector("canvas");
   if (canvas) return canvas.toDataURL("image/png");
   return holder.querySelector("img")?.src || "";
+}
+
+function addQrLogoElement(element) {
+  const logo = document.createElement("img");
+  logo.className = "qr-center-logo";
+  logo.src = QR_LOGO_SRC;
+  logo.alt = "شعار منجز";
+  element.appendChild(logo);
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+async function addLogoToQrDataUrl(qrDataUrl, size = 260) {
+  if (!qrDataUrl) return "";
+  try {
+    const [qrImage, logoImage] = await Promise.all([loadImage(qrDataUrl), loadImage(QR_LOGO_SRC)]);
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    const logoSize = Math.round(size * 0.23);
+    const padding = Math.round(size * 0.035);
+    const boxSize = logoSize + padding * 2;
+    const boxX = Math.round((size - boxSize) / 2);
+    const boxY = boxX;
+    const logoX = boxX + padding;
+    const logoY = boxY + padding;
+
+    context.drawImage(qrImage, 0, 0, size, size);
+    context.fillStyle = "#ffffff";
+    context.strokeStyle = "rgba(30, 42, 68, 0.12)";
+    context.lineWidth = 2;
+    context.beginPath();
+    context.roundRect(boxX, boxY, boxSize, boxSize, Math.round(size * 0.045));
+    context.fill();
+    context.stroke();
+    context.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
+    return canvas.toDataURL("image/png");
+  } catch {
+    return qrDataUrl;
+  }
 }
 
 function renderQrCode(element, text, size = 260) {
@@ -831,6 +881,7 @@ function renderQrCode(element, text, size = 260) {
     colorLight: "#ffffff",
     correctLevel: window.QRCode.CorrectLevel.M,
   });
+  addQrLogoElement(element);
   return createQrDataUrl(text, size);
 }
 
@@ -840,6 +891,9 @@ function renderPortfolioQr() {
   const qrImage = renderQrCode(portfolioQr, qrTarget, 260);
   portfolioQrLink.value = qrTarget;
   downloadQrLink.href = qrImage || "#";
+  addLogoToQrDataUrl(qrImage, 260).then((logoQrImage) => {
+    downloadQrLink.href = logoQrImage || qrImage || "#";
+  });
 }
 
 function openLogin() {
@@ -1588,7 +1642,11 @@ function renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenc
         <p>امسح الرمز للوصول إلى ملف الإنجاز الإلكتروني مباشرة.</p>
         <small>${qrTarget}</small>
       </div>
-      ${qrImage ? `<img src="${qrImage}" alt="QR ملف الإنجاز" />` : '<b class="full-qr-fallback">QR</b>'}
+      ${
+        qrImage
+          ? `<span class="full-qr-stack"><img src="${qrImage}" alt="QR ملف الإنجاز" /><img class="full-qr-logo" src="${QR_LOGO_SRC}" alt="شعار منجز" /></span>`
+          : '<b class="full-qr-fallback">QR</b>'
+      }
     </article>
     <article class="full-term-card">
       <h4>توزيع الإجازات الطبية</h4>
