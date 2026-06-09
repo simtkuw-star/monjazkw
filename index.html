@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=22" />
+    <link rel="stylesheet" href="styles.css?v=23" />
   </head>
   <body>
     <div class="scene">
@@ -60,6 +60,7 @@
             <a href="#portfolio" data-page-link="portfolio"><span>□</span>ملف الإنجاز</a>
             <a href="#learners" data-page-link="learners"><span>◎</span>بطاقات الطلبة</a>
             <a href="#reports" data-page-link="reports"><span>▥</span>التقارير</a>
+            <a href="#archive" data-page-link="archive"><span>▧</span>الأرشيف</a>
             <a href="#awards" data-page-link="awards"><span>♕</span>الجوائز</a>
             <a href="#settings" data-page-link="settings"><span>⚙</span>الإعدادات</a>
           </nav>
@@ -479,6 +480,46 @@
             </section>
           </section>
 
+          <section class="view" data-page="archive">
+            <div class="page-head with-actions">
+              <div>
+                <p>الأرشيف</p>
+                <h2>أرشيف السنوات الدراسية</h2>
+              </div>
+              <button class="print-button" type="button" data-print="archive">تحميل / طباعة</button>
+            </div>
+            <div class="archive-workspace printable-card" data-print-section="archive">
+              <section class="archive-create">
+                <div>
+                  <span>حفظ نسخة</span>
+                  <h3>أرشفة ملف الإنجاز</h3>
+                  <p>احفظ لقطة منظمة من ملف الإنجاز في نهاية الكورس أو نهاية السنة للرجوع لها لاحقاً.</p>
+                </div>
+                <label>
+                  <span>السنة الدراسية</span>
+                  <input id="archiveYear" type="text" value="2026 / 2027" />
+                </label>
+                <label>
+                  <span>نوع الأرشفة</span>
+                  <select id="archiveTerm">
+                    <option value="term1">الكورس الأول</option>
+                    <option value="term2">الكورس الثاني</option>
+                    <option value="annual">السنة كاملة</option>
+                  </select>
+                </label>
+                <button id="createArchive" type="button">حفظ في الأرشيف</button>
+                <small id="archiveStatus"></small>
+              </section>
+              <section class="archive-summary">
+                <article><span>النسخ المحفوظة</span><strong id="archiveCount">0</strong><small>أرشيف</small></article>
+                <article><span>آخر سنة محفوظة</span><strong id="archiveLastYear">-</strong><small>جاهزة للطباعة</small></article>
+                <article><span>حالة الأرشيف</span><strong id="archiveHealth">جديد</strong><small>حسب البيانات</small></article>
+              </section>
+              <section class="archive-list" id="archiveList"></section>
+              <section class="archive-preview" id="archivePreview"></section>
+            </div>
+          </section>
+
           <section class="view" data-page="learners">
             <div class="page-head with-actions">
               <div><p>بطاقات الطلبة</p><h2>الدعم العلاجي والإثرائي</h2></div>
@@ -708,6 +749,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=42"></script>
+    <script type="module" src="app.js?v=43"></script>
   </body>
 </html>

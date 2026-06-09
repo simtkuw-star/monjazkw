@@ -57,6 +57,15 @@ const reportTitle = document.querySelector("#reportTitle");
 const reportGeneratedAt = document.querySelector("#reportGeneratedAt");
 const reportStats = document.querySelector("#reportStats");
 const reportSections = document.querySelector("#reportSections");
+const archiveYear = document.querySelector("#archiveYear");
+const archiveTerm = document.querySelector("#archiveTerm");
+const createArchiveButton = document.querySelector("#createArchive");
+const archiveStatus = document.querySelector("#archiveStatus");
+const archiveCount = document.querySelector("#archiveCount");
+const archiveLastYear = document.querySelector("#archiveLastYear");
+const archiveHealth = document.querySelector("#archiveHealth");
+const archiveList = document.querySelector("#archiveList");
+const archivePreview = document.querySelector("#archivePreview");
 const homeMetrics = {
   total: document.querySelector("#metricTotalAchievements"),
   development: document.querySelector("#metricDevelopment"),
@@ -226,6 +235,7 @@ let activePortfolio = "meetings";
 let activeReport = "monthly";
 let achievements = JSON.parse(localStorage.getItem("munjaz.achievements") || "[]");
 let awards = JSON.parse(localStorage.getItem("munjaz.awards") || "[]");
+let archives = JSON.parse(localStorage.getItem("munjaz.archives") || "[]");
 let currentUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
 let profileDetails = JSON.parse(localStorage.getItem("munjaz.profileDetails") || "{}");
 let currentEvidence = [];
@@ -249,12 +259,14 @@ let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sick
 
 achievements = cleanStoredData(achievements);
 awards = cleanStoredData(awards);
+archives = cleanStoredData(archives);
 profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
 localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
 localStorage.setItem("munjaz.awards", JSON.stringify(awards));
+localStorage.setItem("munjaz.archives", JSON.stringify(archives));
 localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
@@ -481,6 +493,7 @@ async function saveRemoteState() {
       name: currentUser.name,
       profileDetails,
       awards,
+      archives,
       excellentDays,
       leaveStats,
       updatedAt: serverTimestamp(),
@@ -539,6 +552,11 @@ async function loadRemoteState() {
           awards = cleanStoredData(profile.awards);
           localStorage.setItem("munjaz.awards", JSON.stringify(awards));
           renderAwards();
+        }
+        if (Array.isArray(profile.archives)) {
+          archives = cleanStoredData(profile.archives);
+          localStorage.setItem("munjaz.archives", JSON.stringify(archives));
+          renderArchives();
         }
         localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
         updateAuthUI();
@@ -1840,6 +1858,123 @@ function renderReport(type = activeReport) {
   `;
 }
 
+function getArchiveTermLabel(value) {
+  if (value === "term1") return "الكورس الأول";
+  if (value === "term2") return "الكورس الثاني";
+  return "السنة كاملة";
+}
+
+function buildArchiveSnapshot() {
+  const year = archiveYear?.value.trim() || "السنة الدراسية الحالية";
+  const term = archiveTerm?.value || "annual";
+  const evidenceCount = getAchievementEvidenceCount();
+  const sickRecords = normalizeLeaveStats(leaveStats).sickRecords;
+  const casualTotal = normalizeLeaveStats(leaveStats).casualTermOne + normalizeLeaveStats(leaveStats).casualTermTwo;
+  const totalsByType = countBy(achievements, (item) => portfolioConfig[item.type]?.title || "إنجاز آخر");
+
+  return {
+    id: crypto.randomUUID(),
+    year,
+    term,
+    createdAt: new Date().toISOString(),
+    profileName: profileDetails.fullName || currentUser?.email || "غير محدد",
+    school: profileDetails.school || "غير محدد",
+    stage: profileDetails.stage || "غير محدد",
+    achievementsCount: achievements.length,
+    evidenceCount,
+    calendarCount: calendarEvents.length,
+    awardsCount: awards.length,
+    excellentDaysCount: excellentDays.length,
+    sickLeaveCount: sickRecords.length,
+    casualLeaveCount: casualTotal,
+    strongestArea: Object.entries(totalsByType).sort((a, b) => b[1] - a[1])[0]?.[0] || "لم يحدد بعد",
+    totalsByType,
+  };
+}
+
+function persistArchives() {
+  archives = cleanStoredData(archives);
+  localStorage.setItem("munjaz.archives", JSON.stringify(archives));
+  saveRemoteState().catch(() => {});
+}
+
+function renderArchivePreview(archive = archives[0]) {
+  if (!archivePreview) return;
+  if (!archive) {
+    archivePreview.innerHTML = `
+      <div class="archive-empty">
+        <strong>لا توجد نسخة مؤرشفة بعد</strong>
+        <span>احفظ نسخة من ملف الإنجاز لتظهر المعاينة هنا.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const distribution = Object.entries(archive.totalsByType || {})
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, value]) => `<li><span>${escapeHtml(label)}</span><b>${value}</b></li>`)
+    .join("");
+
+  archivePreview.innerHTML = `
+    <article>
+      <div>
+        <span>${getArchiveTermLabel(archive.term)}</span>
+        <h3>${escapeHtml(archive.year)}</h3>
+        <p>${escapeHtml(archive.profileName)} - ${escapeHtml(archive.school)} - ${escapeHtml(archive.stage)}</p>
+      </div>
+      <b>${archive.achievementsCount}</b>
+    </article>
+    <div class="archive-preview-grid">
+      <section><span>الشواهد</span><strong>${archive.evidenceCount}</strong></section>
+      <section><span>المواعيد</span><strong>${archive.calendarCount}</strong></section>
+      <section><span>الجوائز</span><strong>${archive.awardsCount}</strong></section>
+      <section><span>الأيام الفعلية</span><strong>${archive.excellentDaysCount}</strong></section>
+      <section><span>الطبيات</span><strong>${archive.sickLeaveCount}</strong></section>
+      <section><span>العرضي</span><strong>${archive.casualLeaveCount}</strong></section>
+    </div>
+    <div class="archive-distribution">
+      <h4>توزيع الإنجازات</h4>
+      ${distribution ? `<ul>${distribution}</ul>` : '<p>لا توجد إنجازات في هذه النسخة.</p>'}
+    </div>
+  `;
+}
+
+function renderArchives() {
+  if (!archiveList || !archiveCount || !archiveLastYear || !archiveHealth) return;
+  const sorted = [...archives].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  archiveCount.textContent = sorted.length;
+  archiveLastYear.textContent = sorted[0]?.year || "-";
+  archiveHealth.textContent = sorted.length ? "محفوظ" : "جديد";
+
+  archiveList.innerHTML = sorted.length
+    ? sorted
+        .map(
+          (archive) => `
+            <article data-archive-id="${archive.id}">
+              <div>
+                <span>${getArchiveTermLabel(archive.term)}</span>
+                <strong>${escapeHtml(archive.year)}</strong>
+                <small>${new Date(archive.createdAt).toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" })}</small>
+              </div>
+              <b>${archive.achievementsCount}</b>
+              <button type="button" data-view-archive="${archive.id}">استعراض</button>
+            </article>
+          `,
+        )
+        .join("")
+    : '<div class="archive-empty"><strong>لا يوجد أرشيف محفوظ</strong><span>احفظ نسخة نهاية الكورس أو نهاية السنة.</span></div>';
+
+  renderArchivePreview(sorted[0]);
+}
+
+function createArchiveSnapshot() {
+  const snapshot = buildArchiveSnapshot();
+  archives = [snapshot, ...archives.filter((archive) => !(archive.year === snapshot.year && archive.term === snapshot.term))];
+  persistArchives();
+  renderArchives();
+  if (archiveStatus) archiveStatus.textContent = "تم حفظ النسخة في الأرشيف.";
+}
+
 async function addEvidenceFiles(files) {
   if (!files.length) return;
   if (!currentUser) {
@@ -1953,6 +2088,15 @@ awardList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-award]");
   if (!button) return;
   deleteAward(button.dataset.deleteAward);
+});
+
+createArchiveButton?.addEventListener("click", createArchiveSnapshot);
+
+archiveList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-view-archive]");
+  if (!button) return;
+  const archive = archives.find((item) => item.id === button.dataset.viewArchive);
+  renderArchivePreview(archive);
 });
 
 reportButtons.forEach((button) => {
@@ -2095,6 +2239,7 @@ renderProfileDetails();
 renderPortfolioQr();
 renderHomeMetrics();
 renderAwards();
+renderArchives();
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
