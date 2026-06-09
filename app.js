@@ -1462,6 +1462,111 @@ function renderMiniList(items, emptyText, formatter) {
   return `<ul>${items.map(formatter).join("")}</ul>`;
 }
 
+function formatTermName(term) {
+  return term === "term2" ? "الكورس الثاني" : "الكورس الأول";
+}
+
+function renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenceCount) {
+  const safeProfile = profileDetails || {};
+  const profileRows = [
+    ["اسم المعلم/ـة", safeProfile.fullName || currentUser?.email || "غير محدد"],
+    ["الرقم الوظيفي", safeProfile.employeeId || "غير محدد"],
+    ["التخصص", safeProfile.specialty || "غير محدد"],
+    ["المرحلة", safeProfile.stage || "غير محدد"],
+    ["المنطقة التعليمية", safeProfile.district || "غير محدد"],
+    ["المدرسة", safeProfile.school || "غير محدد"],
+  ];
+  const sickRecords = normalizeLeaveStats(leaveStats).sickRecords;
+  const casualTermOne = normalizeLeaveStats(leaveStats).casualTermOne;
+  const casualTermTwo = normalizeLeaveStats(leaveStats).casualTermTwo;
+  const sickByTerm = countBy(sickRecords, (record) => formatTermName(record.term));
+  const qrTarget = "https://monjazkw.com/#portfolio";
+  const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=12&data=${encodeURIComponent(qrTarget)}`;
+
+  const profileBlock = profileRows
+    .map(([label, value]) => `<div><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`)
+    .join("");
+
+  const leaveBlock = [
+    ["الأيام الفعلية", excellentDays.length, "من 140 يوم"],
+    ["الإجازات الطبية", sickRecords.length, `${Math.max(0, SICK_LEAVE_LIMIT - sickRecords.length)} يوم متاح`],
+    ["عرضي الكورس الأول", casualTermOne, "من 2 يوم"],
+    ["عرضي الكورس الثاني", casualTermTwo, "من 2 يوم"],
+  ]
+    .map(
+      ([label, value, note]) => `
+        <div>
+          <span>${label}</span>
+          <strong>${escapeHtml(value)}</strong>
+          <small>${note}</small>
+        </div>
+      `,
+    )
+    .join("");
+
+  const sickList = renderMiniList(
+    sickRecords,
+    "لا توجد إجازات طبية مسجلة.",
+    (record) => `<li><span>${formatArabicDate(record.date)}</span><small>${formatTermName(record.term)}</small></li>`,
+  );
+
+  const awardItems = renderMiniList(
+    awards,
+    "لا توجد جوائز محفوظة حتى الآن.",
+    (award) => `<li><span>${escapeHtml(award.title)}</span><small>${escapeHtml(award.level || "بدون مستوى")} - ${award.date || "بدون تاريخ"}</small></li>`,
+  );
+
+  return `
+    <article class="full-report-cover">
+      <div>
+        <span>ملف الإنجاز الكامل</span>
+        <h4>نسخة منظمة للتقديم والطباعة</h4>
+        <p>تجمع هذه النسخة بيانات المعلم، الإنجازات، الشواهد، الرزنامة، الأيام الفعلية، الإجازات، والجوائز في ملف واحد مرتب.</p>
+      </div>
+      <b>${filteredAchievements.length}</b>
+    </article>
+    <article class="full-profile-card">
+      <h4>بيانات المعلم</h4>
+      <div class="full-profile-grid">${profileBlock}</div>
+    </article>
+    <article class="full-leave-card">
+      <h4>الأيام الفعلية والإجازات</h4>
+      <div class="full-mini-metrics">${leaveBlock}</div>
+      <div class="full-sick-list">
+        <strong>سجل الإجازات الطبية</strong>
+        ${sickList}
+      </div>
+    </article>
+    <article class="full-evidence-card">
+      <h4>الشواهد والروابط</h4>
+      <div class="full-mini-metrics">
+        <div><span>الشواهد</span><strong>${evidenceCount}</strong><small>ملف / رابط</small></div>
+        <div><span>الجوائز</span><strong>${awards.length}</strong><small>جائزة محفوظة</small></div>
+        <div><span>مواعيد الرزنامة</span><strong>${filteredEvents.length}</strong><small>موعد</small></div>
+      </div>
+    </article>
+    <article class="full-awards-card">
+      <h4>الجوائز والإنجازات النوعية</h4>
+      ${awardItems}
+    </article>
+    <article class="full-qr-card">
+      <div>
+        <h4>QR ملف الإنجاز</h4>
+        <p>امسح الرمز للوصول إلى ملف الإنجاز الإلكتروني مباشرة.</p>
+        <small>${qrTarget}</small>
+      </div>
+      <img src="${qrImage}" alt="QR ملف الإنجاز" />
+    </article>
+    <article class="full-term-card">
+      <h4>توزيع الإجازات الطبية</h4>
+      <ul class="report-bars">
+        <li><span>الكورس الأول</span><b>${sickByTerm["الكورس الأول"] || 0}</b></li>
+        <li><span>الكورس الثاني</span><b>${sickByTerm["الكورس الثاني"] || 0}</b></li>
+      </ul>
+    </article>
+  `;
+}
+
 function renderReport(type = activeReport) {
   if (!reportTitle || !reportStats || !reportSections) return;
   activeReport = type;
@@ -1509,7 +1614,29 @@ function renderReport(type = activeReport) {
     .map(([label, total]) => `<li><span>${escapeHtml(label)}</span><b>${total}</b></li>`)
     .join("");
 
+  if (type === "full") {
+    reportStats.innerHTML = [
+      ["إجمالي الإنجازات", filteredAchievements.length, "إنجاز"],
+      ["الشواهد", evidenceCount, "ملف / رابط"],
+      ["الأيام الفعلية", excellentDays.length, "من 140"],
+      ["الإجازات الطبية", normalizeLeaveStats(leaveStats).sickRecords.length, "من 15"],
+      ["الجوائز", awards.length, "جائزة"],
+      ["مواعيد الرزنامة", filteredEvents.length, "موعد"],
+    ]
+      .map(
+        ([label, value, note]) => `
+          <article>
+            <span>${label}</span>
+            <strong>${escapeHtml(value)}</strong>
+            <small>${note}</small>
+          </article>
+        `,
+      )
+      .join("");
+  }
+
   reportSections.innerHTML = `
+    ${type === "full" ? renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenceCount) : ""}
     <article class="report-summary">
       <h4>ملخص التقرير</h4>
       <p>${reportDescriptions[type]}</p>
