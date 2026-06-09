@@ -65,6 +65,14 @@ const homeMetrics = {
   radio: document.querySelector("#metricRadio"),
   visits: document.querySelector("#metricVisits"),
   progress: document.querySelector("#metricProgress"),
+  readinessLabel: document.querySelector("#readinessLabel"),
+  readinessRing: document.querySelector("#readinessRing"),
+  readinessScore: document.querySelector("#readinessScore"),
+  readinessTitle: document.querySelector("#readinessTitle"),
+  readinessText: document.querySelector("#readinessText"),
+  insightStrip: document.querySelector("#insightStrip"),
+  smartAlerts: document.querySelector("#smartAlerts"),
+  coverageBars: document.querySelector("#coverageBars"),
 };
 const ideaSearches = document.querySelectorAll(".idea-search");
 const ideaButtons = document.querySelectorAll(".idea-button");
@@ -1266,10 +1274,96 @@ function countAchievementsByType(...types) {
   return achievements.filter((item) => wanted.has(item.type)).length;
 }
 
+function getAchievementEvidenceCount() {
+  return achievements.reduce((total, item) => total + (item.evidence?.length || 0), 0);
+}
+
+function getReadinessData() {
+  const total = achievements.length;
+  const evidenceCount = getAchievementEvidenceCount();
+  const documentedCount = achievements.filter((item) => item.evidence?.length).length;
+  const uniqueTypes = new Set(achievements.map((item) => item.type)).size;
+  const profileFields = Object.values(profileDetails || {}).filter((value) => String(value || "").trim()).length;
+  const profileScore = Math.min(1, profileFields / 7);
+  const achievementScore = Math.min(1, total / 30);
+  const evidenceScore = total ? documentedCount / total : 0;
+  const diversityScore = Math.min(1, uniqueTypes / 7);
+  const calendarScore = Math.min(1, calendarEvents.length / 8);
+  const excellentScore = Math.min(1, excellentDays.length / 140);
+  const awardScore = Math.min(1, awards.length / 2);
+  const score = Math.round(
+    achievementScore * 30 +
+      evidenceScore * 22 +
+      diversityScore * 14 +
+      profileScore * 12 +
+      calendarScore * 10 +
+      excellentScore * 8 +
+      awardScore * 4,
+  );
+  const missingEvidence = Math.max(0, total - documentedCount);
+  const strongestArea = Object.entries(countBy(achievements, (item) => portfolioConfig[item.type]?.title || "إنجاز آخر"))
+    .sort((a, b) => b[1] - a[1])[0]?.[0] || "لم يحدد بعد";
+
+  return {
+    score,
+    total,
+    evidenceCount,
+    documentedCount,
+    missingEvidence,
+    uniqueTypes,
+    profileFields,
+    strongestArea,
+  };
+}
+
+function renderSmartInsights(readiness) {
+  if (!homeMetrics.insightStrip || !homeMetrics.smartAlerts || !homeMetrics.coverageBars) return;
+
+  homeMetrics.insightStrip.innerHTML = [
+    ["أقوى مجال", readiness.strongestArea],
+    ["إنجازات موثقة", readiness.documentedCount],
+    ["شواهد محفوظة", readiness.evidenceCount],
+    ["تنوع المجالات", readiness.uniqueTypes],
+  ]
+    .map(([label, value]) => `<article><span>${label}</span><strong>${escapeHtml(value)}</strong></article>`)
+    .join("");
+
+  const alerts = [];
+  if (!currentUser) alerts.push(["سجل الدخول", "حتى تحفظ بياناتك في فايربيز وتنتقل معك بين الأجهزة."]);
+  if (readiness.profileFields < 7) alerts.push(["أكمل بياناتي", "البيانات المهنية تظهر في ملف الإنجاز الكامل."]);
+  if (readiness.missingEvidence) alerts.push(["أضف شواهد", `يوجد ${readiness.missingEvidence} إنجاز بدون مرفق أو رابط.`]);
+  if (readiness.uniqueTypes < 5) alerts.push(["وازن الملف", "نوّع بين الدروس، الورش، الفعاليات، الزيارات، والبرامج."]);
+  if (excellentDays.length < 140) alerts.push(["تابع الأيام الفعلية", `المتبقي ${140 - excellentDays.length} يوم للوصول إلى 140 يوم.`]);
+  if (!awards.length) alerts.push(["أضف الجوائز", "حتى تظهر الإنجازات النوعية في الملف الكامل."]);
+  if (!alerts.length) alerts.push(["الملف متوازن", "استمر بتحديث الشواهد والرزنامة أولاً بأول."]);
+
+  homeMetrics.smartAlerts.innerHTML = alerts
+    .slice(0, 4)
+    .map(([title, text]) => `<li><strong>${title}</strong><span>${text}</span></li>`)
+    .join("");
+
+  const coverageItems = [
+    ["الدورات والورش", countAchievementsByType("development", "workshops")],
+    ["الدروس الريادية", countAchievementsByType("lessons")],
+    ["المسابقات", countAchievementsByType("competitions")],
+    ["الفعاليات", countAchievementsByType("events")],
+    ["البرامج الإذاعية", countAchievementsByType("radio")],
+    ["تبادل الزيارات", countAchievementsByType("visits")],
+  ];
+  const maxCoverage = Math.max(1, ...coverageItems.map(([, value]) => value));
+  homeMetrics.coverageBars.innerHTML = coverageItems
+    .map(([label, value]) => {
+      const width = Math.max(8, Math.round((value / maxCoverage) * 100));
+      return `<article style="--w:${width}%"><div><span>${label}</span><b>${value}</b></div><em></em></article>`;
+    })
+    .join("");
+}
+
 function renderHomeMetrics() {
   const total = achievements.length;
   const yearlyTarget = 30;
   const progress = Math.min(100, Math.round((total / yearlyTarget) * 100));
+  const readiness = getReadinessData();
 
   if (homeMetrics.total) homeMetrics.total.textContent = total;
   if (homeMetrics.development) homeMetrics.development.textContent = countAchievementsByType("development", "workshops");
@@ -1278,6 +1372,22 @@ function renderHomeMetrics() {
   if (homeMetrics.radio) homeMetrics.radio.textContent = countAchievementsByType("radio");
   if (homeMetrics.visits) homeMetrics.visits.textContent = countAchievementsByType("visits");
   if (homeMetrics.progress) homeMetrics.progress.textContent = `${progress}%`;
+  if (homeMetrics.readinessLabel) homeMetrics.readinessLabel.textContent = `${readiness.score}%`;
+  if (homeMetrics.readinessRing) homeMetrics.readinessRing.style.setProperty("--score", readiness.score);
+  if (homeMetrics.readinessScore) homeMetrics.readinessScore.textContent = `${readiness.score}%`;
+  if (homeMetrics.readinessTitle) {
+    homeMetrics.readinessTitle.textContent =
+      readiness.score >= 80 ? "ملفك قريب من الجاهزية" : readiness.score >= 45 ? "ملفك يتقدم بثبات" : "ابدأ ببناء ملف الإنجاز";
+  }
+  if (homeMetrics.readinessText) {
+    homeMetrics.readinessText.textContent =
+      readiness.score >= 80
+        ? "راجع الشواهد والتقارير النهائية قبل الطباعة أو المشاركة."
+        : readiness.score >= 45
+          ? "أضف شواهد أكثر ونوّع المجالات لرفع جاهزية الملف."
+          : "كل إنجاز موثق ومرفق يقرب الملف من النسخة الجاهزة للتقديم.";
+  }
+  renderSmartInsights(readiness);
 }
 
 function persistAwards() {
