@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=13" />
+    <link rel="stylesheet" href="styles.css?v=14" />
   </head>
   <body>
     <div class="scene">
@@ -178,10 +178,25 @@
                 <label>اسم المعلم/ـة<input id="profileFullName" type="text" placeholder="اكتب الاسم الكامل" /></label>
                 <label>الرقم الوظيفي<input id="profileEmployeeId" type="text" placeholder="مثال: 102458" /></label>
                 <label>التخصص<input id="profileSpecialty" type="text" placeholder="مثال: لغة عربية" /></label>
-                <label>المرحلة<input id="profileStage" type="text" placeholder="مثال: المرحلة الثانوية" /></label>
+                <label>المرحلة<select id="profileStage">
+                  <option value="">اختر المرحلة</option>
+                  <option>رياض الأطفال</option>
+                  <option>المرحلة الابتدائية</option>
+                  <option>المرحلة المتوسطة</option>
+                  <option>المرحلة الثانوية</option>
+                  <option>المعهد الديني</option>
+                </select></label>
                 <label>المدرسة<input id="profileSchool" type="text" placeholder="اسم المدرسة" /></label>
                 <label>القسم<input id="profileDepartment" type="text" placeholder="مثال: قسم اللغة العربية" /></label>
-                <label>المنطقة التعليمية<input id="profileDistrict" type="text" placeholder="مثال: العاصمة التعليمية" /></label>
+                <label>المنطقة التعليمية<select id="profileDistrict">
+                  <option value="">اختر المنطقة التعليمية</option>
+                  <option>منطقة العاصمة التعليمية</option>
+                  <option>منطقة حولي التعليمية</option>
+                  <option>منطقة مبارك الكبير التعليمية</option>
+                  <option>منطقة الجهراء التعليمية</option>
+                  <option>منطقة الفروانية التعليمية</option>
+                  <option>منطقة الأحمدي التعليمية</option>
+                </select></label>
                 <label>البريد الإلكتروني<input id="profileEmail" type="email" placeholder="name@example.com" /></label>
                 <label class="wide">نبذة مهنية<textarea id="profileBio" rows="5" placeholder="اكتب نبذة مختصرة عن خبراتك، مبادراتك، وأهدافك المهنية لهذا العام"></textarea></label>
                 <div class="profile-save-row">
