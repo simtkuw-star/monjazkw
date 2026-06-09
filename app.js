@@ -105,6 +105,7 @@ const eventReminder = document.querySelector("#eventReminder");
 const eventNotes = document.querySelector("#eventNotes");
 const addCalendarEvent = document.querySelector("#addCalendarEvent");
 const calendarStatus = document.querySelector("#calendarStatus");
+const reminderButtons = document.querySelectorAll("[data-reminder-value]");
 const excellentDaysGrid = document.querySelector("#excellentDaysGrid");
 const excellentDaysCount = document.querySelector("#excellentDaysCount");
 const excellentDaysProgress = document.querySelector("#excellentDaysProgress");
@@ -1073,6 +1074,27 @@ function getEventsForDate(dateKey) {
     .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
 }
 
+function getReminderLabel(value) {
+  const days = String(value || "7");
+  if (days === "1") return "قبل يوم";
+  if (days === "3") return "قبل 3 أيام";
+  return "قبل أسبوع";
+}
+
+function getReminderNote(value) {
+  const days = String(value || "7");
+  if (days === "1") return "تأكيد نهائي قبل التنفيذ";
+  if (days === "3") return "وقت مناسب لمراجعة الشواهد";
+  return "تنبيه مبكر للتجهيز والتنسيق";
+}
+
+function syncReminderPills() {
+  const selected = eventReminder?.value || "7";
+  reminderButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.reminderValue === selected);
+  });
+}
+
 function renderSelectedDay() {
   selectedDayTitle.textContent = formatArabicDate(selectedCalendarDate);
   const dayEvents = getEventsForDate(selectedCalendarDate);
@@ -1091,7 +1113,7 @@ function renderSelectedDay() {
             <span>${calendarTypeLabels[event.type]} • ${event.time || "بدون وقت"}</span>
           </div>
           <p>${escapeHtml(event.notes || "بدون ملاحظات")}</p>
-          <small>تنبيه: قبل ${event.reminder} ${event.reminder === "1" ? "يوم" : "أيام"}</small>
+          <small class="reminder-chip"><b>${getReminderLabel(event.reminder)}</b><span>${getReminderNote(event.reminder)}</span></small>
           <button type="button" data-delete-event="${event.id}">حذف</button>
         </article>
       `,
@@ -1107,7 +1129,7 @@ function openEventDialog(id) {
   eventDialogTitle.textContent = event.title;
   eventDialogDate.textContent = formatArabicDate(event.date);
   eventDialogTime.textContent = event.time ? `الوقت: ${event.time}` : "بدون وقت محدد";
-  eventDialogReminder.textContent = `تنبيه قبل ${event.reminder} ${event.reminder === "1" ? "يوم" : "أيام"}`;
+  eventDialogReminder.textContent = `${getReminderLabel(event.reminder)} - ${getReminderNote(event.reminder)}`;
   eventDialogNotes.textContent = event.notes || "لا توجد ملاحظات أو مرفقات.";
   eventDialog.showModal();
 }
@@ -1998,6 +2020,15 @@ selectedDayEvents.addEventListener("click", (event) => {
   deleteCalendarEvent(id);
 });
 
+reminderButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    eventReminder.value = button.dataset.reminderValue;
+    syncReminderPills();
+  });
+});
+
+eventReminder?.addEventListener("change", syncReminderPills);
+
 addCalendarEvent.addEventListener("click", addCalendarEventItem);
 
 excellentDaysGrid?.addEventListener("click", (event) => {
@@ -2081,6 +2112,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 renderPortfolio();
 eventDate.value = selectedCalendarDate;
+syncReminderPills();
 renderCalendar();
 renderExcellentDays();
 renderReport();

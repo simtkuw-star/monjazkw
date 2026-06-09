@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=20" />
+    <link rel="stylesheet" href="styles.css?v=22" />
   </head>
   <body>
     <div class="scene">
@@ -120,17 +120,29 @@
 
             <div class="performance panel">
               <div class="panel-title">
-                <h3>مؤشرات الأداء</h3>
-                <select><option>هذا الفصل الدراسي</option></select>
+                <h3>لوحة المؤشرات</h3>
+                <span id="readinessLabel">0%</span>
               </div>
-              <div class="chart">
-                <div style="--h:48"><span>الورش</span></div>
-                <div style="--h:67"><span>الدروس الريادية</span></div>
-                <div style="--h:51"><span>المسابقات</span></div>
-                <div style="--h:86"><span>ساعات التنمية</span></div>
-                <div style="--h:45"><span>التكليفات</span></div>
-                <div style="--h:70"><span>الفعاليات</span></div>
-                <div style="--h:56"><span>البرامج الإذاعية</span></div>
+              <div class="insight-board">
+                <section class="readiness-card">
+                  <div class="readiness-ring" id="readinessRing" style="--score:0">
+                    <strong id="readinessScore">0%</strong>
+                    <span>جاهزية الملف</span>
+                  </div>
+                  <div>
+                    <h4 id="readinessTitle">ابدأ ببناء ملف الإنجاز</h4>
+                    <p id="readinessText">كل إنجاز موثق ومرفق يقرب الملف من النسخة الجاهزة للتقديم.</p>
+                  </div>
+                </section>
+                <section class="insight-strip" id="insightStrip"></section>
+                <section class="smart-alerts">
+                  <h4>تنبيهات ذكية</h4>
+                  <ul id="smartAlerts"></ul>
+                </section>
+                <section class="coverage-bars">
+                  <h4>توزيع الإنجازات</h4>
+                  <div id="coverageBars"></div>
+                </section>
               </div>
             </div>
 
@@ -271,6 +283,11 @@
                       <option value="1">قبل يوم</option>
                     </select>
                   </label>
+                  <div class="reminder-pills" id="reminderPills" aria-label="اختيار وقت التنبيه">
+                    <button class="active" type="button" data-reminder-value="7"><span>7</span><strong>قبل أسبوع</strong><small>مناسب للتجهيز المبكر</small></button>
+                    <button type="button" data-reminder-value="3"><span>3</span><strong>قبل 3 أيام</strong><small>مراجعة الشواهد</small></button>
+                    <button type="button" data-reminder-value="1"><span>1</span><strong>قبل يوم</strong><small>تأكيد نهائي</small></button>
+                  </div>
                   <label class="wide">ملاحظات أو مرفقات<textarea id="eventNotes" rows="3" placeholder="رابط، ملاحظات، أو متطلبات النشاط"></textarea></label>
                   <button id="addCalendarEvent" type="button">إضافة إلى الرزنامة</button>
                   <span id="calendarStatus" class="calendar-status"></span>
@@ -691,6 +708,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=40"></script>
+    <script type="module" src="app.js?v=42"></script>
   </body>
 </html>

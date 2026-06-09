@@ -590,6 +590,175 @@ input, select, textarea { box-sizing: border-box; }
   text-align: center;
 }
 
+.performance .panel-title > span {
+  min-width: 62px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--brand-navy);
+  background: rgba(201, 162, 39, 0.18);
+  text-align: center;
+  font-weight: 950;
+}
+
+.insight-board {
+  display: grid;
+  gap: 12px;
+}
+
+.readiness-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(77, 182, 172, 0.14), transparent 34%),
+    #fff;
+}
+
+.readiness-ring {
+  width: 116px;
+  height: 116px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, white 58%, transparent 60%),
+    conic-gradient(var(--brand-gold) calc(var(--score) * 1%), #e8edf1 0);
+  box-shadow: inset 0 0 0 1px rgba(30, 42, 68, 0.06);
+}
+
+.readiness-ring strong {
+  color: var(--brand-navy);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.readiness-ring span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.readiness-card h4,
+.smart-alerts h4,
+.coverage-bars h4 {
+  margin: 0 0 8px;
+  color: var(--brand-navy);
+  font-size: 1rem;
+}
+
+.readiness-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 800;
+}
+
+.insight-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.insight-strip article {
+  min-width: 0;
+  padding: 11px;
+  border-radius: 14px;
+  background: #f8fafb;
+}
+
+.insight-strip span,
+.smart-alerts span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.insight-strip strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--brand-navy);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.smart-alerts,
+.coverage-bars {
+  padding: 14px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.smart-alerts ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.smart-alerts li {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: #f8fafb;
+}
+
+.smart-alerts strong {
+  color: var(--brand-navy);
+  font-size: 0.9rem;
+}
+
+.coverage-bars > div {
+  display: grid;
+  gap: 9px;
+}
+
+.coverage-bars article {
+  display: grid;
+  gap: 6px;
+}
+
+.coverage-bars article div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--brand-navy);
+  font-weight: 900;
+}
+
+.coverage-bars article span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.coverage-bars article b {
+  color: var(--brand-navy);
+}
+
+.coverage-bars em {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf1;
+}
+
+.coverage-bars em::before {
+  content: "";
+  display: block;
+  width: var(--w);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-teal), var(--brand-gold));
+}
+
 .start-card {
   display: grid;
   justify-items: center;
@@ -1061,6 +1230,87 @@ input, select, textarea { box-sizing: border-box; }
   border-radius: 13px;
   padding: 12px;
   background: white;
+}
+
+.event-form label:has(#eventReminder) {
+  display: none;
+}
+
+.reminder-pills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reminder-pills button {
+  display: grid;
+  gap: 5px;
+  min-height: 94px;
+  padding: 11px 9px;
+  border: 1px solid rgba(30, 42, 68, 0.1);
+  border-radius: 16px;
+  color: var(--brand-navy);
+  background: #f8fafb;
+  text-align: center;
+  cursor: pointer;
+}
+
+.reminder-pills button span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border-radius: 11px;
+  color: white;
+  background: var(--brand-navy);
+  font-weight: 950;
+}
+
+.reminder-pills button strong {
+  color: var(--brand-navy);
+  font-size: 0.86rem;
+}
+
+.reminder-pills button small {
+  color: var(--muted);
+  line-height: 1.4;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.reminder-pills button.active {
+  border-color: rgba(201, 162, 39, 0.55);
+  background:
+    radial-gradient(circle at 18% 10%, rgba(201, 162, 39, 0.18), transparent 42%),
+    white;
+  box-shadow: 0 12px 24px rgba(30, 42, 68, 0.08);
+}
+
+.reminder-pills button.active span {
+  color: var(--brand-navy);
+  background: var(--brand-gold);
+}
+
+.reminder-chip {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(201, 162, 39, 0.24);
+  border-radius: 12px;
+  background: rgba(201, 162, 39, 0.08);
+}
+
+.reminder-chip b {
+  color: var(--brand-navy);
+  font-size: 0.82rem;
+}
+
+.reminder-chip span {
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .event-form button {
@@ -1714,6 +1964,7 @@ input, select, textarea { box-sizing: border-box; }
   .sidebar nav,
   .metrics,
   .quick > div,
+  .insight-strip,
   .chart,
   .portfolio-grid,
   .report-grid,
@@ -1727,6 +1978,16 @@ input, select, textarea { box-sizing: border-box; }
   }
   .top-hero { padding: 86px 18px 22px; }
   .hero-art { display: none; }
+
+  .readiness-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .reminder-pills {
+    grid-template-columns: 1fr;
+  }
 
   .calendar-days {
     display: none;
