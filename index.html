@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=15" />
+    <link rel="stylesheet" href="styles.css?v=16" />
   </head>
   <body>
     <div class="scene">
@@ -605,11 +605,42 @@
           </section>
 
           <section class="view" data-page="awards">
-            <div class="page-head"><p>الجوائز</p><h2>الجوائز والإنجازات</h2></div>
-            <div class="form-page">
-              <label>اسم الجائزة<input type="text" /></label>
-              <label>المستوى<input type="text" placeholder="مدرسي / منطقة / وزارة" /></label>
-              <label>الشهادة<input type="text" placeholder="رابط أو اسم مرفق" /></label>
+            <div class="page-head with-actions">
+              <div><p>الجوائز</p><h2>الجوائز والإنجازات</h2></div>
+              <button class="print-button" type="button" data-print="awards">تحميل / طباعة</button>
+            </div>
+            <div class="awards-workspace printable-card" data-print-section="awards">
+              <section class="award-form">
+                <div>
+                  <p>إضافة جائزة</p>
+                  <h3>توثيق الجوائز المهنية</h3>
+                </div>
+                <label>اسم الجائزة<input id="awardTitle" type="text" placeholder="مثال: جائزة المعلم المتميز" /></label>
+                <label>المستوى<select id="awardLevel">
+                  <option>مدرسي</option>
+                  <option>منطقة تعليمية</option>
+                  <option>وزارة التربية</option>
+                  <option>دولة / خارجية</option>
+                </select></label>
+                <label>التاريخ<input id="awardDate" type="date" /></label>
+                <label>الجهة المانحة<input id="awardIssuer" type="text" placeholder="مثال: إدارة المدرسة / التوجيه الفني" /></label>
+                <label class="wide">الشهادة أو الرابط<input id="awardEvidence" type="text" placeholder="رابط الشهادة أو اسم الملف" /></label>
+                <label class="wide">ملاحظات<textarea id="awardNotes" rows="4" placeholder="اكتب أثر الجائزة أو سبب الحصول عليها"></textarea></label>
+                <div class="profile-save-row">
+                  <button id="saveAward" type="button">حفظ الجائزة</button>
+                  <span id="awardStatus"></span>
+                </div>
+              </section>
+              <section class="award-list-panel">
+                <div class="award-list-head">
+                  <div>
+                    <p>السجل</p>
+                    <h3>الجوائز المحفوظة</h3>
+                  </div>
+                  <strong id="awardCount">0</strong>
+                </div>
+                <div class="award-list" id="awardList"></div>
+              </section>
             </div>
           </section>
 
@@ -659,6 +690,6 @@
       <a href="teacher-portfolio-kuwait.html">ملف إنجاز المعلم في الكويت</a>
     </footer>
 
-    <script type="module" src="app.js?v=35"></script>
+    <script type="module" src="app.js?v=36"></script>
   </body>
 </html>

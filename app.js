@@ -115,6 +115,16 @@ const casualSelectedRemaining = document.querySelector("#casualSelectedRemaining
 const casualTermOneCount = document.querySelector("#casualTermOneCount");
 const casualTermTwoCount = document.querySelector("#casualTermTwoCount");
 const totalLeaveDays = document.querySelector("#totalLeaveDays");
+const awardTitle = document.querySelector("#awardTitle");
+const awardLevel = document.querySelector("#awardLevel");
+const awardDate = document.querySelector("#awardDate");
+const awardIssuer = document.querySelector("#awardIssuer");
+const awardEvidence = document.querySelector("#awardEvidence");
+const awardNotes = document.querySelector("#awardNotes");
+const saveAwardButton = document.querySelector("#saveAward");
+const awardStatus = document.querySelector("#awardStatus");
+const awardCount = document.querySelector("#awardCount");
+const awardList = document.querySelector("#awardList");
 const eventDialog = document.querySelector("#eventDialog");
 const eventDialogType = document.querySelector("#eventDialogType");
 const eventDialogTitle = document.querySelector("#eventDialogTitle");
@@ -206,6 +216,7 @@ const portfolioConfig = {
 let activePortfolio = "meetings";
 let activeReport = "monthly";
 let achievements = JSON.parse(localStorage.getItem("munjaz.achievements") || "[]");
+let awards = JSON.parse(localStorage.getItem("munjaz.awards") || "[]");
 let currentUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
 let profileDetails = JSON.parse(localStorage.getItem("munjaz.profileDetails") || "{}");
 let currentEvidence = [];
@@ -228,11 +239,13 @@ const CASUAL_LEAVE_TERM_LIMIT = 2;
 let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sickRecords":[],"casual":0}');
 
 achievements = cleanStoredData(achievements);
+awards = cleanStoredData(awards);
 profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
 localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
+localStorage.setItem("munjaz.awards", JSON.stringify(awards));
 localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
@@ -458,6 +471,7 @@ async function saveRemoteState() {
       email: currentUser.email,
       name: currentUser.name,
       profileDetails,
+      awards,
       excellentDays,
       leaveStats,
       updatedAt: serverTimestamp(),
@@ -511,6 +525,11 @@ async function loadRemoteState() {
           profileDetails = normalizeProfileDetails(profile.profileDetails);
           localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
           renderProfileDetails();
+        }
+        if (Array.isArray(profile.awards)) {
+          awards = cleanStoredData(profile.awards);
+          localStorage.setItem("munjaz.awards", JSON.stringify(awards));
+          renderAwards();
         }
         localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
         updateAuthUI();
@@ -1226,6 +1245,77 @@ function renderHomeMetrics() {
   if (homeMetrics.progress) homeMetrics.progress.textContent = `${progress}%`;
 }
 
+function persistAwards() {
+  awards = cleanStoredData(awards);
+  localStorage.setItem("munjaz.awards", JSON.stringify(awards));
+  saveRemoteState().catch(() => {});
+}
+
+function renderAwards() {
+  if (!awardList || !awardCount) return;
+  awardCount.textContent = awards.length;
+
+  if (!awards.length) {
+    awardList.innerHTML = '<div class="empty-saved">لا توجد جوائز محفوظة بعد.</div>';
+    return;
+  }
+
+  awardList.innerHTML = awards
+    .map(
+      (award) => `
+        <article>
+          <div>
+            <strong>${escapeHtml(award.title)}</strong>
+            <span>${escapeHtml(award.level || "بدون مستوى")} - ${escapeHtml(award.date || "بدون تاريخ")}</span>
+          </div>
+          <p>${escapeHtml(award.issuer || "بدون جهة مانحة")}</p>
+          ${award.evidence ? `<a href="${escapeHtml(award.evidence)}" target="_blank" rel="noopener">${escapeHtml(award.evidence)}</a>` : ""}
+          ${award.notes ? `<small>${escapeHtml(award.notes)}</small>` : ""}
+          <button type="button" data-delete-award="${escapeHtml(award.id)}">حذف</button>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function saveAward() {
+  const title = awardTitle?.value.trim() || "";
+  if (!title) {
+    if (awardStatus) {
+      awardStatus.textContent = "اكتب اسم الجائزة أولاً.";
+      awardStatus.classList.add("error");
+    }
+    return;
+  }
+
+  awards.unshift({
+    id: crypto.randomUUID(),
+    title,
+    level: awardLevel?.value || "",
+    date: awardDate?.value || "",
+    issuer: awardIssuer?.value.trim() || "",
+    evidence: awardEvidence?.value.trim() || "",
+    notes: awardNotes?.value.trim() || "",
+    createdAt: new Date().toISOString(),
+  });
+
+  persistAwards();
+  renderAwards();
+  [awardTitle, awardDate, awardIssuer, awardEvidence, awardNotes].forEach((input) => {
+    if (input) input.value = "";
+  });
+  if (awardStatus) {
+    awardStatus.textContent = "تم حفظ الجائزة.";
+    awardStatus.classList.remove("error");
+  }
+}
+
+function deleteAward(id) {
+  awards = awards.filter((award) => award.id !== id);
+  persistAwards();
+  renderAwards();
+}
+
 function renderSelectedEvidence() {
   if (!selectedEvidence) return;
   attachmentCount.textContent = currentEvidence.length;
@@ -1564,6 +1654,12 @@ copyQrLink?.addEventListener("click", async () => {
 });
 
 saveProfileDetailsButton?.addEventListener("click", saveProfileDetails);
+saveAwardButton?.addEventListener("click", saveAward);
+awardList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-delete-award]");
+  if (!button) return;
+  deleteAward(button.dataset.deleteAward);
+});
 
 reportButtons.forEach((button) => {
   button.addEventListener("click", () => renderReport(button.dataset.reportType));
@@ -1695,6 +1791,7 @@ updateAuthUI();
 renderProfileDetails();
 renderPortfolioQr();
 renderHomeMetrics();
+renderAwards();
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
