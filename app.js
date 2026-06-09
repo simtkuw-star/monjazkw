@@ -57,6 +57,15 @@ const reportTitle = document.querySelector("#reportTitle");
 const reportGeneratedAt = document.querySelector("#reportGeneratedAt");
 const reportStats = document.querySelector("#reportStats");
 const reportSections = document.querySelector("#reportSections");
+const homeMetrics = {
+  total: document.querySelector("#metricTotalAchievements"),
+  development: document.querySelector("#metricDevelopment"),
+  competitions: document.querySelector("#metricCompetitions"),
+  lessons: document.querySelector("#metricLessons"),
+  radio: document.querySelector("#metricRadio"),
+  visits: document.querySelector("#metricVisits"),
+  progress: document.querySelector("#metricProgress"),
+};
 const ideaSearches = document.querySelectorAll(".idea-search");
 const ideaButtons = document.querySelectorAll(".idea-button");
 const suggestionTriggers = document.querySelectorAll("[data-suggest-topic]");
@@ -530,6 +539,7 @@ async function loadRemoteState() {
       localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
     } catch {}
     renderPortfolio(activePortfolio);
+    renderHomeMetrics();
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
@@ -538,6 +548,7 @@ async function loadRemoteState() {
 
   if (!HAS_LOCAL_API) {
     renderPortfolio(activePortfolio);
+    renderHomeMetrics();
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
@@ -557,11 +568,13 @@ async function loadRemoteState() {
       saveCalendarEvents();
     }
     renderPortfolio(activePortfolio);
+    renderHomeMetrics();
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
   } catch {
     renderPortfolio(activePortfolio);
+    renderHomeMetrics();
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
@@ -1194,6 +1207,25 @@ function renderPortfolio(tabKey = activePortfolio) {
   renderSavedAchievements();
 }
 
+function countAchievementsByType(...types) {
+  const wanted = new Set(types);
+  return achievements.filter((item) => wanted.has(item.type)).length;
+}
+
+function renderHomeMetrics() {
+  const total = achievements.length;
+  const yearlyTarget = 30;
+  const progress = Math.min(100, Math.round((total / yearlyTarget) * 100));
+
+  if (homeMetrics.total) homeMetrics.total.textContent = total;
+  if (homeMetrics.development) homeMetrics.development.textContent = countAchievementsByType("development", "workshops");
+  if (homeMetrics.competitions) homeMetrics.competitions.textContent = countAchievementsByType("competitions");
+  if (homeMetrics.lessons) homeMetrics.lessons.textContent = countAchievementsByType("lessons");
+  if (homeMetrics.radio) homeMetrics.radio.textContent = countAchievementsByType("radio");
+  if (homeMetrics.visits) homeMetrics.visits.textContent = countAchievementsByType("visits");
+  if (homeMetrics.progress) homeMetrics.progress.textContent = `${progress}%`;
+}
+
 function renderSelectedEvidence() {
   if (!selectedEvidence) return;
   attachmentCount.textContent = currentEvidence.length;
@@ -1291,6 +1323,7 @@ function saveAchievement() {
     if (field) field.value = "";
   });
   renderSavedAchievements();
+  renderHomeMetrics();
   renderReport(activeReport);
 }
 
@@ -1298,6 +1331,7 @@ function deleteAchievement(id) {
   achievements = achievements.filter((item) => item.id !== id);
   persistAchievements();
   renderSavedAchievements();
+  renderHomeMetrics();
   renderReport(activeReport);
 }
 
@@ -1660,6 +1694,7 @@ if (document.querySelector(`[data-page="${initialPage}"]`)) {
 updateAuthUI();
 renderProfileDetails();
 renderPortfolioQr();
+renderHomeMetrics();
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
