@@ -2507,16 +2507,25 @@ body {
   font-weight: 800;
 }
 
-.qr-card img {
+.qr-code-box {
   width: 100%;
   max-width: 190px;
   aspect-ratio: 1;
+  display: grid;
+  place-items: center;
   justify-self: center;
   padding: 12px;
   border: 1px solid rgba(30, 42, 68, 0.1);
   border-radius: 18px;
   background: white;
   box-shadow: 0 14px 24px rgba(30, 42, 68, 0.08);
+}
+
+.qr-code-box canvas,
+.qr-code-box img {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
 }
 
 .qr-card label {
@@ -3003,6 +3012,18 @@ body {
   height: 112px;
   border-radius: 18px;
   padding: 8px;
+  background: white;
+  box-shadow: 0 14px 32px rgba(30, 42, 68, 0.1);
+}
+
+.full-qr-fallback {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: var(--brand-navy);
   background: white;
   box-shadow: 0 14px 32px rgba(30, 42, 68, 0.1);
 }

@@ -800,13 +800,46 @@ async function saveProfileDetails() {
   }
 }
 
+function createQrDataUrl(text, size = 260) {
+  if (!window.QRCode) return "";
+  const holder = document.createElement("div");
+  new window.QRCode(holder, {
+    text,
+    width: size,
+    height: size,
+    colorDark: "#1e2a44",
+    colorLight: "#ffffff",
+    correctLevel: window.QRCode.CorrectLevel.M,
+  });
+  const canvas = holder.querySelector("canvas");
+  if (canvas) return canvas.toDataURL("image/png");
+  return holder.querySelector("img")?.src || "";
+}
+
+function renderQrCode(element, text, size = 260) {
+  if (!element) return "";
+  element.innerHTML = "";
+  if (!window.QRCode) {
+    element.textContent = "QR";
+    return "";
+  }
+  new window.QRCode(element, {
+    text,
+    width: size,
+    height: size,
+    colorDark: "#1e2a44",
+    colorLight: "#ffffff",
+    correctLevel: window.QRCode.CorrectLevel.M,
+  });
+  return createQrDataUrl(text, size);
+}
+
 function renderPortfolioQr() {
   if (!portfolioQr || !portfolioQrLink || !downloadQrLink) return;
   const qrTarget = "https://monjazkw.com/#portfolio";
-  const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(qrTarget)}`;
-  portfolioQr.src = qrImage;
+  const qrImage = renderQrCode(portfolioQr, qrTarget, 260);
   portfolioQrLink.value = qrTarget;
-  downloadQrLink.href = qrImage;
+  downloadQrLink.href = qrImage || "#";
 }
 
 function openLogin() {
@@ -1481,7 +1514,7 @@ function renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenc
   const casualTermTwo = normalizeLeaveStats(leaveStats).casualTermTwo;
   const sickByTerm = countBy(sickRecords, (record) => formatTermName(record.term));
   const qrTarget = "https://monjazkw.com/#portfolio";
-  const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=12&data=${encodeURIComponent(qrTarget)}`;
+  const qrImage = createQrDataUrl(qrTarget, 180);
 
   const profileBlock = profileRows
     .map(([label, value]) => `<div><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`)
@@ -1555,7 +1588,7 @@ function renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenc
         <p>امسح الرمز للوصول إلى ملف الإنجاز الإلكتروني مباشرة.</p>
         <small>${qrTarget}</small>
       </div>
-      <img src="${qrImage}" alt="QR ملف الإنجاز" />
+      ${qrImage ? `<img src="${qrImage}" alt="QR ملف الإنجاز" />` : '<b class="full-qr-fallback">QR</b>'}
     </article>
     <article class="full-term-card">
       <h4>توزيع الإجازات الطبية</h4>
