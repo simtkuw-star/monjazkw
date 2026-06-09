@@ -2529,20 +2529,6 @@ body {
   display: block;
 }
 
-.qr-code-box .qr-center-logo {
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 24% !important;
-  height: 24% !important;
-  transform: translate(-50%, -50%);
-  object-fit: contain;
-  padding: 4px;
-  border: 1px solid rgba(30, 42, 68, 0.12);
-  border-radius: 10px;
-  background: white;
-  box-shadow: 0 8px 18px rgba(30, 42, 68, 0.14);
-}
-
 .qr-card label {
   display: grid;
   gap: 7px;
@@ -3022,15 +3008,7 @@ body {
     white !important;
 }
 
-.full-qr-stack {
-  position: relative;
-  width: 112px;
-  height: 112px;
-  flex: 0 0 auto;
-  display: block;
-}
-
-.full-qr-stack > img:first-child {
+.full-qr-card img {
   width: 112px;
   height: 112px;
   display: block;
@@ -3038,20 +3016,6 @@ body {
   padding: 8px;
   background: white;
   box-shadow: 0 14px 32px rgba(30, 42, 68, 0.1);
-}
-
-.full-qr-logo {
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 28px;
-  height: 28px;
-  transform: translate(-50%, -50%);
-  object-fit: contain;
-  padding: 3px;
-  border: 1px solid rgba(30, 42, 68, 0.12);
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 6px 14px rgba(30, 42, 68, 0.14);
 }
 
 .full-qr-fallback {
