@@ -52,6 +52,23 @@ const portfolioQrLink = document.querySelector("#portfolioQrLink");
 const copyQrLink = document.querySelector("#copyQrLink");
 const downloadQrLink = document.querySelector("#downloadQrLink");
 const qrStatus = document.querySelector("#qrStatus");
+const shareView = {
+  name: document.querySelector("#shareName"),
+  meta: document.querySelector("#shareMeta"),
+  updated: document.querySelector("#shareUpdated"),
+  readinessRing: document.querySelector("#shareReadinessRing"),
+  readiness: document.querySelector("#shareReadiness"),
+  readinessTitle: document.querySelector("#shareReadinessTitle"),
+  readinessText: document.querySelector("#shareReadinessText"),
+  total: document.querySelector("#shareTotal"),
+  evidence: document.querySelector("#shareEvidence"),
+  awards: document.querySelector("#shareAwards"),
+  days: document.querySelector("#shareDays"),
+  strongest: document.querySelector("#shareStrongest"),
+  highlights: document.querySelector("#shareHighlights"),
+  coverage: document.querySelector("#shareCoverage"),
+  awardsList: document.querySelector("#shareAwardsList"),
+};
 const reportButtons = document.querySelectorAll("[data-report-type]");
 const reportTitle = document.querySelector("#reportTitle");
 const reportGeneratedAt = document.querySelector("#reportGeneratedAt");
@@ -817,6 +834,8 @@ async function saveProfileDetails() {
     localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
     updateAuthUI();
   }
+  renderHomeMetrics();
+  renderSharePage();
 
   if (profileSaveStatus) profileSaveStatus.textContent = currentUser ? "جاري الحفظ..." : "تم الحفظ على هذا الجهاز.";
   try {
@@ -827,7 +846,8 @@ async function saveProfileDetails() {
   }
 }
 
-const STATIC_QR_SRC = "assets/portfolio-qr.png";
+const SHARE_URL = "https://monjazkw.com/#share";
+const STATIC_QR_SRC = "assets/share-qr.png";
 
 function createQrDataUrl(text, size = 260) {
   if (!window.QRCode) return STATIC_QR_SRC;
@@ -865,7 +885,7 @@ function renderQrCode(element, text, size = 260) {
 
 function renderPortfolioQr() {
   if (!portfolioQr || !portfolioQrLink || !downloadQrLink) return;
-  const qrTarget = "https://monjazkw.com/#portfolio";
+  const qrTarget = SHARE_URL;
   const qrImage = renderQrCode(portfolioQr, qrTarget, 260);
   portfolioQrLink.value = qrTarget;
   downloadQrLink.href = qrImage || "#";
@@ -1399,6 +1419,55 @@ function renderSmartInsights(readiness) {
     .join("");
 }
 
+function renderSharePage() {
+  if (!shareView.name) return;
+  const readiness = getReadinessData();
+  const profileName = profileDetails.fullName || currentUser?.name || "ملف الإنجاز المهني";
+  const metaParts = [profileDetails.school, profileDetails.stage, profileDetails.district].filter(Boolean);
+  const updatedAt = new Date().toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" });
+  const coverageItems = Object.entries(countBy(achievements, (item) => portfolioConfig[item.type]?.title || "إنجاز آخر"))
+    .sort((a, b) => b[1] - a[1]);
+  const maxCoverage = Math.max(1, ...coverageItems.map(([, value]) => value));
+  const highlights = achievements.slice(0, 5);
+  const visibleAwards = awards.slice(0, 4);
+
+  shareView.name.textContent = profileName;
+  shareView.meta.textContent = metaParts.length ? metaParts.join(" - ") : "أكمل بياناتي لعرض المدرسة والمرحلة والمنطقة";
+  shareView.updated.textContent = `آخر تحديث: ${updatedAt}`;
+  shareView.readinessRing?.style.setProperty("--score", readiness.score);
+  shareView.readiness.textContent = `${readiness.score}%`;
+  shareView.readinessTitle.textContent = readiness.score >= 80 ? "ملف جاهز للعرض" : readiness.score >= 45 ? "ملف متقدم" : "ملف قيد البناء";
+  shareView.readinessText.textContent =
+    readiness.score >= 80
+      ? "الملف يحتوي على توثيق جيد ويمكن مشاركته للزيارة أو العرض."
+      : "كلما زادت الشواهد وتنوعت المجالات ظهرت صفحة المشاركة بصورة أقوى.";
+  shareView.total.textContent = achievements.length;
+  shareView.evidence.textContent = readiness.evidenceCount;
+  shareView.awards.textContent = awards.length;
+  shareView.days.textContent = excellentDays.length;
+  shareView.strongest.textContent = readiness.strongestArea;
+
+  shareView.highlights.innerHTML = highlights.length
+    ? highlights
+        .map(
+          (item) => `<li><span>${escapeHtml(item.title)}</span><small>${portfolioConfig[item.type]?.title || "إنجاز"} - ${item.date || "بدون تاريخ"}</small></li>`,
+        )
+        .join("")
+    : '<li><span>لا توجد إنجازات معروضة بعد.</span><small>ابدأ بإضافة إنجاز من ملف الإنجاز.</small></li>';
+
+  shareView.coverage.innerHTML = coverageItems.length
+    ? coverageItems
+        .map(([label, value]) => `<article style="--w:${Math.max(8, Math.round((value / maxCoverage) * 100))}%"><div><span>${escapeHtml(label)}</span><b>${value}</b></div><em></em></article>`)
+        .join("")
+    : '<p>لا يوجد توزيع بعد.</p>';
+
+  shareView.awardsList.innerHTML = visibleAwards.length
+    ? visibleAwards
+        .map((award) => `<li><span>${escapeHtml(award.title)}</span><small>${escapeHtml(award.level || "جائزة")} - ${award.date || "بدون تاريخ"}</small></li>`)
+        .join("")
+    : '<li><span>لا توجد جوائز محفوظة بعد.</span><small>يمكن إضافتها من صفحة الجوائز.</small></li>';
+}
+
 function renderHomeMetrics() {
   const total = achievements.length;
   const yearlyTarget = 30;
@@ -1428,6 +1497,7 @@ function renderHomeMetrics() {
           : "كل إنجاز موثق ومرفق يقرب الملف من النسخة الجاهزة للتقديم.";
   }
   renderSmartInsights(readiness);
+  renderSharePage();
 }
 
 function persistAwards() {
@@ -2071,7 +2141,7 @@ printButtons.forEach((button) => {
 });
 
 copyQrLink?.addEventListener("click", async () => {
-  const value = portfolioQrLink?.value || "https://monjazkw.com/#portfolio";
+  const value = portfolioQrLink?.value || SHARE_URL;
   try {
     await navigator.clipboard.writeText(value);
     if (qrStatus) qrStatus.textContent = "تم نسخ الرابط.";

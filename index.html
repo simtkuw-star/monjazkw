@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=23" />
+    <link rel="stylesheet" href="styles.css?v=24" />
   </head>
   <body>
     <div class="scene">
@@ -58,6 +58,7 @@
             <a href="#profile" data-page-link="profile"><span>○</span>بياناتي</a>
             <a href="#calendar" data-page-link="calendar"><span>▣</span>الرزنامة</a>
             <a href="#portfolio" data-page-link="portfolio"><span>□</span>ملف الإنجاز</a>
+            <a href="#share" data-page-link="share"><span>◇</span>المشاركة</a>
             <a href="#learners" data-page-link="learners"><span>◎</span>بطاقات الطلبة</a>
             <a href="#reports" data-page-link="reports"><span>▥</span>التقارير</a>
             <a href="#archive" data-page-link="archive"><span>▧</span>الأرشيف</a>
@@ -163,7 +164,7 @@
               <button data-page-button="reports"><i>▤</i>التقارير</button>
               <button data-page-button="portfolio"><i>□</i>مكتبة النماذج</button>
               <button data-page-button="learners"><i>◎</i>بطاقات الطلبة</button>
-              <button data-page-button="settings"><i>♙</i>مساعد ذكي</button>
+              <button data-page-button="share"><i>◇</i>مشاركة الملف</button>
             </div>
           </section>
           </section>
@@ -234,6 +235,65 @@
                 </div>
                 <small id="qrStatus"></small>
               </aside>
+            </div>
+          </section>
+
+          <section class="view" data-page="share">
+            <div class="page-head with-actions">
+              <div>
+                <p>المشاركة</p>
+                <h2>واجهة عرض ملف الإنجاز</h2>
+              </div>
+              <button class="print-button" type="button" data-print="share">تحميل / طباعة</button>
+            </div>
+            <div class="share-page printable-card" data-print-section="share">
+              <section class="share-hero-card">
+                <div>
+                  <span>منجز</span>
+                  <h3 id="shareName">ملف الإنجاز المهني</h3>
+                  <p id="shareMeta">المدرسة - المرحلة - المنطقة التعليمية</p>
+                  <small id="shareUpdated">آخر تحديث: اليوم</small>
+                </div>
+                <img src="munjaz-logo-cropped.png" alt="شعار منجز" />
+              </section>
+
+              <section class="share-score-card">
+                <div class="readiness-ring share-ring" id="shareReadinessRing" style="--score:0">
+                  <strong id="shareReadiness">0%</strong>
+                  <span>جاهزية الملف</span>
+                </div>
+                <div>
+                  <h4 id="shareReadinessTitle">ملف قيد البناء</h4>
+                  <p id="shareReadinessText">يعرض هذا الرابط ملخص ملف الإنجاز بصورة منظمة للزيارة أو العرض السريع.</p>
+                </div>
+              </section>
+
+              <section class="share-metrics">
+                <article><span>الإنجازات</span><strong id="shareTotal">0</strong></article>
+                <article><span>الشواهد</span><strong id="shareEvidence">0</strong></article>
+                <article><span>الجوائز</span><strong id="shareAwards">0</strong></article>
+                <article><span>الأيام الفعلية</span><strong id="shareDays">0</strong></article>
+              </section>
+
+              <section class="share-grid">
+                <article class="share-panel">
+                  <h4>أقوى مجال</h4>
+                  <strong id="shareStrongest">لم يحدد بعد</strong>
+                  <p>يعتمد على أكثر المجالات توثيقاً في ملف الإنجاز.</p>
+                </article>
+                <article class="share-panel">
+                  <h4>أبرز الإنجازات</h4>
+                  <ul id="shareHighlights"></ul>
+                </article>
+                <article class="share-panel">
+                  <h4>توزيع المجالات</h4>
+                  <div class="share-coverage" id="shareCoverage"></div>
+                </article>
+                <article class="share-panel">
+                  <h4>الجوائز</h4>
+                  <ul id="shareAwardsList"></ul>
+                </article>
+              </section>
             </div>
           </section>
 
@@ -749,6 +809,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=43"></script>
+    <script type="module" src="app.js?v=44"></script>
   </body>
 </html>
