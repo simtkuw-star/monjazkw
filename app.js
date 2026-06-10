@@ -384,6 +384,10 @@ function normalizeProfileDetails(raw = {}) {
   };
 }
 
+function getPublicProfileName(fallback = "ملف الإنجاز المهني") {
+  return profileDetails.fullName?.trim() || fallback;
+}
+
 function getArabicWeekday(dateKey) {
   if (!dateKey) return "";
   const date = new Date(`${dateKey}T12:00:00`);
@@ -1422,7 +1426,7 @@ function renderSmartInsights(readiness) {
 function renderSharePage() {
   if (!shareView.name) return;
   const readiness = getReadinessData();
-  const profileName = profileDetails.fullName || currentUser?.name || "ملف الإنجاز المهني";
+  const profileName = getPublicProfileName();
   const metaParts = [profileDetails.school, profileDetails.stage, profileDetails.district].filter(Boolean);
   const updatedAt = new Date().toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" });
   const coverageItems = Object.entries(countBy(achievements, (item) => portfolioConfig[item.type]?.title || "إنجاز آخر"))
@@ -1724,7 +1728,7 @@ function formatTermName(term) {
 function renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenceCount) {
   const safeProfile = profileDetails || {};
   const profileRows = [
-    ["اسم المعلم/ـة", safeProfile.fullName || currentUser?.email || "غير محدد"],
+    ["اسم المعلم/ـة", getPublicProfileName("غير محدد")],
     ["الرقم الوظيفي", safeProfile.employeeId || "غير محدد"],
     ["التخصص", safeProfile.specialty || "غير محدد"],
     ["المرحلة", safeProfile.stage || "غير محدد"],
@@ -1947,7 +1951,7 @@ function buildArchiveSnapshot() {
     year,
     term,
     createdAt: new Date().toISOString(),
-    profileName: profileDetails.fullName || currentUser?.email || "غير محدد",
+    profileName: getPublicProfileName("غير محدد"),
     school: profileDetails.school || "غير محدد",
     stage: profileDetails.stage || "غير محدد",
     achievementsCount: achievements.length,
