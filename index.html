@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=31" />
+    <link rel="stylesheet" href="styles.css?v=32" />
   </head>
   <body>
     <div class="scene">
@@ -58,6 +58,7 @@
             <a href="#profile" data-page-link="profile"><span>○</span>بياناتي</a>
             <a href="#calendar" data-page-link="calendar"><span>▣</span>الرزنامة</a>
             <a href="#portfolio" data-page-link="portfolio"><span>□</span>ملف الإنجاز</a>
+            <a href="#developmentPlan" data-page-link="developmentPlan"><span>▤</span>خطة التطوير</a>
             <a href="#share" data-page-link="share"><span>◇</span>المشاركة</a>
             <a href="#learners" data-page-link="learners"><span>◎</span>بطاقات الطلبة</a>
             <a href="#reports" data-page-link="reports"><span>▥</span>التقارير</a>
@@ -584,6 +585,86 @@
             </div>
           </section>
 
+          <section class="view" data-page="developmentPlan">
+            <div class="page-head with-actions">
+              <div>
+                <p>التطوير المهني</p>
+                <h2>خطة تطوير مهني</h2>
+              </div>
+              <button class="print-button" type="button" data-print="developmentPlan">تحميل / طباعة</button>
+            </div>
+            <div class="development-plan-workspace printable-card" data-print-section="developmentPlan">
+              <section class="development-plan-hero">
+                <div>
+                  <span>خطة ذكية</span>
+                  <h3>مسار واضح لتطوير الأداء المهني</h3>
+                  <p>حدد هدفا مهنيا، اربطه بإجراء عملي وشاهد، ثم تابع حالة التنفيذ خلال العام الدراسي.</p>
+                </div>
+                <strong id="developmentPlanCompletion">0%</strong>
+              </section>
+
+              <section class="development-plan-stats">
+                <article><span>الأهداف</span><strong id="developmentPlanTotal">0</strong><small>هدف مهني</small></article>
+                <article><span>تم إنجازه</span><strong id="developmentPlanDone">0</strong><small>مكتمل</small></article>
+                <article><span>قيد التنفيذ</span><strong id="developmentPlanActive">0</strong><small>متابعة</small></article>
+                <article><span>أقرب متابعة</span><strong id="developmentPlanNext">-</strong><small>تاريخ مستحق</small></article>
+              </section>
+
+              <section class="development-plan-builder">
+                <div class="development-plan-form">
+                  <label>مجال التطوير
+                    <select id="developmentFocus">
+                      <option>الأداء التدريسي</option>
+                      <option>استراتيجيات التدريس</option>
+                      <option>التقويم وأدوات القياس</option>
+                      <option>التقنيات التعليمية</option>
+                      <option>إدارة الصف</option>
+                      <option>القيادة التربوية</option>
+                      <option>رعاية المتعلمين</option>
+                    </select>
+                  </label>
+                  <label>الأولوية
+                    <select id="developmentPriority">
+                      <option value="high">عالية</option>
+                      <option value="medium">متوسطة</option>
+                      <option value="low">منخفضة</option>
+                    </select>
+                  </label>
+                  <label class="wide">الهدف التطويري
+                    <textarea id="developmentGoal" rows="3" placeholder="مثال: تحسين توظيف استراتيجيات التعلم النشط داخل الحصة"></textarea>
+                  </label>
+                  <label class="wide">الإجراء العملي
+                    <textarea id="developmentAction" rows="3" placeholder="مثال: حضور ورشة، تطبيق استراتيجية، قياس أثرها على المتعلمين"></textarea>
+                  </label>
+                  <label>الشاهد المتوقع
+                    <input id="developmentEvidence" type="text" placeholder="خطة درس، صور، تقرير أثر" />
+                  </label>
+                  <label>تاريخ المتابعة
+                    <input id="developmentDueDate" type="date" />
+                  </label>
+                  <label>حالة التنفيذ
+                    <select id="developmentStatus">
+                      <option value="planned">مخطط</option>
+                      <option value="active">قيد التنفيذ</option>
+                      <option value="completed">منجز</option>
+                    </select>
+                  </label>
+                  <button id="addDevelopmentGoal" type="button">إضافة للخطة</button>
+                  <small id="developmentPlanStatus"></small>
+                </div>
+
+                <aside class="development-plan-suggestions">
+                  <span>اقتراحات جاهزة</span>
+                  <h3>اختصر وقت كتابة الخطة</h3>
+                  <p>اختَر مسارا جاهزا ثم عدل عليه بما يناسب تخصصك ومدرستك.</p>
+                  <div id="developmentSuggestions"></div>
+                </aside>
+              </section>
+
+              <section class="development-plan-list" id="developmentPlanList"></section>
+            </div>
+          </section>
+
           <section class="view" data-page="reports">
             <div class="page-head with-actions">
               <div>
@@ -1033,6 +1114,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=52"></script>
+    <script type="module" src="app.js?v=53"></script>
   </body>
 </html>

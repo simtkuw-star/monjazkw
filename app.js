@@ -104,6 +104,26 @@ const settingsView = {
 };
 const saveSystemSettingsButton = document.querySelector("#saveSystemSettings");
 const exportBackupButton = document.querySelector("#exportBackup");
+const developmentPlanInputs = {
+  focus: document.querySelector("#developmentFocus"),
+  priority: document.querySelector("#developmentPriority"),
+  goal: document.querySelector("#developmentGoal"),
+  action: document.querySelector("#developmentAction"),
+  evidence: document.querySelector("#developmentEvidence"),
+  dueDate: document.querySelector("#developmentDueDate"),
+  status: document.querySelector("#developmentStatus"),
+};
+const developmentPlanView = {
+  completion: document.querySelector("#developmentPlanCompletion"),
+  total: document.querySelector("#developmentPlanTotal"),
+  done: document.querySelector("#developmentPlanDone"),
+  active: document.querySelector("#developmentPlanActive"),
+  next: document.querySelector("#developmentPlanNext"),
+  status: document.querySelector("#developmentPlanStatus"),
+  suggestions: document.querySelector("#developmentSuggestions"),
+  list: document.querySelector("#developmentPlanList"),
+};
+const addDevelopmentGoalButton = document.querySelector("#addDevelopmentGoal");
 const homeMetrics = {
   total: document.querySelector("#metricTotalAchievements"),
   development: document.querySelector("#metricDevelopment"),
@@ -290,6 +310,7 @@ let archives = JSON.parse(localStorage.getItem("munjaz.archives") || "[]");
 let currentUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
 let profileDetails = JSON.parse(localStorage.getItem("munjaz.profileDetails") || "{}");
 let appSettings = JSON.parse(localStorage.getItem("munjaz.appSettings") || "{}");
+let developmentPlan = JSON.parse(localStorage.getItem("munjaz.developmentPlan") || "[]");
 let currentEvidence = [];
 let calendarDate = new Date(2026, 9, 1);
 let selectedCalendarDate = "2026-10-04";
@@ -315,6 +336,7 @@ awards = cleanStoredData(awards);
 archives = cleanStoredData(archives);
 profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
 appSettings = normalizeAppSettings(cleanStoredData(appSettings));
+developmentPlan = normalizeDevelopmentPlan(cleanStoredData(developmentPlan));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
@@ -323,6 +345,7 @@ localStorage.setItem("munjaz.awards", JSON.stringify(awards));
 localStorage.setItem("munjaz.archives", JSON.stringify(archives));
 localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
 localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
+localStorage.setItem("munjaz.developmentPlan", JSON.stringify(developmentPlan));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
 localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
@@ -349,6 +372,33 @@ const reportDescriptions = {
   annual: "يعطي صورة سنوية رسمية عن الأداء المهني والأنشطة والشواهد.",
   full: "يجمع ملف الإنجاز كاملا مع الرزنامة والمؤشرات في نسخة واحدة منظمة.",
 };
+
+const developmentPlanSuggestions = [
+  {
+    focus: "استراتيجيات التدريس",
+    priority: "high",
+    goal: "تطوير توظيف استراتيجيات التعلم النشط داخل الحصة لرفع مشاركة المتعلمين.",
+    action: "تطبيق استراتيجيتين خلال شهر، وتوثيق أثرهما في تفاعل المتعلمين ومخرجات الدرس.",
+    evidence: "خطة درس، صور تطبيق، نموذج قياس أثر",
+    dueDate: "2026-10-30",
+  },
+  {
+    focus: "التقويم وأدوات القياس",
+    priority: "medium",
+    goal: "تحسين أدوات التقويم البنائي وربطها بمستوى تحقق نواتج التعلم.",
+    action: "إعداد بطاقة ملاحظة قصيرة وتذكرة خروج، ثم تحليل النتائج بعد حصتين.",
+    evidence: "أداة تقييم، عينة نتائج، تقرير مختصر",
+    dueDate: "2026-11-15",
+  },
+  {
+    focus: "التقنيات التعليمية",
+    priority: "medium",
+    goal: "استخدام أداة رقمية واحدة لدعم التعلم ومتابعة أثرها على أداء المتعلمين.",
+    action: "اختيار أداة مناسبة، تنفيذ نشاط رقمي، ومقارنة نتائج المتعلمين قبل وبعد التطبيق.",
+    evidence: "رابط النشاط، صور، تحليل نتائج",
+    dueDate: "2026-12-05",
+  },
+];
 
 function escapeHtml(value) {
   return String(value)
@@ -432,6 +482,24 @@ function normalizeAppSettings(raw = {}) {
     autoArchive: raw.autoArchive !== false,
     lastSavedAt: raw.lastSavedAt || "",
   };
+}
+
+function normalizeDevelopmentPlan(raw = []) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item) => item && typeof item === "object")
+    .map((item, index) => ({
+      id: String(item.id || `dev-${Date.now()}-${index}`),
+      focus: String(item.focus || "الأداء التدريسي"),
+      priority: ["high", "medium", "low"].includes(item.priority) ? item.priority : "medium",
+      goal: String(item.goal || ""),
+      action: String(item.action || ""),
+      evidence: String(item.evidence || ""),
+      dueDate: String(item.dueDate || ""),
+      status: ["planned", "active", "completed"].includes(item.status) ? item.status : "planned",
+      createdAt: String(item.createdAt || new Date().toISOString()),
+    }))
+    .filter((item) => item.goal.trim() || item.action.trim());
 }
 
 function getPublicProfileName(fallback = "ملف الإنجاز المهني") {
@@ -661,6 +729,7 @@ async function saveRemoteState() {
       name: currentUser.name,
       profileDetails,
       appSettings,
+      developmentPlan,
       awards,
       archives,
       excellentDays,
@@ -724,6 +793,11 @@ async function loadRemoteState() {
           localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
           renderSystemSettings();
         }
+        if (Array.isArray(profile.developmentPlan)) {
+          developmentPlan = normalizeDevelopmentPlan(cleanStoredData(profile.developmentPlan));
+          localStorage.setItem("munjaz.developmentPlan", JSON.stringify(developmentPlan));
+          renderDevelopmentPlan();
+        }
         if (Array.isArray(profile.awards)) {
           awards = cleanStoredData(profile.awards);
           localStorage.setItem("munjaz.awards", JSON.stringify(awards));
@@ -765,6 +839,7 @@ async function loadRemoteState() {
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
+    renderDevelopmentPlan();
     return;
   }
 
@@ -774,6 +849,7 @@ async function loadRemoteState() {
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
+    renderDevelopmentPlan();
     return;
   }
 
@@ -794,12 +870,14 @@ async function loadRemoteState() {
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
+    renderDevelopmentPlan();
   } catch {
     renderPortfolio(activePortfolio);
     renderHomeMetrics();
     renderCalendar();
     renderExcellentDays();
     renderReport(activeReport);
+    renderDevelopmentPlan();
   }
 }
 
@@ -986,7 +1064,7 @@ function formatSettingsDate(value) {
 }
 
 function getTotalRecordCount() {
-  return achievements.length + calendarEvents.length + awards.length + archives.length;
+  return achievements.length + calendarEvents.length + awards.length + archives.length + developmentPlan.length;
 }
 
 function renderSystemSettings() {
@@ -1032,6 +1110,136 @@ async function saveSystemSettings() {
   }
 }
 
+function getDevelopmentPriorityLabel(priority) {
+  return { high: "عالية", medium: "متوسطة", low: "منخفضة" }[priority] || "متوسطة";
+}
+
+function getDevelopmentStatusLabel(status) {
+  return { planned: "مخطط", active: "قيد التنفيذ", completed: "منجز" }[status] || "مخطط";
+}
+
+function formatDevelopmentDate(dateKey) {
+  if (!dateKey) return "-";
+  const date = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return date.toLocaleDateString("ar", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function persistDevelopmentPlan(message = "تم حفظ خطة التطوير المهني.") {
+  developmentPlan = normalizeDevelopmentPlan(developmentPlan);
+  localStorage.setItem("munjaz.developmentPlan", JSON.stringify(developmentPlan));
+  renderDevelopmentPlan();
+  if (developmentPlanView.status) developmentPlanView.status.textContent = message;
+  saveRemoteState().catch(() => {
+    if (developmentPlanView.status) developmentPlanView.status.textContent = "تم الحفظ محليا، وتعذر الحفظ في فايربيز حاليا.";
+  });
+}
+
+function addDevelopmentPlanItem(item = null) {
+  const nextItem = item || {
+    focus: developmentPlanInputs.focus?.value || "الأداء التدريسي",
+    priority: developmentPlanInputs.priority?.value || "medium",
+    goal: developmentPlanInputs.goal?.value.trim() || "",
+    action: developmentPlanInputs.action?.value.trim() || "",
+    evidence: developmentPlanInputs.evidence?.value.trim() || "",
+    dueDate: developmentPlanInputs.dueDate?.value || "",
+    status: developmentPlanInputs.status?.value || "planned",
+  };
+
+  if (!nextItem.goal.trim() && !nextItem.action.trim()) {
+    if (developmentPlanView.status) developmentPlanView.status.textContent = "اكتب الهدف أو الإجراء قبل الإضافة.";
+    return;
+  }
+
+  developmentPlan = [
+    {
+      id: `dev-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: "planned",
+      ...nextItem,
+    },
+    ...developmentPlan,
+  ];
+
+  if (!item) {
+    if (developmentPlanInputs.goal) developmentPlanInputs.goal.value = "";
+    if (developmentPlanInputs.action) developmentPlanInputs.action.value = "";
+    if (developmentPlanInputs.evidence) developmentPlanInputs.evidence.value = "";
+    if (developmentPlanInputs.dueDate) developmentPlanInputs.dueDate.value = "";
+  }
+
+  persistDevelopmentPlan("تمت إضافة هدف تطويري للخطة.");
+}
+
+function renderDevelopmentPlan() {
+  if (!developmentPlanView.list) return;
+
+  const total = developmentPlan.length;
+  const done = developmentPlan.filter((item) => item.status === "completed").length;
+  const active = developmentPlan.filter((item) => item.status === "active" || item.status === "planned").length;
+  const completion = total ? Math.round((done / total) * 100) : 0;
+  const nextDue = [...developmentPlan]
+    .filter((item) => item.status !== "completed" && item.dueDate)
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0]?.dueDate;
+
+  if (developmentPlanView.completion) developmentPlanView.completion.textContent = `${completion}%`;
+  if (developmentPlanView.total) developmentPlanView.total.textContent = total;
+  if (developmentPlanView.done) developmentPlanView.done.textContent = done;
+  if (developmentPlanView.active) developmentPlanView.active.textContent = active;
+  if (developmentPlanView.next) developmentPlanView.next.textContent = formatDevelopmentDate(nextDue);
+
+  if (developmentPlanView.suggestions) {
+    developmentPlanView.suggestions.innerHTML = developmentPlanSuggestions
+      .map(
+        (item, index) => `
+          <button type="button" data-add-development-suggestion="${index}">
+            <strong>${escapeHtml(item.focus)}</strong>
+            <span>${escapeHtml(item.goal)}</span>
+          </button>
+        `,
+      )
+      .join("");
+  }
+
+  developmentPlanView.list.innerHTML = total
+    ? developmentPlan
+        .map(
+          (item) => `
+            <article class="development-plan-item ${item.status}">
+              <div class="development-plan-item-head">
+                <span>${escapeHtml(item.focus)}</span>
+                <b>${getDevelopmentPriorityLabel(item.priority)}</b>
+              </div>
+              <h3>${escapeHtml(item.goal || "هدف تطويري")}</h3>
+              <p>${escapeHtml(item.action || "لم يتم تحديد إجراء بعد.")}</p>
+              <div class="development-plan-evidence">
+                <small>الشاهد</small>
+                <strong>${escapeHtml(item.evidence || "يحدد لاحقا")}</strong>
+              </div>
+              <div class="development-plan-footer">
+                <label>
+                  <span>الحالة</span>
+                  <select data-development-status="${item.id}">
+                    <option value="planned" ${item.status === "planned" ? "selected" : ""}>مخطط</option>
+                    <option value="active" ${item.status === "active" ? "selected" : ""}>قيد التنفيذ</option>
+                    <option value="completed" ${item.status === "completed" ? "selected" : ""}>منجز</option>
+                  </select>
+                </label>
+                <div><span>المتابعة</span><strong>${formatDevelopmentDate(item.dueDate)}</strong></div>
+                <button type="button" data-delete-development="${item.id}">حذف</button>
+              </div>
+            </article>
+          `,
+        )
+        .join("")
+    : `
+      <div class="development-plan-empty">
+        <strong>لا توجد أهداف تطويرية بعد</strong>
+        <span>أضف هدفا من النموذج أو اختر اقتراحا جاهزا كبداية.</span>
+      </div>
+    `;
+}
+
 function exportBackup() {
   const backup = {
     exportedAt: new Date().toISOString(),
@@ -1039,6 +1247,7 @@ function exportBackup() {
     user: currentUser ? { email: currentUser.email, name: getPublicProfileName("غير محدد") } : null,
     profileDetails,
     appSettings,
+    developmentPlan,
     achievements,
     calendarEvents,
     awards,
@@ -2718,6 +2927,27 @@ copyQrLink?.addEventListener("click", async () => {
 saveProfileDetailsButton?.addEventListener("click", saveProfileDetails);
 saveSystemSettingsButton?.addEventListener("click", saveSystemSettings);
 exportBackupButton?.addEventListener("click", exportBackup);
+addDevelopmentGoalButton?.addEventListener("click", () => addDevelopmentPlanItem());
+developmentPlanView.suggestions?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-add-development-suggestion]");
+  if (!button) return;
+  const item = developmentPlanSuggestions[Number(button.dataset.addDevelopmentSuggestion)];
+  if (item) addDevelopmentPlanItem(item);
+});
+developmentPlanView.list?.addEventListener("change", (event) => {
+  const select = event.target.closest("[data-development-status]");
+  if (!select) return;
+  developmentPlan = developmentPlan.map((item) =>
+    item.id === select.dataset.developmentStatus ? { ...item, status: select.value } : item,
+  );
+  persistDevelopmentPlan(`تم تحديث الحالة إلى ${getDevelopmentStatusLabel(select.value)}.`);
+});
+developmentPlanView.list?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-delete-development]");
+  if (!button) return;
+  developmentPlan = developmentPlan.filter((item) => item.id !== button.dataset.deleteDevelopment);
+  persistDevelopmentPlan("تم حذف الهدف من خطة التطوير.");
+});
 saveAwardButton?.addEventListener("click", saveAward);
 awardList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-award]");
@@ -2872,6 +3102,7 @@ if (document.querySelector(`[data-page="${initialPage}"]`)) {
 updateAuthUI();
 renderProfileDetails();
 renderSystemSettings();
+renderDevelopmentPlan();
 renderPortfolioQr();
 renderHomeMetrics();
 renderAwards();
