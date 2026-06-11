@@ -83,6 +83,26 @@ const archiveLastYear = document.querySelector("#archiveLastYear");
 const archiveHealth = document.querySelector("#archiveHealth");
 const archiveList = document.querySelector("#archiveList");
 const archivePreview = document.querySelector("#archivePreview");
+const settingsInputs = {
+  schoolYear: document.querySelector("#settingsSchoolYear"),
+  term: document.querySelector("#settingsTerm"),
+  defaultReminder: document.querySelector("#settingsDefaultReminder"),
+  printMode: document.querySelector("#settingsPrintMode"),
+  publicShare: document.querySelector("#settingsPublicShare"),
+  autoArchive: document.querySelector("#settingsAutoArchive"),
+};
+const settingsView = {
+  dataHealth: document.querySelector("#settingsDataHealth"),
+  userName: document.querySelector("#settingsUserName"),
+  email: document.querySelector("#settingsEmail"),
+  firebaseStatus: document.querySelector("#settingsFirebaseStatus"),
+  recordsCount: document.querySelector("#settingsRecordsCount"),
+  lastSync: document.querySelector("#settingsLastSync"),
+  scope: document.querySelector("#settingsScope"),
+  saveStatus: document.querySelector("#settingsSaveStatus"),
+};
+const saveSystemSettingsButton = document.querySelector("#saveSystemSettings");
+const exportBackupButton = document.querySelector("#exportBackup");
 const homeMetrics = {
   total: document.querySelector("#metricTotalAchievements"),
   development: document.querySelector("#metricDevelopment"),
@@ -255,6 +275,7 @@ let awards = JSON.parse(localStorage.getItem("munjaz.awards") || "[]");
 let archives = JSON.parse(localStorage.getItem("munjaz.archives") || "[]");
 let currentUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
 let profileDetails = JSON.parse(localStorage.getItem("munjaz.profileDetails") || "{}");
+let appSettings = JSON.parse(localStorage.getItem("munjaz.appSettings") || "{}");
 let currentEvidence = [];
 let calendarDate = new Date(2026, 9, 1);
 let selectedCalendarDate = "2026-10-04";
@@ -278,6 +299,7 @@ achievements = cleanStoredData(achievements);
 awards = cleanStoredData(awards);
 archives = cleanStoredData(archives);
 profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
+appSettings = normalizeAppSettings(cleanStoredData(appSettings));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
@@ -285,6 +307,7 @@ localStorage.setItem("munjaz.achievements", JSON.stringify(achievements));
 localStorage.setItem("munjaz.awards", JSON.stringify(awards));
 localStorage.setItem("munjaz.archives", JSON.stringify(archives));
 localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
+localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
 localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
@@ -381,6 +404,18 @@ function normalizeProfileDetails(raw = {}) {
     district: String(raw.district || ""),
     email: String(raw.email || ""),
     bio: String(raw.bio || ""),
+  };
+}
+
+function normalizeAppSettings(raw = {}) {
+  return {
+    schoolYear: String(raw.schoolYear || "2026 / 2027"),
+    term: ["term1", "term2", "annual"].includes(raw.term) ? raw.term : "term1",
+    defaultReminder: ["7", "3", "1", "0"].includes(String(raw.defaultReminder)) ? String(raw.defaultReminder) : "3",
+    printMode: ["official", "detailed", "presentation"].includes(raw.printMode) ? raw.printMode : "official",
+    publicShare: raw.publicShare !== false,
+    autoArchive: raw.autoArchive !== false,
+    lastSavedAt: raw.lastSavedAt || "",
   };
 }
 
@@ -513,6 +548,7 @@ async function saveRemoteState() {
       email: currentUser.email,
       name: currentUser.name,
       profileDetails,
+      appSettings,
       awards,
       archives,
       excellentDays,
@@ -568,6 +604,11 @@ async function loadRemoteState() {
           profileDetails = normalizeProfileDetails(profile.profileDetails);
           localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
           renderProfileDetails();
+        }
+        if (profile.appSettings && typeof profile.appSettings === "object") {
+          appSettings = normalizeAppSettings(profile.appSettings);
+          localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
+          renderSystemSettings();
         }
         if (Array.isArray(profile.awards)) {
           awards = cleanStoredData(profile.awards);
@@ -821,6 +862,86 @@ function renderProfileDetails() {
   Object.entries(profileInputs).forEach(([key, input]) => {
     if (input) input.value = profileDetails[key] || (key === "email" ? currentUser?.email || "" : "");
   });
+}
+
+function formatSettingsDate(value) {
+  if (!value) return "محلي";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "محلي";
+  return date.toLocaleDateString("ar", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function getTotalRecordCount() {
+  return achievements.length + calendarEvents.length + awards.length + archives.length;
+}
+
+function renderSystemSettings() {
+  if (!settingsView.dataHealth) return;
+
+  settingsInputs.schoolYear.value = appSettings.schoolYear;
+  settingsInputs.term.value = appSettings.term;
+  settingsInputs.defaultReminder.value = appSettings.defaultReminder;
+  settingsInputs.printMode.value = appSettings.printMode;
+  settingsInputs.publicShare.checked = appSettings.publicShare;
+  settingsInputs.autoArchive.checked = appSettings.autoArchive;
+
+  const totalRecords = getTotalRecordCount();
+  const hasProfileName = Boolean(profileDetails.fullName?.trim());
+  settingsView.userName.textContent = getPublicProfileName("غير محدد");
+  settingsView.email.textContent = currentUser?.email || "لم يتم تسجيل الدخول";
+  settingsView.firebaseStatus.textContent = currentUser?.mode === "local" || !currentUser ? "محلي" : "متصل";
+  settingsView.recordsCount.textContent = totalRecords;
+  settingsView.lastSync.textContent = formatSettingsDate(appSettings.lastSavedAt);
+  settingsView.scope.textContent = appSettings.schoolYear;
+  settingsView.dataHealth.textContent = hasProfileName && totalRecords ? "مكتمل" : totalRecords ? "جيد" : "جديد";
+}
+
+async function saveSystemSettings() {
+  appSettings = normalizeAppSettings({
+    schoolYear: settingsInputs.schoolYear?.value.trim(),
+    term: settingsInputs.term?.value,
+    defaultReminder: settingsInputs.defaultReminder?.value,
+    printMode: settingsInputs.printMode?.value,
+    publicShare: settingsInputs.publicShare?.checked,
+    autoArchive: settingsInputs.autoArchive?.checked,
+    lastSavedAt: new Date().toISOString(),
+  });
+  localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
+  renderSystemSettings();
+  if (settingsView.saveStatus) settingsView.saveStatus.textContent = currentUser ? "جاري الحفظ..." : "تم حفظ الإعدادات محليا.";
+
+  try {
+    await saveRemoteState();
+    if (settingsView.saveStatus) settingsView.saveStatus.textContent = currentUser ? "تم حفظ الإعدادات في فايربيز." : "تم حفظ الإعدادات محليا.";
+  } catch {
+    if (settingsView.saveStatus) settingsView.saveStatus.textContent = "تم حفظ الإعدادات محليا، وتعذر الحفظ في فايربيز حاليا.";
+  }
+}
+
+function exportBackup() {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    app: "منجز",
+    user: currentUser ? { email: currentUser.email, name: getPublicProfileName("غير محدد") } : null,
+    profileDetails,
+    appSettings,
+    achievements,
+    calendarEvents,
+    awards,
+    archives,
+    excellentDays,
+    leaveStats,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `munjaz-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if (settingsView.saveStatus) settingsView.saveStatus.textContent = "تم تنزيل النسخة الاحتياطية.";
 }
 
 async function saveProfileDetails() {
@@ -1502,6 +1623,7 @@ function renderHomeMetrics() {
   }
   renderSmartInsights(readiness);
   renderSharePage();
+  renderSystemSettings();
 }
 
 function persistAwards() {
@@ -2209,6 +2331,8 @@ copyQrLink?.addEventListener("click", async () => {
 });
 
 saveProfileDetailsButton?.addEventListener("click", saveProfileDetails);
+saveSystemSettingsButton?.addEventListener("click", saveSystemSettings);
+exportBackupButton?.addEventListener("click", exportBackup);
 saveAwardButton?.addEventListener("click", saveAward);
 awardList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-award]");
@@ -2362,6 +2486,7 @@ if (document.querySelector(`[data-page="${initialPage}"]`)) {
 
 updateAuthUI();
 renderProfileDetails();
+renderSystemSettings();
 renderPortfolioQr();
 renderHomeMetrics();
 renderAwards();
@@ -2379,6 +2504,7 @@ onAuthStateChanged(auth, async (user) => {
   localStorage.setItem("munjaz.user", JSON.stringify(currentUser));
   updateAuthUI();
   renderProfileDetails();
+  renderSystemSettings();
   await loadRemoteState();
 });
 renderPortfolio();

@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=25" />
+    <link rel="stylesheet" href="styles.css?v=26" />
   </head>
   <body>
     <div class="scene">
@@ -763,11 +763,78 @@
           </section>
 
           <section class="view" data-page="settings">
-            <div class="page-head"><p>الإعدادات</p><h2>إعدادات المنصة والمساعد الذكي</h2></div>
-            <div class="form-page">
-              <label>اسم المنصة<input type="text" value="منجز" /></label>
-              <label>تنبيه قبل النشاط<select><option>قبل أسبوع</option><option>قبل 3 أيام</option><option>قبل يوم</option></select></label>
-              <label>المساعد الذكي<textarea rows="4" placeholder="اكتبي حالة أو طلبًا ليقترح خطة أو فعالية"></textarea></label>
+            <div class="page-head with-actions">
+              <div>
+                <p>الإعدادات</p>
+                <h2>إعدادات النظام والتفضيلات</h2>
+              </div>
+              <button class="print-button" type="button" data-print="settings">تحميل / طباعة</button>
+            </div>
+            <div class="settings-workspace printable-card" data-print-section="settings">
+              <section class="settings-hero">
+                <div>
+                  <span>منجز</span>
+                  <h3>لوحة تحكم النظام</h3>
+                  <p>اضبط بيانات العام الدراسي، التنبيهات، الطباعة، والمشاركة من مكان واحد.</p>
+                </div>
+                <div class="settings-status-pill">
+                  <strong id="settingsDataHealth">جاهز</strong>
+                  <small>حالة البيانات</small>
+                </div>
+              </section>
+
+              <section class="settings-status-grid">
+                <article><span>المستخدم</span><strong id="settingsUserName">غير مسجل</strong><small id="settingsEmail">-</small></article>
+                <article><span>فايربيز</span><strong id="settingsFirebaseStatus">غير متصل</strong><small>الحفظ السحابي</small></article>
+                <article><span>السجلات</span><strong id="settingsRecordsCount">0</strong><small>إنجاز / موعد / جائزة</small></article>
+                <article><span>آخر حفظ</span><strong id="settingsLastSync">محلي</strong><small>حسب آخر تحديث</small></article>
+              </section>
+
+              <section class="settings-panel">
+                <div class="settings-panel-head">
+                  <div>
+                    <span>العام الدراسي</span>
+                    <h3>إعدادات التشغيل الأساسية</h3>
+                  </div>
+                  <strong id="settingsScope">2026 / 2027</strong>
+                </div>
+                <div class="settings-form">
+                  <label>السنة الدراسية<input id="settingsSchoolYear" type="text" placeholder="مثال: 2026 / 2027" /></label>
+                  <label>الكورس الحالي<select id="settingsTerm"><option value="term1">الكورس الأول</option><option value="term2">الكورس الثاني</option><option value="annual">السنة كاملة</option></select></label>
+                  <label>تنبيه الرزنامة الافتراضي<select id="settingsDefaultReminder"><option value="7">قبل أسبوع</option><option value="3">قبل 3 أيام</option><option value="1">قبل يوم</option><option value="0">بدون تنبيه</option></select></label>
+                  <label>نمط الطباعة<select id="settingsPrintMode"><option value="official">رسمي ومختصر</option><option value="detailed">تفصيلي</option><option value="presentation">للعرض السريع</option></select></label>
+                </div>
+              </section>
+
+              <section class="settings-options">
+                <article>
+                  <div>
+                    <span>المشاركة</span>
+                    <h3>صفحة المشاركة و QR</h3>
+                    <p>إظهار رابط المشاركة في ملف الإنجاز والتقارير بدون عرض البريد الإلكتروني.</p>
+                  </div>
+                  <label class="settings-switch"><input id="settingsPublicShare" type="checkbox" /><span></span></label>
+                </article>
+                <article>
+                  <div>
+                    <span>الأرشفة</span>
+                    <h3>تذكير الأرشفة</h3>
+                    <p>إظهار تذكير لحفظ نسخة أرشيفية عند نهاية الكورس أو السنة الدراسية.</p>
+                  </div>
+                  <label class="settings-switch"><input id="settingsAutoArchive" type="checkbox" /><span></span></label>
+                </article>
+              </section>
+
+              <section class="settings-actions">
+                <div>
+                  <span>النسخ الاحتياطي</span>
+                  <h3>حفظ نسخة من بيانات الموقع</h3>
+                  <p>ينزل ملف JSON يحتوي على الإنجازات، الرزنامة، الجوائز، الأرشيف، وبيانات الإعدادات.</p>
+                </div>
+                <button id="exportBackup" type="button">تنزيل نسخة احتياطية</button>
+                <button id="saveSystemSettings" type="button">حفظ الإعدادات</button>
+                <small id="settingsSaveStatus"></small>
+              </section>
             </div>
           </section>
         </section>
@@ -809,6 +876,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=46"></script>
+    <script type="module" src="app.js?v=47"></script>
   </body>
 </html>
