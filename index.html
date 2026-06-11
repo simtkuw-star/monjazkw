@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=28" />
+    <link rel="stylesheet" href="styles.css?v=29" />
   </head>
   <body>
     <div class="scene">
@@ -93,6 +93,30 @@
                 <li><b>03</b><span>تقرير جاهز للطباعة والمشاركة</span></li>
               </ul>
             </div>
+          </section>
+
+          <section class="executive-dashboard">
+            <article class="executive-status">
+              <span>لوحة القيادة</span>
+              <h3 id="executiveStatusTitle">ابدأ ببناء ملف الإنجاز</h3>
+              <p id="executiveStatusText">أضف بياناتك المهنية وأول إنجاز موثق حتى تبدأ مؤشرات الأداء بالظهور.</p>
+              <button type="button" id="executiveNextAction" data-page-button="portfolio">إضافة أول إنجاز</button>
+            </article>
+            <article class="executive-card">
+              <span>أقرب موعد</span>
+              <strong id="executiveNextEvent">لا يوجد موعد قريب</strong>
+              <small id="executiveNextEventDate">أضف موعدًا من الرزنامة</small>
+            </article>
+            <article class="executive-card">
+              <span>الشواهد الناقصة</span>
+              <strong id="executiveEvidenceGap">0</strong>
+              <small>إنجاز بدون مرفق أو رابط</small>
+            </article>
+            <article class="executive-card">
+              <span>الأعمال الممتازة</span>
+              <strong id="executiveExcellentRemaining">140</strong>
+              <small>يوم متبق للوصول إلى 140</small>
+            </article>
           </section>
 
           <header class="top-hero">
@@ -987,6 +1011,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=49"></script>
+    <script type="module" src="app.js?v=50"></script>
   </body>
 </html>

@@ -425,6 +425,88 @@ input, select, textarea { box-sizing: border-box; }
   font-weight: 900;
 }
 
+.executive-dashboard {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.35fr) repeat(3, minmax(160px, 0.7fr));
+  gap: 14px;
+  margin: 0 0 22px;
+}
+
+.executive-status,
+.executive-card {
+  min-width: 0;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 34px rgba(30, 42, 68, 0.07);
+}
+
+.executive-status {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: 22px;
+  color: white;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(201, 162, 39, 0.22), transparent 32%),
+    linear-gradient(135deg, var(--brand-navy), #263957);
+}
+
+.executive-status span,
+.executive-card span {
+  color: var(--brand-gold);
+  font-weight: 950;
+}
+
+.executive-status h3,
+.executive-status p {
+  margin: 0;
+  color: white;
+}
+
+.executive-status h3 {
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+
+.executive-status p {
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.8;
+  font-weight: 800;
+}
+
+.executive-status button {
+  width: fit-content;
+  min-height: 42px;
+  border: 0;
+  border-radius: 13px;
+  padding: 0 16px;
+  color: var(--brand-navy);
+  background: var(--brand-gold);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.executive-card {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 18px;
+}
+
+.executive-card strong {
+  color: var(--brand-navy);
+  font-size: clamp(1.25rem, 2vw, 1.85rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.executive-card small {
+  color: var(--muted);
+  font-weight: 850;
+  line-height: 1.6;
+}
+
 .user-line {
   width: 20px;
   height: 20px;
@@ -4929,6 +5011,7 @@ body {
 
   .profile-dashboard,
   .welcome-gate,
+  .executive-dashboard,
   .share-score-card,
   .share-metrics,
   .share-grid,
@@ -5632,6 +5715,7 @@ body {
 
   .settings-status-pill,
   .welcome-actions button,
+  .executive-status button,
   .settings-actions button,
   .settings-actions small,
   .competition-closing > strong {

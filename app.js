@@ -120,6 +120,13 @@ const homeMetrics = {
   insightStrip: document.querySelector("#insightStrip"),
   smartAlerts: document.querySelector("#smartAlerts"),
   coverageBars: document.querySelector("#coverageBars"),
+  executiveStatusTitle: document.querySelector("#executiveStatusTitle"),
+  executiveStatusText: document.querySelector("#executiveStatusText"),
+  executiveNextAction: document.querySelector("#executiveNextAction"),
+  executiveNextEvent: document.querySelector("#executiveNextEvent"),
+  executiveNextEventDate: document.querySelector("#executiveNextEventDate"),
+  executiveEvidenceGap: document.querySelector("#executiveEvidenceGap"),
+  executiveExcellentRemaining: document.querySelector("#executiveExcellentRemaining"),
 };
 const ideaSearches = document.querySelectorAll(".idea-search");
 const ideaButtons = document.querySelectorAll(".idea-button");
@@ -1555,6 +1562,47 @@ function renderSmartInsights(readiness) {
     .join("");
 }
 
+function getNextUpcomingEvent() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return calendarEvents
+    .map((event) => ({ ...event, parsedDate: getItemDate(event) }))
+    .filter((event) => event.parsedDate && event.parsedDate >= today)
+    .sort((a, b) => a.parsedDate - b.parsedDate)[0];
+}
+
+function getNextDashboardAction(readiness) {
+  if (!currentUser) return ["سجل الدخول لحفظ بياناتك", "login"];
+  if (readiness.profileFields < 7) return ["أكمل بياناتي", "profile"];
+  if (!readiness.total) return ["إضافة أول إنجاز", "portfolio"];
+  if (readiness.missingEvidence) return ["إضافة شواهد", "portfolio"];
+  if (excellentDays.length < 140) return ["تحديث الأيام الفعلية", "calendar"];
+  if (!awards.length) return ["إضافة جائزة", "awards"];
+  return ["فتح صفحة المشاركة", "share"];
+}
+
+function renderExecutiveDashboard(readiness) {
+  if (!homeMetrics.executiveStatusTitle) return;
+  const nextEvent = getNextUpcomingEvent();
+  const [actionLabel, page] = getNextDashboardAction(readiness);
+  const remainingExcellentDays = Math.max(0, 140 - excellentDays.length);
+
+  homeMetrics.executiveStatusTitle.textContent =
+    readiness.score >= 80 ? "ملفك جاهز للعرض بثقة" : readiness.score >= 45 ? "ملفك يتقدم بشكل واضح" : "ملفك يحتاج بداية منظمة";
+  homeMetrics.executiveStatusText.textContent =
+    readiness.score >= 80
+      ? "راجع التقرير الكامل وصفحة المشاركة قبل التقديم النهائي."
+      : readiness.score >= 45
+        ? "ركز الآن على الشواهد الناقصة وتنويع مجالات الإنجاز."
+        : "ابدأ بالبيانات المهنية، ثم أضف إنجازًا واحدًا موثقًا على الأقل.";
+  homeMetrics.executiveNextAction.textContent = actionLabel;
+  homeMetrics.executiveNextAction.dataset.pageButton = page;
+  homeMetrics.executiveNextEvent.textContent = nextEvent?.title || "لا يوجد موعد قريب";
+  homeMetrics.executiveNextEventDate.textContent = nextEvent ? `${formatArabicDate(nextEvent.date)} - ${nextEvent.time || "بدون وقت"}` : "أضف موعدًا من الرزنامة";
+  homeMetrics.executiveEvidenceGap.textContent = readiness.missingEvidence;
+  homeMetrics.executiveExcellentRemaining.textContent = remainingExcellentDays;
+}
+
 function renderSharePage() {
   if (!shareView.name) return;
   const readiness = getReadinessData();
@@ -1633,6 +1681,7 @@ function renderHomeMetrics() {
           : "كل إنجاز موثق ومرفق يقرب الملف من النسخة الجاهزة للتقديم.";
   }
   renderSmartInsights(readiness);
+  renderExecutiveDashboard(readiness);
   renderSharePage();
   renderSystemSettings();
 }
@@ -2317,6 +2366,15 @@ pageButtons.forEach((button) => {
   button.addEventListener("click", () => {
     showPage(button.dataset.pageButton);
   });
+});
+
+homeMetrics.executiveNextAction?.addEventListener("click", () => {
+  const page = homeMetrics.executiveNextAction.dataset.pageButton;
+  if (page === "login") {
+    openLogin();
+    return;
+  }
+  showPage(page || "portfolio");
 });
 
 printButtons.forEach((button) => {
