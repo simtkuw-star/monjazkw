@@ -19,6 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const loginButton = document.querySelector("#loginButton");
+const loginTriggers = document.querySelectorAll("[data-login-trigger]");
 const loginButtonText = document.querySelector("#loginButtonText");
 const loginDialog = document.querySelector("#loginDialog");
 const loginForm = document.querySelector("#loginForm");
@@ -1380,6 +1381,16 @@ loginButton.addEventListener("click", () => {
     return;
   }
   openLogin();
+});
+
+loginTriggers.forEach((trigger) => {
+  trigger.addEventListener("click", () => {
+    if (currentUser) {
+      showPage("portfolio");
+      return;
+    }
+    openLogin();
+  });
 });
 
 loginForm.addEventListener("submit", async (event) => {

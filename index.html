@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=27" />
+    <link rel="stylesheet" href="styles.css?v=28" />
   </head>
   <body>
     <div class="scene">
@@ -71,6 +71,30 @@
 
         <section class="content">
           <section class="view active" data-page="home">
+          <section class="welcome-gate">
+            <div class="welcome-copy">
+              <span>منصة كويتية ذكية</span>
+              <h2>منجز يوثق أثر المعلم باحترافية</h2>
+              <p>ملف إنجاز مهني ذكي يجمع الإنجازات، الشواهد، الرزنامة، التقارير، مؤشرات الأداء، والخطط المساندة في تجربة واحدة مريحة للمعلم والمعلمة.</p>
+              <div class="welcome-actions">
+                <button class="primary" type="button" data-login-trigger>تسجيل الدخول</button>
+                <button type="button" data-page-button="competition">عرض فكرة المشروع</button>
+              </div>
+            </div>
+            <div class="welcome-card" aria-label="ملخص منصة منجز">
+              <img src="munjaz-logo-cropped.png" alt="شعار منجز" />
+              <div>
+                <strong>ملف إنجاز ذكي</strong>
+                <span>توثيق، تقارير، QR، وأرشيف سنوي</span>
+              </div>
+              <ul>
+                <li><b>01</b><span>إضافة إنجازات وشواهد</span></li>
+                <li><b>02</b><span>متابعة الرزنامة والأيام الفعلية</span></li>
+                <li><b>03</b><span>تقرير جاهز للطباعة والمشاركة</span></li>
+              </ul>
+            </div>
+          </section>
+
           <header class="top-hero">
             <button class="login-button" id="loginButton" type="button">
               <span class="user-line"></span>
@@ -963,6 +987,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=48"></script>
+    <script type="module" src="app.js?v=49"></script>
   </body>
 </html>
