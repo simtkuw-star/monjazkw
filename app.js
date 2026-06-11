@@ -124,6 +124,16 @@ const developmentPlanView = {
   list: document.querySelector("#developmentPlanList"),
 };
 const addDevelopmentGoalButton = document.querySelector("#addDevelopmentGoal");
+const selfAssessmentView = {
+  average: document.querySelector("#selfAssessmentAverage"),
+  completed: document.querySelector("#selfAssessmentCompleted"),
+  strongest: document.querySelector("#selfAssessmentStrongest"),
+  priority: document.querySelector("#selfAssessmentPriority"),
+  grid: document.querySelector("#selfAssessmentGrid"),
+  reflection: document.querySelector("#selfAssessmentReflection"),
+  status: document.querySelector("#selfAssessmentStatus"),
+};
+const saveSelfAssessmentButton = document.querySelector("#saveSelfAssessment");
 const homeMetrics = {
   total: document.querySelector("#metricTotalAchievements"),
   development: document.querySelector("#metricDevelopment"),
@@ -311,6 +321,7 @@ let currentUser = JSON.parse(localStorage.getItem("munjaz.user") || "null");
 let profileDetails = JSON.parse(localStorage.getItem("munjaz.profileDetails") || "{}");
 let appSettings = JSON.parse(localStorage.getItem("munjaz.appSettings") || "{}");
 let developmentPlan = JSON.parse(localStorage.getItem("munjaz.developmentPlan") || "[]");
+let selfAssessment = JSON.parse(localStorage.getItem("munjaz.selfAssessment") || "{}");
 let currentEvidence = [];
 let calendarDate = new Date(2026, 9, 1);
 let selectedCalendarDate = "2026-10-04";
@@ -337,6 +348,7 @@ archives = cleanStoredData(archives);
 profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
 appSettings = normalizeAppSettings(cleanStoredData(appSettings));
 developmentPlan = normalizeDevelopmentPlan(cleanStoredData(developmentPlan));
+selfAssessment = normalizeSelfAssessment(cleanStoredData(selfAssessment));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
@@ -346,6 +358,7 @@ localStorage.setItem("munjaz.archives", JSON.stringify(archives));
 localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
 localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
 localStorage.setItem("munjaz.developmentPlan", JSON.stringify(developmentPlan));
+localStorage.setItem("munjaz.selfAssessment", JSON.stringify(selfAssessment));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
 localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
@@ -397,6 +410,39 @@ const developmentPlanSuggestions = [
     action: "اختيار أداة مناسبة، تنفيذ نشاط رقمي، ومقارنة نتائج المتعلمين قبل وبعد التطبيق.",
     evidence: "رابط النشاط، صور، تحليل نتائج",
     dueDate: "2026-12-05",
+  },
+];
+
+const selfAssessmentCriteria = [
+  {
+    id: "teaching",
+    title: "الأداء التدريسي",
+    description: "تخطيط الدروس، تنويع الاستراتيجيات، وإدارة وقت الحصة.",
+  },
+  {
+    id: "assessment",
+    title: "التقويم وأدوات القياس",
+    description: "استخدام تقويم بنائي وختامي وتحليل نتائج المتعلمين.",
+  },
+  {
+    id: "classroom",
+    title: "إدارة الصف",
+    description: "تهيئة بيئة تعلم منظمة ومحفزة وداعمة.",
+  },
+  {
+    id: "development",
+    title: "التنمية المهنية",
+    description: "حضور ورش ودورات وتطبيق أثرها داخل العمل.",
+  },
+  {
+    id: "initiative",
+    title: "المبادرات والابتكار",
+    description: "تقديم أفكار أو مشاريع أو فعاليات ذات أثر واضح.",
+  },
+  {
+    id: "documentation",
+    title: "التوثيق المهني",
+    description: "تنظيم الشواهد والتقارير وربطها بالإنجازات.",
   },
 ];
 
@@ -500,6 +546,17 @@ function normalizeDevelopmentPlan(raw = []) {
       createdAt: String(item.createdAt || new Date().toISOString()),
     }))
     .filter((item) => item.goal.trim() || item.action.trim());
+}
+
+function normalizeSelfAssessment(raw = {}) {
+  const scores = raw && typeof raw.scores === "object" && !Array.isArray(raw.scores) ? raw.scores : {};
+  return {
+    scores: Object.fromEntries(
+      Object.entries(scores).map(([key, value]) => [key, Math.min(5, Math.max(0, Number(value) || 0))]),
+    ),
+    reflection: String(raw.reflection || ""),
+    updatedAt: String(raw.updatedAt || ""),
+  };
 }
 
 function getPublicProfileName(fallback = "ملف الإنجاز المهني") {
@@ -730,6 +787,7 @@ async function saveRemoteState() {
       profileDetails,
       appSettings,
       developmentPlan,
+      selfAssessment,
       awards,
       archives,
       excellentDays,
@@ -798,6 +856,11 @@ async function loadRemoteState() {
           localStorage.setItem("munjaz.developmentPlan", JSON.stringify(developmentPlan));
           renderDevelopmentPlan();
         }
+        if (profile.selfAssessment && typeof profile.selfAssessment === "object") {
+          selfAssessment = normalizeSelfAssessment(cleanStoredData(profile.selfAssessment));
+          localStorage.setItem("munjaz.selfAssessment", JSON.stringify(selfAssessment));
+          renderSelfAssessment();
+        }
         if (Array.isArray(profile.awards)) {
           awards = cleanStoredData(profile.awards);
           localStorage.setItem("munjaz.awards", JSON.stringify(awards));
@@ -840,6 +903,7 @@ async function loadRemoteState() {
     renderExcellentDays();
     renderReport(activeReport);
     renderDevelopmentPlan();
+    renderSelfAssessment();
     return;
   }
 
@@ -850,6 +914,7 @@ async function loadRemoteState() {
     renderExcellentDays();
     renderReport(activeReport);
     renderDevelopmentPlan();
+    renderSelfAssessment();
     return;
   }
 
@@ -871,6 +936,7 @@ async function loadRemoteState() {
     renderExcellentDays();
     renderReport(activeReport);
     renderDevelopmentPlan();
+    renderSelfAssessment();
   } catch {
     renderPortfolio(activePortfolio);
     renderHomeMetrics();
@@ -878,6 +944,7 @@ async function loadRemoteState() {
     renderExcellentDays();
     renderReport(activeReport);
     renderDevelopmentPlan();
+    renderSelfAssessment();
   }
 }
 
@@ -1064,7 +1131,8 @@ function formatSettingsDate(value) {
 }
 
 function getTotalRecordCount() {
-  return achievements.length + calendarEvents.length + awards.length + archives.length + developmentPlan.length;
+  const hasSelfAssessment = Object.values(selfAssessment.scores || {}).some((value) => Number(value) > 0);
+  return achievements.length + calendarEvents.length + awards.length + archives.length + developmentPlan.length + (hasSelfAssessment ? 1 : 0);
 }
 
 function renderSystemSettings() {
@@ -1240,6 +1308,72 @@ function renderDevelopmentPlan() {
     `;
 }
 
+function getSelfAssessmentSummary() {
+  const scored = selfAssessmentCriteria
+    .map((criterion) => ({
+      ...criterion,
+      score: Number(selfAssessment.scores?.[criterion.id]) || 0,
+    }))
+    .filter((criterion) => criterion.score > 0);
+  const average = scored.length ? scored.reduce((sum, item) => sum + item.score, 0) / scored.length : 0;
+  const strongest = scored.length ? [...scored].sort((a, b) => b.score - a.score)[0] : null;
+  const priority = scored.length ? [...scored].sort((a, b) => a.score - b.score)[0] : null;
+
+  return { scored, average, strongest, priority };
+}
+
+function renderSelfAssessment() {
+  if (!selfAssessmentView.grid) return;
+  const summary = getSelfAssessmentSummary();
+
+  if (selfAssessmentView.average) selfAssessmentView.average.textContent = summary.average.toFixed(1);
+  if (selfAssessmentView.completed) selfAssessmentView.completed.textContent = summary.scored.length;
+  if (selfAssessmentView.strongest) selfAssessmentView.strongest.textContent = summary.strongest?.title || "-";
+  if (selfAssessmentView.priority) selfAssessmentView.priority.textContent = summary.priority?.title || "-";
+  if (selfAssessmentView.reflection) selfAssessmentView.reflection.value = selfAssessment.reflection || "";
+
+  selfAssessmentView.grid.innerHTML = selfAssessmentCriteria
+    .map((criterion) => {
+      const score = Number(selfAssessment.scores?.[criterion.id]) || 0;
+      return `
+        <article class="self-assessment-item" style="--score:${score}">
+          <div>
+            <span>${escapeHtml(criterion.title)}</span>
+            <strong>${score || "-"}</strong>
+          </div>
+          <p>${escapeHtml(criterion.description)}</p>
+          <div class="self-rating" data-self-criterion="${criterion.id}">
+            ${[1, 2, 3, 4, 5]
+              .map(
+                (value) => `
+                  <button class="${score === value ? "active" : ""}" type="button" data-self-score="${value}">
+                    ${value}
+                  </button>
+                `,
+              )
+              .join("")}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function persistSelfAssessment(message = "تم حفظ التقييم الذاتي.") {
+  selfAssessment = normalizeSelfAssessment({
+    ...selfAssessment,
+    reflection: selfAssessmentView.reflection?.value.trim() || "",
+    updatedAt: new Date().toISOString(),
+  });
+  localStorage.setItem("munjaz.selfAssessment", JSON.stringify(selfAssessment));
+  renderSelfAssessment();
+  renderSystemSettings();
+  if (selfAssessmentView.status) selfAssessmentView.status.textContent = message;
+  saveRemoteState().catch(() => {
+    if (selfAssessmentView.status) selfAssessmentView.status.textContent = "تم الحفظ محليا، وتعذر الحفظ في فايربيز حاليا.";
+  });
+}
+
 function exportBackup() {
   const backup = {
     exportedAt: new Date().toISOString(),
@@ -1248,6 +1382,7 @@ function exportBackup() {
     profileDetails,
     appSettings,
     developmentPlan,
+    selfAssessment,
     achievements,
     calendarEvents,
     awards,
@@ -2928,6 +3063,22 @@ saveProfileDetailsButton?.addEventListener("click", saveProfileDetails);
 saveSystemSettingsButton?.addEventListener("click", saveSystemSettings);
 exportBackupButton?.addEventListener("click", exportBackup);
 addDevelopmentGoalButton?.addEventListener("click", () => addDevelopmentPlanItem());
+saveSelfAssessmentButton?.addEventListener("click", () => persistSelfAssessment());
+selfAssessmentView.grid?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-self-score]");
+  const rating = event.target.closest("[data-self-criterion]");
+  if (!button || !rating) return;
+  selfAssessment = normalizeSelfAssessment({
+    ...selfAssessment,
+    reflection: selfAssessmentView.reflection?.value || selfAssessment.reflection || "",
+    scores: {
+      ...(selfAssessment.scores || {}),
+      [rating.dataset.selfCriterion]: Number(button.dataset.selfScore),
+    },
+  });
+  localStorage.setItem("munjaz.selfAssessment", JSON.stringify(selfAssessment));
+  renderSelfAssessment();
+});
 developmentPlanView.suggestions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-add-development-suggestion]");
   if (!button) return;
@@ -3103,6 +3254,7 @@ updateAuthUI();
 renderProfileDetails();
 renderSystemSettings();
 renderDevelopmentPlan();
+renderSelfAssessment();
 renderPortfolioQr();
 renderHomeMetrics();
 renderAwards();

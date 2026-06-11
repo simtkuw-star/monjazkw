@@ -35,7 +35,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=32" />
+    <link rel="stylesheet" href="styles.css?v=33" />
   </head>
   <body>
     <div class="scene">
@@ -59,6 +59,7 @@
             <a href="#calendar" data-page-link="calendar"><span>▣</span>الرزنامة</a>
             <a href="#portfolio" data-page-link="portfolio"><span>□</span>ملف الإنجاز</a>
             <a href="#developmentPlan" data-page-link="developmentPlan"><span>▤</span>خطة التطوير</a>
+            <a href="#selfAssessment" data-page-link="selfAssessment"><span>◈</span>التقييم الذاتي</a>
             <a href="#share" data-page-link="share"><span>◇</span>المشاركة</a>
             <a href="#learners" data-page-link="learners"><span>◎</span>بطاقات الطلبة</a>
             <a href="#reports" data-page-link="reports"><span>▥</span>التقارير</a>
@@ -582,6 +583,50 @@
                 <article><strong id="fieldCount">4</strong><span>حقول النموذج</span></article>
               </div>
               <div class="saved-achievements" id="savedAchievements"></div>
+            </div>
+          </section>
+
+          <section class="view" data-page="selfAssessment">
+            <div class="page-head with-actions">
+              <div>
+                <p>التقييم الذاتي</p>
+                <h2>مرآة الأداء المهني</h2>
+              </div>
+              <button class="print-button" type="button" data-print="selfAssessment">تحميل / طباعة</button>
+            </div>
+            <div class="self-assessment-workspace printable-card" data-print-section="selfAssessment">
+              <section class="self-assessment-hero">
+                <div>
+                  <span>تقييم مهني</span>
+                  <h3>قيّم أداءك وحدد أولويات التطوير</h3>
+                  <p>اختر درجة لكل معيار، واكتب تأملا مختصرا ليظهر لك ملخص مهني قابل للحفظ والطباعة.</p>
+                </div>
+                <div class="self-score-card">
+                  <strong id="selfAssessmentAverage">0.0</strong>
+                  <span>من 5</span>
+                </div>
+              </section>
+
+              <section class="self-assessment-summary">
+                <article><span>المعايير المكتملة</span><strong id="selfAssessmentCompleted">0</strong><small>من 6</small></article>
+                <article><span>أقوى مجال</span><strong id="selfAssessmentStrongest">-</strong><small>حسب التقييم</small></article>
+                <article><span>أولوية التطوير</span><strong id="selfAssessmentPriority">-</strong><small>الأقل درجة</small></article>
+              </section>
+
+              <section class="self-assessment-grid" id="selfAssessmentGrid"></section>
+
+              <section class="self-reflection-panel">
+                <div>
+                  <span>تأمل مهني</span>
+                  <h3>ماذا تعلمت؟ وما الخطوة القادمة؟</h3>
+                  <p>هذا النص يظهر في النسخة المطبوعة ويساعدك على صياغة تقييم ذاتي مرتب.</p>
+                </div>
+                <textarea id="selfAssessmentReflection" rows="5" placeholder="مثال: أحتاج إلى تطوير أدوات التقويم البنائي، وسأبدأ بتطبيق بطاقة ملاحظة وتحليل النتائج خلال الكورس الحالي."></textarea>
+                <div class="self-assessment-actions">
+                  <button id="saveSelfAssessment" type="button">حفظ التقييم</button>
+                  <small id="selfAssessmentStatus"></small>
+                </div>
+              </section>
             </div>
           </section>
 
@@ -1114,6 +1159,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=53"></script>
+    <script type="module" src="app.js?v=54"></script>
   </body>
 </html>
