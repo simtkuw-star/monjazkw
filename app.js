@@ -129,6 +129,8 @@ const homeMetrics = {
   executiveExcellentRemaining: document.querySelector("#executiveExcellentRemaining"),
   onboardingProgress: document.querySelector("#onboardingProgress"),
   onboardingSteps: document.querySelector("#onboardingSteps"),
+  badgesProgress: document.querySelector("#badgesProgress"),
+  achievementBadges: document.querySelector("#achievementBadges"),
 };
 const ideaSearches = document.querySelectorAll(".idea-search");
 const ideaButtons = document.querySelectorAll(".idea-button");
@@ -1662,6 +1664,88 @@ function renderOnboardingSteps(readiness) {
     .join("");
 }
 
+function getAchievementBadges(readiness) {
+  return [
+    {
+      title: "بداية موثقة",
+      text: "تمت إضافة أول إنجاز في ملفك.",
+      hint: "أضف أول إنجاز من ملف الإنجاز.",
+      mark: "01",
+      unlocked: achievements.length >= 1,
+    },
+    {
+      title: "موثق بالشواهد",
+      text: "لديك شواهد محفوظة تدعم إنجازاتك.",
+      hint: "أرفق ملفًا أو رابطًا مع إنجاز واحد على الأقل.",
+      mark: "02",
+      unlocked: readiness.evidenceCount >= 1,
+    },
+    {
+      title: "ملف نشط",
+      text: "وصلت إلى 5 إنجازات محفوظة.",
+      hint: "أضف 5 إنجازات متنوعة.",
+      mark: "03",
+      unlocked: achievements.length >= 5,
+    },
+    {
+      title: "تنوع مهني",
+      text: "وثقت إنجازات في 4 مجالات أو أكثر.",
+      hint: "نوّع بين الورش، الدروس، الفعاليات، الزيارات والبرامج.",
+      mark: "04",
+      unlocked: readiness.uniqueTypes >= 4,
+    },
+    {
+      title: "منظم رزنامة",
+      text: "الرزنامة تحتوي على مواعيد مهنية.",
+      hint: "أضف موعدًا واحدًا على الأقل في الرزنامة.",
+      mark: "05",
+      unlocked: calendarEvents.length >= 1,
+    },
+    {
+      title: "متابع الأعمال الممتازة",
+      text: "بدأت متابعة الأيام الفعلية.",
+      hint: "علّم أول يوم في متابعة 140 يوم.",
+      mark: "06",
+      unlocked: excellentDays.length >= 1,
+    },
+    {
+      title: "إنجاز نوعي",
+      text: "تم حفظ جائزة أو إنجاز نوعي.",
+      hint: "أضف جائزة أو تكريم من صفحة الجوائز.",
+      mark: "07",
+      unlocked: awards.length >= 1,
+    },
+    {
+      title: "جاهز للطباعة",
+      text: "وصل ملفك إلى جاهزية عالية للعرض.",
+      hint: "ارفع جاهزية الملف إلى 80% أو أكثر.",
+      mark: "08",
+      unlocked: readiness.score >= 80,
+    },
+  ];
+}
+
+function renderAchievementBadges(readiness) {
+  if (!homeMetrics.achievementBadges || !homeMetrics.badgesProgress) return;
+  const badges = getAchievementBadges(readiness);
+  const unlockedCount = badges.filter((badge) => badge.unlocked).length;
+  homeMetrics.badgesProgress.textContent = `${unlockedCount} / ${badges.length}`;
+  homeMetrics.achievementBadges.innerHTML = badges
+    .map(
+      (badge) => `
+        <article class="${badge.unlocked ? "unlocked" : "locked"}">
+          <b>${badge.unlocked ? "✓" : badge.mark}</b>
+          <div>
+            <h4>${badge.title}</h4>
+            <p>${badge.unlocked ? badge.text : badge.hint}</p>
+          </div>
+          <span>${badge.unlocked ? "مفتوحة" : "قيد الإنجاز"}</span>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderSharePage() {
   if (!shareView.name) return;
   const readiness = getReadinessData();
@@ -1742,6 +1826,7 @@ function renderHomeMetrics() {
   renderSmartInsights(readiness);
   renderExecutiveDashboard(readiness);
   renderOnboardingSteps(readiness);
+  renderAchievementBadges(readiness);
   renderSharePage();
   renderSystemSettings();
 }

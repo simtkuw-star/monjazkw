@@ -616,6 +616,127 @@ input, select, textarea { box-sizing: border-box; }
   background: var(--brand-navy);
 }
 
+.achievement-badges-panel {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 22px;
+  padding: 20px;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(250, 247, 238, 0.9)),
+    radial-gradient(circle at top right, rgba(201, 162, 39, 0.14), transparent 34%);
+  box-shadow: 0 16px 34px rgba(30, 42, 68, 0.07);
+}
+
+.badges-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.badges-head span {
+  color: var(--brand-gold);
+  font-weight: 950;
+}
+
+.badges-head h3 {
+  margin: 4px 0 0;
+  color: var(--brand-navy);
+}
+
+.badges-head strong {
+  padding: 10px 14px;
+  border-radius: 14px;
+  color: var(--brand-navy);
+  background: var(--brand-gold);
+}
+
+.achievement-badges {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.achievement-badges article {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 10px;
+  min-height: 142px;
+  padding: 14px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 18px;
+  background: white;
+}
+
+.achievement-badges b {
+  grid-row: 1 / 3;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: white;
+  background: var(--brand-navy);
+  font-weight: 950;
+}
+
+.achievement-badges h4,
+.achievement-badges p {
+  margin: 0;
+}
+
+.achievement-badges h4 {
+  color: var(--brand-navy);
+  font-size: 1rem;
+}
+
+.achievement-badges p {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.achievement-badges article > span {
+  grid-column: 2;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: #eef2f5;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.achievement-badges article.unlocked {
+  border-color: rgba(77, 182, 172, 0.32);
+  background:
+    linear-gradient(180deg, #fff, rgba(247, 250, 249, 0.96));
+}
+
+.achievement-badges article.unlocked b {
+  color: white;
+  background: linear-gradient(145deg, var(--brand-teal), #2f7d77);
+}
+
+.achievement-badges article.unlocked > span {
+  color: var(--brand-navy);
+  background: rgba(201, 162, 39, 0.2);
+}
+
+.achievement-badges article.locked {
+  opacity: 0.78;
+}
+
+.achievement-badges article.locked b {
+  color: var(--brand-navy);
+  background: #eef2f5;
+}
+
 .user-line {
   width: 20px;
   height: 20px;
@@ -5122,6 +5243,7 @@ body {
   .welcome-gate,
   .executive-dashboard,
   .onboarding-steps,
+  .achievement-badges,
   .share-score-card,
   .share-metrics,
   .share-grid,
@@ -5802,6 +5924,11 @@ body {
 
 @media (max-width: 900px) {
   .onboarding-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .badges-head {
     align-items: stretch;
     flex-direction: column;
   }
