@@ -1721,6 +1721,47 @@ function renderMiniList(items, emptyText, formatter) {
   return `<ul>${items.map(formatter).join("")}</ul>`;
 }
 
+function getReportReadinessNote(achievementCount, evidenceCount) {
+  if (achievementCount >= 12 && evidenceCount >= achievementCount) {
+    return "التقرير جاهز للعرض، وفيه توازن جيد بين عدد الإنجازات والشواهد.";
+  }
+  if (achievementCount >= 6) {
+    return "التقرير جيد، ويحتاج زيادة الشواهد المرفقة حتى يظهر بصورة أقوى عند الطباعة.";
+  }
+  return "التقرير في مرحلة البناء، ابدأ بإضافة إنجازات موثقة من ملف الإنجاز.";
+}
+
+function getReportScopeLabel(type, monthName) {
+  if (type === "monthly") return monthName;
+  if (type === "term") return "الفصل الدراسي";
+  if (type === "annual") return "العام الدراسي";
+  return "ملف الإنجاز الكامل";
+}
+
+function renderReportIdentityCard(type, monthName, generatedAt, achievementCount, evidenceCount) {
+  const identity = [
+    ["اسم المعلم/ـة", getPublicProfileName("غير محدد")],
+    ["المدرسة", profileDetails.school || "غير محدد"],
+    ["المرحلة", profileDetails.stage || "غير محدد"],
+    ["المنطقة التعليمية", profileDetails.district || "غير محدد"],
+    ["نطاق التقرير", getReportScopeLabel(type, monthName)],
+    ["تاريخ الإصدار", generatedAt],
+  ];
+
+  return `
+    <article class="report-official-card">
+      <div class="report-official-title">
+        <span>نسخة للطباعة</span>
+        <h4>بيانات التقرير</h4>
+        <p>${getReportReadinessNote(achievementCount, evidenceCount)}</p>
+      </div>
+      <div class="report-identity-grid">
+        ${identity.map(([label, value]) => `<div><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}
+      </div>
+    </article>
+  `;
+}
+
 function formatTermName(term) {
   return term === "term2" ? "الكورس الثاني" : "الكورس الأول";
 }
@@ -1842,6 +1883,7 @@ function renderReport(type = activeReport) {
   const strongestArea = Object.entries(portfolioTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "لم يحدد بعد";
   const monthName = calendarDate.toLocaleDateString("ar", { month: "long", year: "numeric" });
   const generatedAt = new Date().toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" });
+  const readinessNote = getReportReadinessNote(filteredAchievements.length, evidenceCount);
 
   reportTitle.textContent = `${reportLabels[type]} - ${type === "monthly" ? monthName : "العام الدراسي"}`;
   reportGeneratedAt.textContent = `آخر تحديث: ${generatedAt}`;
@@ -1895,6 +1937,7 @@ function renderReport(type = activeReport) {
   }
 
   reportSections.innerHTML = `
+    ${renderReportIdentityCard(type, monthName, generatedAt, filteredAchievements.length, evidenceCount)}
     ${type === "full" ? renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenceCount) : ""}
     <article class="report-summary">
       <h4>ملخص التقرير</h4>
@@ -1927,7 +1970,16 @@ function renderReport(type = activeReport) {
     </article>
     <article class="report-summary">
       <h4>توصية مهنية</h4>
+      <p>${readinessNote}</p>
       <p>لجعل الملف أقوى عند التقديم، أرفق شاهدا واحدا على الأقل لكل إنجاز، ووازن بين التنمية المهنية، الدروس الريادية، والأنشطة المدرسية.</p>
+    </article>
+    <article class="report-print-notes">
+      <h4>ملاحظات قبل الطباعة</h4>
+      <ul>
+        <li><span>راجع الاسم الثلاثي وبيانات المدرسة من صفحة بياناتي.</span><small>تظهر في رأس التقرير</small></li>
+        <li><span>تأكد من وجود شاهد واحد على الأقل لكل إنجاز مهم.</span><small>يقوي الملف عند التقييم</small></li>
+        <li><span>استخدم تقرير ملف الإنجاز الكامل عند التسليم النهائي.</span><small>الأكثر شمولية</small></li>
+      </ul>
     </article>
   `;
 }
