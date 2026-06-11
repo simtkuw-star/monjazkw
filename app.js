@@ -201,6 +201,8 @@ const eventDialogReminder = document.querySelector("#eventDialogReminder");
 const eventDialogNotes = document.querySelector("#eventDialogNotes");
 const API_BASE = "";
 const HAS_LOCAL_API = ["127.0.0.1", "localhost"].includes(window.location.hostname);
+const PUBLIC_SHARE_ID = new URLSearchParams(window.location.search).get("share") || "";
+const IS_PUBLIC_SHARE_VIEW = Boolean(PUBLIC_SHARE_ID);
 
 const firebaseConfig = {
   apiKey: "AIzaSyC4In4JAihjxdFU45actNZWuOJ9ZFuR2j4",
@@ -306,6 +308,7 @@ let excellentDays = JSON.parse(localStorage.getItem("munjaz.excellentDays") || "
 const SICK_LEAVE_LIMIT = 15;
 const CASUAL_LEAVE_TERM_LIMIT = 2;
 let leaveStats = JSON.parse(localStorage.getItem("munjaz.leaveStats") || '{"sickRecords":[],"casual":0}');
+let publicShareData = null;
 
 achievements = cleanStoredData(achievements);
 awards = cleanStoredData(awards);
@@ -435,6 +438,13 @@ function getPublicProfileName(fallback = "ملف الإنجاز المهني") {
   return profileDetails.fullName?.trim() || fallback;
 }
 
+function getPublicShareUrl(userId = currentUser?.id) {
+  const baseUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? `${window.location.origin}${window.location.pathname}`
+    : "https://monjazkw.com/";
+  return userId ? `${baseUrl}?share=${encodeURIComponent(userId)}#share` : "https://monjazkw.com/#share";
+}
+
 function getArabicWeekday(dateKey) {
   if (!dateKey) return "";
   const date = new Date(`${dateKey}T12:00:00`);
@@ -549,6 +559,96 @@ async function syncRemoteCollection(batch, collectionRef, items) {
   return cleanItems;
 }
 
+function buildPublicShareSnapshot() {
+  const readiness = getReadinessData();
+  const publicAchievements = achievements.slice(0, 30).map((item) => ({
+    id: item.id,
+    title: item.title,
+    date: item.date || "",
+    type: item.type,
+    category: portfolioConfig[item.type]?.title || "إنجاز",
+    summary: item.summary || "",
+    evidenceCount: item.evidence?.length || 0,
+  }));
+  const publicAwards = awards.slice(0, 12).map((award) => ({
+    title: award.title,
+    level: award.level || "",
+    date: award.date || "",
+    issuer: award.issuer || "",
+  }));
+
+  return {
+    active: appSettings.publicShare !== false,
+    ownerId: currentUser?.id || "",
+    publishedAt: new Date().toISOString(),
+    profile: {
+      name: getPublicProfileName(),
+      school: profileDetails.school || "",
+      stage: profileDetails.stage || "",
+      district: profileDetails.district || "",
+      specialty: profileDetails.specialty || "",
+    },
+    summary: {
+      readinessScore: readiness.score,
+      readinessTitle: readiness.score >= 80 ? "ملف جاهز للعرض" : readiness.score >= 45 ? "ملف متقدم" : "ملف قيد البناء",
+      readinessText:
+        readiness.score >= 80
+          ? "الملف يحتوي على توثيق جيد ويمكن مشاركته للزيارة أو العرض."
+          : "كلما زادت الشواهد وتنوعت المجالات ظهرت صفحة المشاركة بصورة أقوى.",
+      total: achievements.length,
+      evidenceCount: readiness.evidenceCount,
+      awardsCount: awards.length,
+      excellentDaysCount: excellentDays.length,
+      strongestArea: readiness.strongestArea,
+    },
+    achievements: publicAchievements,
+    awards: publicAwards,
+  };
+}
+
+async function publishPublicShare() {
+  if (!currentUser?.id) return;
+  const publicRef = doc(db, "publicShares", currentUser.id);
+  if (appSettings.publicShare === false) {
+    await setDoc(
+      publicRef,
+      {
+        active: false,
+        ownerId: currentUser.id,
+        publishedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return;
+  }
+
+  await setDoc(
+    publicRef,
+    {
+      ...buildPublicShareSnapshot(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+async function loadPublicShare() {
+  if (!PUBLIC_SHARE_ID) return false;
+  try {
+    const snapshot = await getDoc(doc(db, "publicShares", PUBLIC_SHARE_ID));
+    publicShareData = snapshot.exists() ? cleanStoredData(snapshot.data()) : { active: false };
+    showPage("share");
+    renderSharePage();
+    return true;
+  } catch {
+    publicShareData = { active: false };
+    showPage("share");
+    renderSharePage();
+    return false;
+  }
+}
+
 async function saveRemoteState() {
   const refs = getRemoteRefs();
   if (!refs) return;
@@ -572,6 +672,8 @@ async function saveRemoteState() {
   achievements = await syncRemoteCollection(batch, refs.achievements, achievements);
   calendarEvents = await syncRemoteCollection(batch, refs.calendarEvents, calendarEvents);
   await batch.commit();
+  await publishPublicShare();
+  renderPortfolioQr();
 }
 
 function persistAchievements() {
@@ -1022,7 +1124,7 @@ function renderQrCode(element, text, size = 260) {
 
 function renderPortfolioQr() {
   if (!portfolioQr || !portfolioQrLink || !downloadQrLink) return;
-  const qrTarget = SHARE_URL;
+  const qrTarget = getPublicShareUrl();
   const qrImage = renderQrCode(portfolioQr, qrTarget, 260);
   portfolioQrLink.value = qrTarget;
   downloadQrLink.href = qrImage || "#";
@@ -1748,6 +1850,69 @@ function renderAchievementBadges(readiness) {
 
 function renderSharePage() {
   if (!shareView.name) return;
+  if (publicShareData) {
+    if (publicShareData.active === false) {
+      shareView.name.textContent = "رابط المشاركة غير متاح";
+      shareView.meta.textContent = "قد يكون الرابط غير منشور أو تم إيقاف المشاركة من إعدادات الحساب.";
+      shareView.updated.textContent = "منجز - ملف الإنجاز المهني الذكي";
+      shareView.readinessRing?.style.setProperty("--score", 0);
+      shareView.readiness.textContent = "0%";
+      shareView.readinessTitle.textContent = "الرابط غير منشور";
+      shareView.readinessText.textContent = "اطلب من صاحب الملف تفعيل صفحة المشاركة من إعدادات منجز.";
+      shareView.total.textContent = "0";
+      shareView.evidence.textContent = "0";
+      shareView.awards.textContent = "0";
+      shareView.days.textContent = "0";
+      shareView.strongest.textContent = "غير متاح";
+      shareView.highlights.innerHTML = '<li><span>لا توجد بيانات عامة متاحة.</span><small>المشاركة غير مفعلة حاليا.</small></li>';
+      shareView.coverage.innerHTML = '<p>لا يوجد توزيع متاح.</p>';
+      shareView.awardsList.innerHTML = '<li><span>لا توجد جوائز عامة متاحة.</span><small>المشاركة غير مفعلة حاليا.</small></li>';
+      return;
+    }
+
+    const publicProfile = publicShareData.profile || {};
+    const publicSummary = publicShareData.summary || {};
+    const publicAchievements = Array.isArray(publicShareData.achievements) ? publicShareData.achievements : [];
+    const publicAwards = Array.isArray(publicShareData.awards) ? publicShareData.awards : [];
+    const metaParts = [publicProfile.school, publicProfile.stage, publicProfile.district].filter(Boolean);
+    const publishedAt = publicShareData.publishedAt
+      ? new Date(publicShareData.publishedAt).toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" })
+      : "اليوم";
+    const coverageItems = Object.entries(countBy(publicAchievements, (item) => item.category || "إنجاز")).sort((a, b) => b[1] - a[1]);
+    const maxCoverage = Math.max(1, ...coverageItems.map(([, value]) => value));
+
+    shareView.name.textContent = publicProfile.name || "ملف الإنجاز المهني";
+    shareView.meta.textContent = metaParts.length ? metaParts.join(" - ") : "ملف إنجاز مهني منشور";
+    shareView.updated.textContent = `آخر نشر: ${publishedAt}`;
+    shareView.readinessRing?.style.setProperty("--score", publicSummary.readinessScore || 0);
+    shareView.readiness.textContent = `${publicSummary.readinessScore || 0}%`;
+    shareView.readinessTitle.textContent = publicSummary.readinessTitle || "ملف منشور";
+    shareView.readinessText.textContent = publicSummary.readinessText || "نسخة عامة آمنة من ملف الإنجاز.";
+    shareView.total.textContent = publicSummary.total || publicAchievements.length;
+    shareView.evidence.textContent = publicSummary.evidenceCount || 0;
+    shareView.awards.textContent = publicSummary.awardsCount || publicAwards.length;
+    shareView.days.textContent = publicSummary.excellentDaysCount || 0;
+    shareView.strongest.textContent = publicSummary.strongestArea || "لم يحدد بعد";
+    shareView.highlights.innerHTML = publicAchievements.length
+      ? publicAchievements
+          .slice(0, 5)
+          .map((item) => `<li><span>${escapeHtml(item.title)}</span><small>${escapeHtml(item.category || "إنجاز")} - ${item.date || "بدون تاريخ"}</small></li>`)
+          .join("")
+      : '<li><span>لا توجد إنجازات عامة منشورة بعد.</span><small>ستظهر هنا عند نشر ملف الإنجاز.</small></li>';
+    shareView.coverage.innerHTML = coverageItems.length
+      ? coverageItems
+          .map(([label, value]) => `<article style="--w:${Math.max(8, Math.round((value / maxCoverage) * 100))}%"><div><span>${escapeHtml(label)}</span><b>${value}</b></div><em></em></article>`)
+          .join("")
+      : '<p>لا يوجد توزيع بعد.</p>';
+    shareView.awardsList.innerHTML = publicAwards.length
+      ? publicAwards
+          .slice(0, 4)
+          .map((award) => `<li><span>${escapeHtml(award.title)}</span><small>${escapeHtml(award.level || "جائزة")} - ${award.date || "بدون تاريخ"}</small></li>`)
+          .join("")
+      : '<li><span>لا توجد جوائز منشورة بعد.</span><small>يمكن إضافتها من صفحة الجوائز.</small></li>';
+    return;
+  }
+
   const readiness = getReadinessData();
   const profileName = getPublicProfileName();
   const metaParts = [profileDetails.school, profileDetails.stage, profileDetails.district].filter(Boolean);
@@ -2539,7 +2704,7 @@ printButtons.forEach((button) => {
 });
 
 copyQrLink?.addEventListener("click", async () => {
-  const value = portfolioQrLink?.value || SHARE_URL;
+  const value = portfolioQrLink?.value || getPublicShareUrl();
   try {
     await navigator.clipboard.writeText(value);
     if (qrStatus) qrStatus.textContent = "تم نسخ الرابط.";
@@ -2733,4 +2898,8 @@ syncReminderPills();
 renderCalendar();
 renderExcellentDays();
 renderReport();
-loadRemoteState();
+if (IS_PUBLIC_SHARE_VIEW) {
+  loadPublicShare();
+} else {
+  loadRemoteState();
+}

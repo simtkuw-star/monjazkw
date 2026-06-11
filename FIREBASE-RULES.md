@@ -1,8 +1,8 @@
 # Firestore Security Rules
 
-انسخي هذه القواعد في Firebase:
+انسخي هذه القواعد في:
 
-Firestore Database -> Rules
+Firebase Console -> Firestore Database -> Rules
 
 ```js
 rules_version = '2';
@@ -13,6 +13,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    match /publicShares/{userId} {
+      allow read: if resource.data.active == true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
@@ -20,9 +25,8 @@ service cloud.firestore {
 }
 ```
 
-هذه القواعد تجعل كل مستخدم يرى ويحفظ بياناته فقط، وتسمح بأقسام منظمة مثل:
+هذه القواعد تعني:
 
-- `profile`
-- `achievements`
-- `calendarEvents`
-- `private` للبيانات القديمة أثناء النقل فقط
+- بيانات كل مستخدم الخاصة داخل `users` لا يراها إلا صاحب الحساب.
+- صفحة المشاركة العامة تقرأ فقط من `publicShares`.
+- إذا عطلت المشاركة من الإعدادات، يصبح الرابط العام غير متاح.
