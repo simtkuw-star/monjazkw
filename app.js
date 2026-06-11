@@ -127,6 +127,8 @@ const homeMetrics = {
   executiveNextEventDate: document.querySelector("#executiveNextEventDate"),
   executiveEvidenceGap: document.querySelector("#executiveEvidenceGap"),
   executiveExcellentRemaining: document.querySelector("#executiveExcellentRemaining"),
+  onboardingProgress: document.querySelector("#onboardingProgress"),
+  onboardingSteps: document.querySelector("#onboardingSteps"),
 };
 const ideaSearches = document.querySelectorAll(".idea-search");
 const ideaButtons = document.querySelectorAll(".idea-button");
@@ -1603,6 +1605,63 @@ function renderExecutiveDashboard(readiness) {
   homeMetrics.executiveExcellentRemaining.textContent = remainingExcellentDays;
 }
 
+function renderOnboardingSteps(readiness) {
+  if (!homeMetrics.onboardingSteps || !homeMetrics.onboardingProgress) return;
+  const steps = [
+    {
+      number: "01",
+      title: "أكمل بياناتي",
+      text: "الاسم الثلاثي، المدرسة، المرحلة، المنطقة التعليمية، والتخصص.",
+      page: "profile",
+      done: readiness.profileFields >= 7,
+    },
+    {
+      number: "02",
+      title: "حدد السنة الدراسية",
+      text: "اضبط السنة والكورس الحالي من صفحة الإعدادات.",
+      page: "settings",
+      done: Boolean(appSettings.schoolYear),
+    },
+    {
+      number: "03",
+      title: "أضف أول إنجاز",
+      text: "ابدأ بإنجاز واحد موثق حتى تظهر مؤشرات الأداء.",
+      page: "portfolio",
+      done: achievements.length > 0,
+    },
+    {
+      number: "04",
+      title: "أضف موعدًا في الرزنامة",
+      text: "سجل اجتماعًا، درسًا رياديًا، فعالية، أو موعد تسليم.",
+      page: "calendar",
+      done: calendarEvents.length > 0,
+    },
+    {
+      number: "05",
+      title: "جهز رابط المشاركة",
+      text: "استخدم صفحة المشاركة و QR للعرض السريع والزيارات.",
+      page: "share",
+      done: readiness.score >= 45 || achievements.length > 0,
+    },
+  ];
+  const doneCount = steps.filter((step) => step.done).length;
+  homeMetrics.onboardingProgress.textContent = `${doneCount} / ${steps.length}`;
+  homeMetrics.onboardingSteps.innerHTML = steps
+    .map(
+      (step) => `
+        <article class="${step.done ? "done" : ""}">
+          <b>${step.done ? "✓" : step.number}</b>
+          <div>
+            <h4>${step.title}</h4>
+            <p>${step.text}</p>
+          </div>
+          <button type="button" data-onboarding-page="${step.page}">${step.done ? "مراجعة" : "ابدأ"}</button>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderSharePage() {
   if (!shareView.name) return;
   const readiness = getReadinessData();
@@ -1682,6 +1741,7 @@ function renderHomeMetrics() {
   }
   renderSmartInsights(readiness);
   renderExecutiveDashboard(readiness);
+  renderOnboardingSteps(readiness);
   renderSharePage();
   renderSystemSettings();
 }
@@ -2375,6 +2435,12 @@ homeMetrics.executiveNextAction?.addEventListener("click", () => {
     return;
   }
   showPage(page || "portfolio");
+});
+
+homeMetrics.onboardingSteps?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-onboarding-page]");
+  if (!button) return;
+  showPage(button.dataset.onboardingPage);
 });
 
 printButtons.forEach((button) => {
