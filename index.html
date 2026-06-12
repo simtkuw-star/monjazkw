@@ -40,7 +40,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=36" />
+    <link rel="stylesheet" href="styles.css?v=37" />
   </head>
   <body>
     <script>
@@ -73,11 +73,152 @@
               if (!image.dataset.logoFallback) {
                 image.dataset.logoFallback = "true";
                 image.src = "assets/munjaz-logo.png";
+                image.classList.add("logo-fallback-loading");
               }
             },
             { once: true },
           );
         });
+
+        const templatePreview = document.querySelector("#templatePreview");
+        const templateArrange = document.querySelector("#templateArrange");
+        const templateStatus = document.querySelector("#templateSettingsStatus");
+        const templateInputs = {
+          schoolName: document.querySelector("#templateSchoolName"),
+          teacherName: document.querySelector("#templateTeacherName"),
+          headName: document.querySelector("#templateHeadName"),
+          principalName: document.querySelector("#templatePrincipalName"),
+          borderStyle: document.querySelector("#templateBorderStyle"),
+          schoolLogo: document.querySelector("#templateSchoolLogo"),
+          extraLogo: document.querySelector("#templateExtraLogo"),
+          frameImage: document.querySelector("#templateFrameImage"),
+        };
+        const templateState = {
+          schoolName: "",
+          teacherName: "",
+          headName: "",
+          principalName: "",
+          borderStyle: "classic",
+          schoolLogo: "",
+          extraLogo: "",
+          frameImage: "",
+          sectionOrder: ["head", "body", "signatures"],
+        };
+        const savedTemplateState = (() => {
+          try {
+            return JSON.parse(localStorage.getItem("munjaz.templateSettings") || "{}");
+          } catch {
+            return {};
+          }
+        })();
+        Object.assign(templateState, savedTemplateState);
+
+        const readTemplateFile = (file) =>
+          new Promise((resolve, reject) => {
+            if (!file) return resolve("");
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+        const getLogoHtml = (src, label) =>
+          src
+            ? `<img src="${src}" alt="${label}" onerror="this.style.display='none';this.nextElementSibling.hidden=false;" /><span hidden>${label}</span>`
+            : `<span>${label}</span>`;
+
+        const renderTemplateArrangeFallback = () => {
+          if (!templateArrange) return;
+          const labels = {
+            head: "رأس الورقة والشعارات",
+            body: "محتوى النموذج",
+            signatures: "التواقيع",
+          };
+          templateArrange.innerHTML = templateState.sectionOrder
+            .map(
+              (section, index) => `
+                <article>
+                  <strong>${labels[section]}</strong>
+                  <div>
+                    <button type="button" data-template-move="${section}" data-direction="-1" ${index === 0 ? "disabled" : ""}>فوق</button>
+                    <button type="button" data-template-move="${section}" data-direction="1" ${index === templateState.sectionOrder.length - 1 ? "disabled" : ""}>تحت</button>
+                  </div>
+                </article>
+              `,
+            )
+            .join("");
+        };
+
+        const renderTemplatePreviewFallback = () => {
+          if (!templatePreview) return;
+          const bodyText =
+            templatePreview.querySelector(".template-paper-body")?.innerHTML ||
+            "<p>عنوان النموذج: اكتب هنا محتوى النموذج وعدله مباشرة مثل صفحة Word.</p><p>الهدف: توثيق العمل بصورة رسمية قابلة للطباعة.</p><p>الإجراءات: اكتب النقاط أو التفاصيل المطلوبة.</p><p>المرفقات: يمكن ذكر الصور أو الملفات أو الروابط الداعمة.</p>";
+          const sections = {
+            head: `
+              <header class="template-paper-head">
+                <div class="template-paper-logo">${getLogoHtml(templateState.schoolLogo, "لوقو المدرسة")}</div>
+                <div>
+                  <span>نموذج قابل للتعبئة</span>
+                  <h3>${templateState.schoolName || "اسم المدرسة"}</h3>
+                  <p>قالب رسمي قابل للتعديل والطباعة</p>
+                </div>
+                <div class="template-paper-logo">${getLogoHtml(templateState.extraLogo, "لوقو إضافي")}</div>
+              </header>
+            `,
+            body: `<section class="template-paper-body" contenteditable="true" spellcheck="true">${bodyText}</section>`,
+            signatures: `
+              <footer class="template-paper-signatures">
+                <div><span>اسم المعلم/المعلمة</span><strong>${templateState.teacherName || "................"}</strong></div>
+                <div><span>رئيس القسم</span><strong>${templateState.headName || "................"}</strong></div>
+                <div><span>مدير المدرسة</span><strong>${templateState.principalName || "................"}</strong></div>
+              </footer>
+            `,
+          };
+          templatePreview.className = `template-preview template-border-${templateState.borderStyle || "classic"}`;
+          templatePreview.innerHTML = `
+            <div class="template-paper" style="${templateState.frameImage ? `--template-frame:url('${templateState.frameImage}')` : ""}">
+              ${templateState.sectionOrder.map((section) => sections[section]).join("")}
+            </div>
+          `;
+          renderTemplateArrangeFallback();
+        };
+
+        Object.entries(templateInputs).forEach(([key, input]) => {
+          if (!input) return;
+          if (input.type !== "file") input.value = templateState[key] || "";
+          input.addEventListener(input.type === "file" ? "change" : "input", async () => {
+            if (input.type === "file") {
+              templateState[key] = await readTemplateFile(input.files?.[0]);
+              if (templateStatus) templateStatus.textContent = "ظهرت الصورة في المعاينة. اضغط حفظ إذا الشكل مناسب.";
+            } else {
+              templateState[key] = input.value.trim();
+            }
+            renderTemplatePreviewFallback();
+          });
+        });
+
+        templateArrange?.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-template-move]");
+          if (!button) return;
+          const section = button.dataset.templateMove;
+          const direction = Number(button.dataset.direction);
+          const index = templateState.sectionOrder.indexOf(section);
+          const nextIndex = index + direction;
+          if (index < 0 || nextIndex < 0 || nextIndex >= templateState.sectionOrder.length) return;
+          [templateState.sectionOrder[index], templateState.sectionOrder[nextIndex]] = [
+            templateState.sectionOrder[nextIndex],
+            templateState.sectionOrder[index],
+          ];
+          renderTemplatePreviewFallback();
+        });
+
+        document.querySelector("#saveTemplateSettings")?.addEventListener("click", () => {
+          localStorage.setItem("munjaz.templateSettings", JSON.stringify(templateState));
+          if (templateStatus) templateStatus.textContent = "تم حفظ شكل الورقة على هذا الجهاز.";
+        });
+
+        if (templatePreview && !templatePreview.textContent.trim()) renderTemplatePreviewFallback();
       });
     </script>
     <div class="scene">
@@ -1275,6 +1416,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=58"></script>
+    <script type="module" src="app.js?v=59"></script>
   </body>
 </html>
