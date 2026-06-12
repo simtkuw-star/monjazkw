@@ -40,7 +40,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=35" />
+    <link rel="stylesheet" href="styles.css?v=36" />
   </head>
   <body>
     <script>
@@ -717,6 +717,13 @@
                   <label>فورمة المدرسة / خلفية الورقة<input id="templateFrameImage" type="file" accept="image/*" /></label>
                 </div>
                 <small id="templateSettingsStatus"></small>
+                <div class="template-arrange-panel">
+                  <div>
+                    <span>ترتيب الورقة</span>
+                    <p>حرّك أجزاء النموذج وشاهد التغيير مباشرة في المعاينة.</p>
+                  </div>
+                  <div id="templateArrange" class="template-arrange-list"></div>
+                </div>
               </section>
 
               <section class="templates-layout">
@@ -1268,6 +1275,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=57"></script>
+    <script type="module" src="app.js?v=58"></script>
   </body>
 </html>

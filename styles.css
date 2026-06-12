@@ -6409,6 +6409,68 @@ body {
   font-weight: 900;
 }
 
+.template-arrange-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding-top: 14px;
+  border-top: 1px solid rgba(30, 42, 68, 0.08);
+}
+
+.template-arrange-panel span {
+  color: var(--brand-gold);
+  font-weight: 950;
+}
+
+.template-arrange-panel p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.template-arrange-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-arrange-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(30, 42, 68, 0.1);
+  border-radius: 16px;
+  background: rgba(248, 250, 251, 0.86);
+}
+
+.template-arrange-list strong {
+  color: var(--brand-navy);
+}
+
+.template-arrange-list div {
+  display: flex;
+  gap: 8px;
+}
+
+.template-arrange-list button {
+  border: 0;
+  border-radius: 12px;
+  padding: 9px 13px;
+  color: #fff;
+  background: var(--brand-navy);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.template-arrange-list button:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  background: #edf1f4;
+}
+
 .templates-layout {
   display: grid;
   grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.45fr);
@@ -6930,6 +6992,7 @@ body {
   .templates-layout,
   .template-fields,
   .template-letterhead-grid,
+  .template-arrange-panel,
   .template-paper-signatures {
     grid-template-columns: 1fr;
   }

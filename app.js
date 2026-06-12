@@ -143,6 +143,7 @@ const templatesView = {
   preview: document.querySelector("#templatePreview"),
   status: document.querySelector("#templateStatus"),
   settingsStatus: document.querySelector("#templateSettingsStatus"),
+  arrange: document.querySelector("#templateArrange"),
 };
 const copyTemplateTextButton = document.querySelector("#copyTemplateText");
 const saveTemplateSettingsButton = document.querySelector("#saveTemplateSettings");
@@ -834,6 +835,9 @@ function normalizeSelfAssessment(raw = {}) {
 }
 
 function normalizeTemplateSettings(raw = {}) {
+  const sectionOrder = Array.isArray(raw.sectionOrder)
+    ? raw.sectionOrder.filter((item) => ["head", "body", "signatures"].includes(item))
+    : [];
   return {
     schoolName: String(raw.schoolName || ""),
     teacherName: String(raw.teacherName || ""),
@@ -843,6 +847,7 @@ function normalizeTemplateSettings(raw = {}) {
     schoolLogo: typeof raw.schoolLogo === "string" ? raw.schoolLogo : "",
     extraLogo: typeof raw.extraLogo === "string" ? raw.extraLogo : "",
     frameImage: typeof raw.frameImage === "string" ? raw.frameImage : "",
+    sectionOrder: [...sectionOrder, ...["head", "body", "signatures"].filter((item) => !sectionOrder.includes(item))],
   };
 }
 
@@ -1688,6 +1693,32 @@ function renderTemplateSettings() {
   if (templateSettingsInputs.borderStyle) templateSettingsInputs.borderStyle.value = templateSettings.borderStyle;
 }
 
+function getTemplateSectionLabel(section) {
+  return {
+    head: "رأس الورقة والشعارات",
+    body: "محتوى النموذج القابل للتعديل",
+    signatures: "تواقيع المعلم ورئيس القسم والمدير",
+  }[section] || section;
+}
+
+function renderTemplateArrange() {
+  if (!templatesView.arrange) return;
+  const order = templateSettings.sectionOrder || ["head", "body", "signatures"];
+  templatesView.arrange.innerHTML = order
+    .map(
+      (section, index) => `
+        <article>
+          <strong>${escapeHtml(getTemplateSectionLabel(section))}</strong>
+          <div>
+            <button type="button" data-template-move="${section}" data-direction="-1" ${index === 0 ? "disabled" : ""}>فوق</button>
+            <button type="button" data-template-move="${section}" data-direction="1" ${index === order.length - 1 ? "disabled" : ""}>تحت</button>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderTemplateLogo(src, label) {
   if (src) return `<img src="${src}" alt="${escapeHtml(label)}" />`;
   return `<span>${escapeHtml(label)}</span>`;
@@ -1810,11 +1841,9 @@ function renderTemplatePreview() {
     .map((line) => (line.trim() ? `<p>${escapeHtml(line)}</p>` : "<br />"))
     .join("");
   const frameStyle = templateSettings.frameImage ? ` style="--template-frame:url('${templateSettings.frameImage}')"` : "";
-
-  templatesView.preview.className = `template-preview template-border-${templateSettings.borderStyle || "classic"}`;
-  templatesView.preview.innerHTML = `
-    <div class="template-paper"${frameStyle}>
-      <header class="template-paper-head">
+  const sections = {
+    head: `
+      <header class="template-paper-head" data-paper-section="head">
         <div class="template-paper-logo">${renderTemplateLogo(templateSettings.schoolLogo, "لوقو المدرسة")}</div>
         <div>
           <span>${escapeHtml(template.category)}</span>
@@ -1823,16 +1852,32 @@ function renderTemplatePreview() {
         </div>
         <div class="template-paper-logo">${renderTemplateLogo(templateSettings.extraLogo, "لوقو إضافي")}</div>
       </header>
-      <section class="template-paper-body" contenteditable="true" spellcheck="true">
+    `,
+    body: `
+      <section class="template-paper-body" data-paper-section="body" contenteditable="true" spellcheck="true">
         ${lines}
       </section>
-      <footer class="template-paper-signatures">
+    `,
+    signatures: `
+      <footer class="template-paper-signatures" data-paper-section="signatures">
         <div><span>اسم المعلم/المعلمة</span><strong>${escapeHtml(templateSettings.teacherName || "................")}</strong></div>
         <div><span>رئيس القسم</span><strong>${escapeHtml(templateSettings.headName || "................")}</strong></div>
         <div><span>مدير المدرسة</span><strong>${escapeHtml(templateSettings.principalName || "................")}</strong></div>
       </footer>
+    `,
+  };
+  const orderedSections = (templateSettings.sectionOrder || ["head", "body", "signatures"])
+    .map((section) => sections[section])
+    .filter(Boolean)
+    .join("");
+
+  templatesView.preview.className = `template-preview template-border-${templateSettings.borderStyle || "classic"}`;
+  templatesView.preview.innerHTML = `
+    <div class="template-paper"${frameStyle}>
+      ${orderedSections}
     </div>
   `;
+  renderTemplateArrange();
   return getTemplateCopyText();
 }
 
@@ -1861,6 +1906,19 @@ function readTemplateImage(file) {
     reader.onerror = () => reject(new Error("read-failed"));
     reader.readAsDataURL(file);
   });
+}
+
+async function previewTemplateImageInput(key, input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  try {
+    templateSettings[key] = await readTemplateImage(file);
+    templateSettings = normalizeTemplateSettings(templateSettings);
+    renderTemplatePreview();
+    if (templatesView.settingsStatus) templatesView.settingsStatus.textContent = "تم تحديث المعاينة. اضغط حفظ الإعدادات إذا الشكل مناسب.";
+  } catch {
+    if (templatesView.settingsStatus) templatesView.settingsStatus.textContent = "حجم الصورة كبير. اختاري صورة أصغر حتى تظهر في المعاينة.";
+  }
 }
 
 function syncTemplateSettingsFromInputs() {
@@ -3611,6 +3669,26 @@ templatesView.fields?.addEventListener("input", renderTemplatePreview);
     syncTemplateSettingsFromInputs();
     renderTemplatePreview();
   });
+});
+[
+  ["schoolLogo", templateSettingsInputs.schoolLogo],
+  ["extraLogo", templateSettingsInputs.extraLogo],
+  ["frameImage", templateSettingsInputs.frameImage],
+].forEach(([key, input]) => {
+  input?.addEventListener("change", () => previewTemplateImageInput(key, input));
+});
+templatesView.arrange?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-template-move]");
+  if (!button) return;
+  const section = button.dataset.templateMove;
+  const direction = Number(button.dataset.direction);
+  const order = [...(templateSettings.sectionOrder || ["head", "body", "signatures"])];
+  const index = order.indexOf(section);
+  const nextIndex = index + direction;
+  if (index < 0 || nextIndex < 0 || nextIndex >= order.length) return;
+  [order[index], order[nextIndex]] = [order[nextIndex], order[index]];
+  templateSettings = normalizeTemplateSettings({ ...templateSettings, sectionOrder: order });
+  renderTemplatePreview();
 });
 selfAssessmentView.grid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-self-score]");
