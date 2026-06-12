@@ -40,7 +40,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=34" />
+    <link rel="stylesheet" href="styles.css?v=35" />
   </head>
   <body>
     <div class="scene">
@@ -654,6 +654,34 @@
                 <strong id="templateCount">8</strong>
               </section>
 
+              <section class="template-letterhead-panel">
+                <div class="template-letterhead-head">
+                  <div>
+                    <span>إعدادات الورقة</span>
+                    <h3>رأس وتذييل النموذج</h3>
+                  </div>
+                  <button id="saveTemplateSettings" type="button">حفظ الإعدادات</button>
+                </div>
+                <div class="template-letterhead-grid">
+                  <label>اسم المدرسة<input id="templateSchoolName" type="text" placeholder="مثال: ثانوية ..." /></label>
+                  <label>اسم المعلم/المعلمة<input id="templateTeacherName" type="text" placeholder="اسم المعلم/المعلمة" /></label>
+                  <label>رئيس القسم<input id="templateHeadName" type="text" placeholder="رئيس القسم" /></label>
+                  <label>مدير المدرسة<input id="templatePrincipalName" type="text" placeholder="مدير المدرسة" /></label>
+                  <label>شكل البوردر
+                    <select id="templateBorderStyle">
+                      <option value="classic">رسمي كلاسيك</option>
+                      <option value="gold">ذهبي</option>
+                      <option value="teal">تركواز</option>
+                      <option value="none">بدون بوردر</option>
+                    </select>
+                  </label>
+                  <label>لوقو المدرسة<input id="templateSchoolLogo" type="file" accept="image/*" /></label>
+                  <label>لوقو إضافي<input id="templateExtraLogo" type="file" accept="image/*" /></label>
+                  <label>فورمة المدرسة / خلفية الورقة<input id="templateFrameImage" type="file" accept="image/*" /></label>
+                </div>
+                <small id="templateSettingsStatus"></small>
+              </section>
+
               <section class="templates-layout">
                 <aside class="template-list" id="templateList"></aside>
                 <section class="template-builder">
@@ -1203,6 +1231,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=55"></script>
+    <script type="module" src="app.js?v=56"></script>
   </body>
 </html>

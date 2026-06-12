@@ -142,8 +142,20 @@ const templatesView = {
   fields: document.querySelector("#templateFields"),
   preview: document.querySelector("#templatePreview"),
   status: document.querySelector("#templateStatus"),
+  settingsStatus: document.querySelector("#templateSettingsStatus"),
 };
 const copyTemplateTextButton = document.querySelector("#copyTemplateText");
+const saveTemplateSettingsButton = document.querySelector("#saveTemplateSettings");
+const templateSettingsInputs = {
+  schoolName: document.querySelector("#templateSchoolName"),
+  teacherName: document.querySelector("#templateTeacherName"),
+  headName: document.querySelector("#templateHeadName"),
+  principalName: document.querySelector("#templatePrincipalName"),
+  borderStyle: document.querySelector("#templateBorderStyle"),
+  schoolLogo: document.querySelector("#templateSchoolLogo"),
+  extraLogo: document.querySelector("#templateExtraLogo"),
+  frameImage: document.querySelector("#templateFrameImage"),
+};
 const homeMetrics = {
   total: document.querySelector("#metricTotalAchievements"),
   development: document.querySelector("#metricDevelopment"),
@@ -325,6 +337,7 @@ const portfolioConfig = {
 let activePortfolio = "meetings";
 let activeReport = "monthly";
 let activeTemplate = "remedial-plan";
+let templateSettings = JSON.parse(localStorage.getItem("munjaz.templateSettings") || "{}");
 let achievements = JSON.parse(localStorage.getItem("munjaz.achievements") || "[]");
 let awards = JSON.parse(localStorage.getItem("munjaz.awards") || "[]");
 let archives = JSON.parse(localStorage.getItem("munjaz.archives") || "[]");
@@ -360,6 +373,7 @@ profileDetails = normalizeProfileDetails(cleanStoredData(profileDetails));
 appSettings = normalizeAppSettings(cleanStoredData(appSettings));
 developmentPlan = normalizeDevelopmentPlan(cleanStoredData(developmentPlan));
 selfAssessment = normalizeSelfAssessment(cleanStoredData(selfAssessment));
+templateSettings = normalizeTemplateSettings(cleanStoredData(templateSettings));
 calendarEvents = cleanStoredData(calendarEvents);
 excellentDays = cleanStoredData(excellentDays).map(Number).filter((day) => day >= 1 && day <= 140);
 leaveStats = normalizeLeaveStats(cleanStoredData(leaveStats));
@@ -370,6 +384,7 @@ localStorage.setItem("munjaz.profileDetails", JSON.stringify(profileDetails));
 localStorage.setItem("munjaz.appSettings", JSON.stringify(appSettings));
 localStorage.setItem("munjaz.developmentPlan", JSON.stringify(developmentPlan));
 localStorage.setItem("munjaz.selfAssessment", JSON.stringify(selfAssessment));
+localStorage.setItem("munjaz.templateSettings", JSON.stringify(templateSettings));
 localStorage.setItem("munjaz.calendarEvents", JSON.stringify(calendarEvents));
 localStorage.setItem("munjaz.excellentDays", JSON.stringify(excellentDays));
 localStorage.setItem("munjaz.leaveStats", JSON.stringify(leaveStats));
@@ -815,6 +830,19 @@ function normalizeSelfAssessment(raw = {}) {
     ),
     reflection: String(raw.reflection || ""),
     updatedAt: String(raw.updatedAt || ""),
+  };
+}
+
+function normalizeTemplateSettings(raw = {}) {
+  return {
+    schoolName: String(raw.schoolName || ""),
+    teacherName: String(raw.teacherName || ""),
+    headName: String(raw.headName || ""),
+    principalName: String(raw.principalName || ""),
+    borderStyle: ["classic", "gold", "teal", "none"].includes(raw.borderStyle) ? raw.borderStyle : "classic",
+    schoolLogo: typeof raw.schoolLogo === "string" ? raw.schoolLogo : "",
+    extraLogo: typeof raw.extraLogo === "string" ? raw.extraLogo : "",
+    frameImage: typeof raw.frameImage === "string" ? raw.frameImage : "",
   };
 }
 
@@ -1646,15 +1674,75 @@ function getActiveTemplate() {
   return readyTemplates.find((template) => template.id === activeTemplate) || readyTemplates[0];
 }
 
+function getTemplatePlainText() {
+  const template = getActiveTemplate();
+  if (!template) return "";
+  return template.body(getTemplateValues()).trim();
+}
+
+function renderTemplateSettings() {
+  if (templateSettingsInputs.schoolName) templateSettingsInputs.schoolName.value = templateSettings.schoolName;
+  if (templateSettingsInputs.teacherName) templateSettingsInputs.teacherName.value = templateSettings.teacherName;
+  if (templateSettingsInputs.headName) templateSettingsInputs.headName.value = templateSettings.headName;
+  if (templateSettingsInputs.principalName) templateSettingsInputs.principalName.value = templateSettings.principalName;
+  if (templateSettingsInputs.borderStyle) templateSettingsInputs.borderStyle.value = templateSettings.borderStyle;
+}
+
+function renderTemplateLogo(src, label) {
+  if (src) return `<img src="${src}" alt="${escapeHtml(label)}" />`;
+  return `<span>${escapeHtml(label)}</span>`;
+}
+
+function getTemplateEditedText() {
+  return templatesView.preview?.querySelector(".template-paper-body")?.innerText.trim() || getTemplatePlainText();
+}
+
 function renderTemplatePreview() {
   const template = getActiveTemplate();
   if (!template || !templatesView.preview) return "";
-  const text = template.body(getTemplateValues()).trim();
-  templatesView.preview.innerHTML = text
+  const text = getTemplatePlainText();
+  const lines = text
     .split("\n")
     .map((line) => (line.trim() ? `<p>${escapeHtml(line)}</p>` : "<br />"))
     .join("");
-  return text;
+  const schoolLogo = templateSettings.schoolLogo
+    ? `<img src="${templateSettings.schoolLogo}" alt="لوقو المدرسة" />`
+    : `<span>لوقو المدرسة</span>`;
+  const extraLogo = templateSettings.extraLogo
+    ? `<img src="${templateSettings.extraLogo}" alt="لوقو إضافي" />`
+    : `<span>لوقو إضافي</span>`;
+  const frameStyle = templateSettings.frameImage ? ` style="--template-frame:url('${templateSettings.frameImage}')"` : "";
+
+  templatesView.preview.className = `template-preview template-border-${templateSettings.borderStyle}`;
+  templatesView.preview.innerHTML = `
+    <div class="template-paper"${frameStyle}>
+      <header class="template-paper-head">
+        <div class="template-paper-logo">${schoolLogo}</div>
+        <div>
+          <span>${escapeHtml(template.category)}</span>
+          <h3>${escapeHtml(templateSettings.schoolName || "اسم المدرسة")}</h3>
+          <p>${escapeHtml(template.title)}</p>
+        </div>
+        <div class="template-paper-logo">${extraLogo}</div>
+      </header>
+      <section class="template-paper-body" contenteditable="true" spellcheck="true">
+        ${lines}
+      </section>
+      <footer class="template-paper-signatures">
+        <div><span>اسم المعلم/المعلمة</span><strong>${escapeHtml(templateSettings.teacherName || "................")}</strong></div>
+        <div><span>رئيس القسم</span><strong>${escapeHtml(templateSettings.headName || "................")}</strong></div>
+        <div><span>مدير المدرسة</span><strong>${escapeHtml(templateSettings.principalName || "................")}</strong></div>
+      </footer>
+    </div>
+  `;
+  return [
+    templateSettings.schoolName,
+    template.title,
+    text,
+    `اسم المعلم/المعلمة: ${templateSettings.teacherName || ""}`,
+    `رئيس القسم: ${templateSettings.headName || ""}`,
+    `مدير المدرسة: ${templateSettings.principalName || ""}`,
+  ].filter(Boolean).join("\n\n");
 }
 
 function renderTemplates() {
@@ -1700,6 +1788,113 @@ async function copyCurrentTemplate() {
   }
 }
 
+function getTemplateCopyText() {
+  const template = getActiveTemplate();
+  if (!template) return "";
+  return [
+    templateSettings.schoolName,
+    template.title,
+    getTemplateEditedText(),
+    `اسم المعلم/المعلمة: ${templateSettings.teacherName || ""}`,
+    `رئيس القسم: ${templateSettings.headName || ""}`,
+    `مدير المدرسة: ${templateSettings.principalName || ""}`,
+  ].filter(Boolean).join("\n\n");
+}
+
+function renderTemplatePreview() {
+  const template = getActiveTemplate();
+  if (!template || !templatesView.preview) return "";
+  const text = getTemplatePlainText();
+  const lines = text
+    .split("\n")
+    .map((line) => (line.trim() ? `<p>${escapeHtml(line)}</p>` : "<br />"))
+    .join("");
+  const frameStyle = templateSettings.frameImage ? ` style="--template-frame:url('${templateSettings.frameImage}')"` : "";
+
+  templatesView.preview.className = `template-preview template-border-${templateSettings.borderStyle || "classic"}`;
+  templatesView.preview.innerHTML = `
+    <div class="template-paper"${frameStyle}>
+      <header class="template-paper-head">
+        <div class="template-paper-logo">${renderTemplateLogo(templateSettings.schoolLogo, "لوقو المدرسة")}</div>
+        <div>
+          <span>${escapeHtml(template.category)}</span>
+          <h3>${escapeHtml(templateSettings.schoolName || "اسم المدرسة")}</h3>
+          <p>${escapeHtml(template.title)}</p>
+        </div>
+        <div class="template-paper-logo">${renderTemplateLogo(templateSettings.extraLogo, "لوقو إضافي")}</div>
+      </header>
+      <section class="template-paper-body" contenteditable="true" spellcheck="true">
+        ${lines}
+      </section>
+      <footer class="template-paper-signatures">
+        <div><span>اسم المعلم/المعلمة</span><strong>${escapeHtml(templateSettings.teacherName || "................")}</strong></div>
+        <div><span>رئيس القسم</span><strong>${escapeHtml(templateSettings.headName || "................")}</strong></div>
+        <div><span>مدير المدرسة</span><strong>${escapeHtml(templateSettings.principalName || "................")}</strong></div>
+      </footer>
+    </div>
+  `;
+  return getTemplateCopyText();
+}
+
+async function copyCurrentTemplate() {
+  const text = getTemplateCopyText();
+  try {
+    await navigator.clipboard.writeText(text);
+    if (templatesView.status) templatesView.status.textContent = "تم نسخ النموذج.";
+  } catch {
+    if (templatesView.status) templatesView.status.textContent = "تعذر النسخ التلقائي، يمكن تحديد النص من المعاينة.";
+  }
+}
+
+function readTemplateImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve("");
+      return;
+    }
+    if (file.size > 1200000) {
+      reject(new Error("large-file"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("read-failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function syncTemplateSettingsFromInputs() {
+  templateSettings = normalizeTemplateSettings({
+    ...templateSettings,
+    schoolName: templateSettingsInputs.schoolName?.value.trim() || "",
+    teacherName: templateSettingsInputs.teacherName?.value.trim() || "",
+    headName: templateSettingsInputs.headName?.value.trim() || "",
+    principalName: templateSettingsInputs.principalName?.value.trim() || "",
+    borderStyle: templateSettingsInputs.borderStyle?.value || "classic",
+  });
+}
+
+async function saveTemplateSettings() {
+  syncTemplateSettingsFromInputs();
+  try {
+    const uploads = [
+      ["schoolLogo", templateSettingsInputs.schoolLogo?.files?.[0]],
+      ["extraLogo", templateSettingsInputs.extraLogo?.files?.[0]],
+      ["frameImage", templateSettingsInputs.frameImage?.files?.[0]],
+    ];
+    for (const [key, file] of uploads) {
+      if (file) templateSettings[key] = await readTemplateImage(file);
+    }
+    templateSettings = normalizeTemplateSettings(templateSettings);
+    localStorage.setItem("munjaz.templateSettings", JSON.stringify(templateSettings));
+    renderTemplateSettings();
+    renderTemplatePreview();
+    if (templatesView.settingsStatus) templatesView.settingsStatus.textContent = "تم حفظ إعدادات الورقة على هذا الجهاز.";
+  } catch {
+    if (templatesView.settingsStatus) templatesView.settingsStatus.textContent = "حجم الصورة كبير. اختاري صورة أصغر أو قصيها ثم ارفعيها.";
+  }
+}
+
 function exportBackup() {
   const backup = {
     exportedAt: new Date().toISOString(),
@@ -1709,6 +1904,7 @@ function exportBackup() {
     appSettings,
     developmentPlan,
     selfAssessment,
+    templateSettings,
     achievements,
     calendarEvents,
     awards,
@@ -3391,6 +3587,7 @@ exportBackupButton?.addEventListener("click", exportBackup);
 addDevelopmentGoalButton?.addEventListener("click", () => addDevelopmentPlanItem());
 saveSelfAssessmentButton?.addEventListener("click", () => persistSelfAssessment());
 copyTemplateTextButton?.addEventListener("click", copyCurrentTemplate);
+saveTemplateSettingsButton?.addEventListener("click", saveTemplateSettings);
 templatesView.list?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-template-id]");
   if (!button) return;
@@ -3398,6 +3595,12 @@ templatesView.list?.addEventListener("click", (event) => {
   renderTemplates();
 });
 templatesView.fields?.addEventListener("input", renderTemplatePreview);
+["schoolName", "teacherName", "headName", "principalName", "borderStyle"].forEach((key) => {
+  templateSettingsInputs[key]?.addEventListener("input", () => {
+    syncTemplateSettingsFromInputs();
+    renderTemplatePreview();
+  });
+});
 selfAssessmentView.grid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-self-score]");
   const rating = event.target.closest("[data-self-criterion]");
@@ -3589,6 +3792,7 @@ renderProfileDetails();
 renderSystemSettings();
 renderDevelopmentPlan();
 renderSelfAssessment();
+renderTemplateSettings();
 renderTemplates();
 renderPortfolioQr();
 renderHomeMetrics();
