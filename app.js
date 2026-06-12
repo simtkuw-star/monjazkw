@@ -2354,7 +2354,7 @@ function deleteCalendarEvent(id) {
   renderReport(activeReport);
 }
 
-loginButton.addEventListener("click", () => {
+loginButton?.addEventListener("click", () => {
   if (currentUser) {
     showPage("profile");
     return;
@@ -2372,7 +2372,7 @@ loginTriggers.forEach((trigger) => {
   });
 });
 
-loginForm.addEventListener("submit", async (event) => {
+loginForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = usernameInput.value.trim();
   const password = passwordInput.value.trim();
@@ -2392,21 +2392,43 @@ loginForm.addEventListener("submit", async (event) => {
   await loginUser(email, password);
 });
 
-cancelLogin.addEventListener("click", () => {
+cancelLogin?.addEventListener("click", () => {
   loginDialog.close();
 });
 
-logoutButton.addEventListener("click", logoutUser);
+logoutButton?.addEventListener("click", logoutUser);
 
 function showPage(page) {
+  if (!document.querySelector(`[data-page="${page}"]`)) return;
   views.forEach((view) => {
     view.classList.toggle("active", view.dataset.page === page);
   });
   pageLinks.forEach((link) => {
     link.classList.toggle("active", link.dataset.pageLink === page);
   });
-  window.location.hash = page;
+  if (window.location.hash !== `#${page}`) window.location.hash = page;
 }
+
+function bindPageNavigation() {
+  pageLinks.forEach((link) => {
+    if (link.dataset.navBound === "true") return;
+    link.dataset.navBound = "true";
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      showPage(link.dataset.pageLink);
+    });
+  });
+
+  pageButtons.forEach((button) => {
+    if (button.dataset.navBound === "true") return;
+    button.dataset.navBound = "true";
+    button.addEventListener("click", () => {
+      showPage(button.dataset.pageButton);
+    });
+  });
+}
+
+bindPageNavigation();
 
 window.addEventListener("hashchange", () => {
   const page = window.location.hash.replace("#", "") || "home";
@@ -3531,18 +3553,7 @@ function showSuggestion(type, topic, trigger) {
   });
 }
 
-pageLinks.forEach((link) => {
-  link.addEventListener("click", (event) => {
-    event.preventDefault();
-    showPage(link.dataset.pageLink);
-  });
-});
-
-pageButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    showPage(button.dataset.pageButton);
-  });
-});
+bindPageNavigation();
 
 homeMetrics.executiveNextAction?.addEventListener("click", () => {
   const page = homeMetrics.executiveNextAction.dataset.pageButton;
@@ -3780,7 +3791,7 @@ portfolioTabs.forEach((tab) => {
   tab.addEventListener("click", () => renderPortfolio(tab.dataset.portfolioTab));
 });
 
-document.querySelector("#saveAchievement").addEventListener("click", saveAchievement);
+document.querySelector("#saveAchievement")?.addEventListener("click", saveAchievement);
 
 const initialPage = window.location.hash.replace("#", "") || "home";
 if (document.querySelector(`[data-page="${initialPage}"]`)) {
