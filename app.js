@@ -134,6 +134,16 @@ const selfAssessmentView = {
   status: document.querySelector("#selfAssessmentStatus"),
 };
 const saveSelfAssessmentButton = document.querySelector("#saveSelfAssessment");
+const templatesView = {
+  count: document.querySelector("#templateCount"),
+  list: document.querySelector("#templateList"),
+  category: document.querySelector("#templateCategory"),
+  title: document.querySelector("#templateTitle"),
+  fields: document.querySelector("#templateFields"),
+  preview: document.querySelector("#templatePreview"),
+  status: document.querySelector("#templateStatus"),
+};
+const copyTemplateTextButton = document.querySelector("#copyTemplateText");
 const homeMetrics = {
   total: document.querySelector("#metricTotalAchievements"),
   development: document.querySelector("#metricDevelopment"),
@@ -314,6 +324,7 @@ const portfolioConfig = {
 
 let activePortfolio = "meetings";
 let activeReport = "monthly";
+let activeTemplate = "remedial-plan";
 let achievements = JSON.parse(localStorage.getItem("munjaz.achievements") || "[]");
 let awards = JSON.parse(localStorage.getItem("munjaz.awards") || "[]");
 let archives = JSON.parse(localStorage.getItem("munjaz.archives") || "[]");
@@ -443,6 +454,254 @@ const selfAssessmentCriteria = [
     id: "documentation",
     title: "التوثيق المهني",
     description: "تنظيم الشواهد والتقارير وربطها بالإنجازات.",
+  },
+];
+
+const readyTemplates = [
+  {
+    id: "remedial-plan",
+    category: "خطة علاجية",
+    title: "نموذج خطة علاجية",
+    description: "للمتعلم المتعثر في مهارة محددة.",
+    fields: [
+      ["student", "اسم المتعلم"],
+      ["grade", "الصف"],
+      ["subject", "المادة"],
+      ["skill", "المهارة الضعيفة"],
+      ["period", "مدة التنفيذ"],
+      ["evidence", "أداة القياس"],
+    ],
+    body: ({ student, grade, subject, skill, period, evidence }) => `
+خطة علاجية للمتعلمين
+
+اسم المتعلم: ${student || "................"}
+الصف: ${grade || "................"}
+المادة: ${subject || "................"}
+المهارة المستهدفة: ${skill || "................"}
+مدة التنفيذ: ${period || "................"}
+
+الهدف:
+رفع مستوى المتعلم في المهارة المستهدفة من خلال أنشطة علاجية قصيرة ومتدرجة.
+
+الإجراءات:
+1. تشخيص مستوى المتعلم في المهارة المحددة.
+2. تقديم أنشطة علاجية فردية أو جماعية قصيرة.
+3. استخدام أمثلة تطبيقية وتغذية راجعة مباشرة.
+4. متابعة التحسن أسبوعيا وتوثيق النتائج.
+
+أداة القياس:
+${evidence || "اختبار قصير / بطاقة ملاحظة / ورقة عمل"}
+
+ملاحظات المتابعة:
+....................................................................
+    `,
+  },
+  {
+    id: "enrichment-plan",
+    category: "خطة إثرائية",
+    title: "نموذج خطة إثرائية",
+    description: "للمتعلم الموهوب أو المتفوق.",
+    fields: [
+      ["student", "اسم المتعلم"],
+      ["grade", "الصف"],
+      ["subject", "المادة"],
+      ["talent", "مجال التميز"],
+      ["task", "المهمة الإثرائية"],
+      ["output", "الناتج المتوقع"],
+    ],
+    body: ({ student, grade, subject, talent, task, output }) => `
+خطة إثرائية للمتعلمين
+
+اسم المتعلم: ${student || "................"}
+الصف: ${grade || "................"}
+المادة: ${subject || "................"}
+مجال التميز: ${talent || "................"}
+
+الهدف:
+تنمية قدرات المتعلم الموهوب من خلال مهام تفكير عليا ومشروعات قصيرة.
+
+المهمة الإثرائية:
+${task || "إعداد مشروع بحثي أو منتج إبداعي مرتبط بموضوع الدرس."}
+
+الناتج المتوقع:
+${output || "عرض شفهي / مشروع مصغر / ملف إنجاز للطالب / مشاركة في مسابقة"}
+
+آلية المتابعة:
+متابعة مراحل التنفيذ، تقديم تغذية راجعة، وتوثيق الناتج النهائي.
+    `,
+  },
+  {
+    id: "meeting-minutes",
+    category: "اجتماع فني",
+    title: "محضر اجتماع فني",
+    description: "لتوثيق اجتماعات القسم أو الفريق.",
+    fields: [
+      ["title", "عنوان الاجتماع"],
+      ["date", "التاريخ"],
+      ["attendees", "الحضور"],
+      ["agenda", "محاور الاجتماع"],
+      ["decisions", "التوصيات"],
+    ],
+    body: ({ title, date, attendees, agenda, decisions }) => `
+محضر اجتماع فني
+
+عنوان الاجتماع: ${title || "................"}
+التاريخ: ${date || "................"}
+الحضور: ${attendees || "................"}
+
+محاور الاجتماع:
+${agenda || "1. ................................\n2. ................................"}
+
+التوصيات والقرارات:
+${decisions || "1. ................................\n2. ................................"}
+
+توقيع الحضور:
+....................................................................
+    `,
+  },
+  {
+    id: "class-visit",
+    category: "زيارة صفية",
+    title: "نموذج زيارة صفية",
+    description: "لتبادل الزيارات وملاحظات الحصة.",
+    fields: [
+      ["teacher", "اسم المعلم/المعلمة"],
+      ["subject", "المادة"],
+      ["lesson", "عنوان الدرس"],
+      ["date", "التاريخ"],
+      ["strength", "نقطة قوة"],
+      ["recommendation", "توصية"],
+    ],
+    body: ({ teacher, subject, lesson, date, strength, recommendation }) => `
+نموذج زيارة صفية
+
+اسم المعلم/المعلمة: ${teacher || "................"}
+المادة: ${subject || "................"}
+عنوان الدرس: ${lesson || "................"}
+التاريخ: ${date || "................"}
+
+نقطة قوة ملحوظة:
+${strength || "................................"}
+
+توصية تطويرية:
+${recommendation || "................................"}
+
+ملاحظات عامة:
+....................................................................
+    `,
+  },
+  {
+    id: "pioneer-lesson",
+    category: "درس ريادي",
+    title: "نموذج درس ريادي",
+    description: "لتوثيق الدرس الريادي وأثره.",
+    fields: [
+      ["lesson", "عنوان الدرس"],
+      ["subject", "المادة"],
+      ["grade", "الصف"],
+      ["strategy", "الاستراتيجية"],
+      ["impact", "الأثر"],
+    ],
+    body: ({ lesson, subject, grade, strategy, impact }) => `
+نموذج درس ريادي
+
+عنوان الدرس: ${lesson || "................"}
+المادة: ${subject || "................"}
+الصف: ${grade || "................"}
+الاستراتيجية المستخدمة: ${strategy || "................"}
+
+وصف مختصر للدرس:
+تم تنفيذ درس ريادي يهدف إلى رفع تفاعل المتعلمين وتطبيق مهارات التفكير.
+
+الأثر المتوقع أو الملحوظ:
+${impact || "زيادة المشاركة، تحسين الفهم، وتوثيق نواتج التعلم."}
+
+الشواهد:
+صور الدرس / خطة الدرس / بطاقة ملاحظة / نتائج المتعلمين.
+    `,
+  },
+  {
+    id: "school-activity",
+    category: "نشاط مدرسي",
+    title: "نموذج نشاط مدرسي",
+    description: "لتوثيق الأنشطة المدرسية.",
+    fields: [
+      ["name", "اسم النشاط"],
+      ["goal", "الهدف"],
+      ["target", "الفئة المستهدفة"],
+      ["date", "التاريخ"],
+      ["evidence", "الشواهد"],
+    ],
+    body: ({ name, goal, target, date, evidence }) => `
+نموذج نشاط مدرسي
+
+اسم النشاط: ${name || "................"}
+الهدف: ${goal || "................"}
+الفئة المستهدفة: ${target || "................"}
+التاريخ: ${date || "................"}
+
+وصف التنفيذ:
+تم تنفيذ النشاط وفق خطة منظمة وبمشاركة الفئة المستهدفة.
+
+الشواهد:
+${evidence || "صور / تقرير مختصر / كشوف مشاركة"}
+    `,
+  },
+  {
+    id: "event-report",
+    category: "فعالية",
+    title: "نموذج تقرير فعالية",
+    description: "لإعداد تقرير مختصر عن فعالية.",
+    fields: [
+      ["name", "اسم الفعالية"],
+      ["role", "نوع المشاركة"],
+      ["date", "التاريخ"],
+      ["summary", "ملخص التنفيذ"],
+      ["impact", "الأثر"],
+    ],
+    body: ({ name, role, date, summary, impact }) => `
+تقرير فعالية
+
+اسم الفعالية: ${name || "................"}
+نوع المشاركة: ${role || "تنظيم / تنفيذ / حضور / إشراف"}
+التاريخ: ${date || "................"}
+
+ملخص التنفيذ:
+${summary || "................................"}
+
+الأثر:
+${impact || "تعزيز المشاركة، دعم القيم التربوية، وإثراء البيئة المدرسية."}
+
+الشواهد:
+صور / شهادات / تقرير مختصر.
+    `,
+  },
+  {
+    id: "radio-program",
+    category: "إذاعة مدرسية",
+    title: "نموذج برنامج إذاعي",
+    description: "لتوثيق برنامج إذاعي مدرسي.",
+    fields: [
+      ["title", "عنوان البرنامج"],
+      ["date", "التاريخ"],
+      ["value", "القيمة أو الموضوع"],
+      ["participants", "المشاركون"],
+      ["link", "رابط التسجيل أو الشاهد"],
+    ],
+    body: ({ title, date, value, participants, link }) => `
+نموذج برنامج إذاعي
+
+عنوان البرنامج: ${title || "................"}
+التاريخ: ${date || "................"}
+القيمة أو الموضوع: ${value || "................"}
+المشاركون: ${participants || "................"}
+
+وصف البرنامج:
+تم تقديم برنامج إذاعي يهدف إلى تعزيز الوعي بالقيمة أو الموضوع المحدد.
+
+رابط التسجيل أو الشاهد:
+${link || "................................"}
+    `,
   },
 ];
 
@@ -1372,6 +1631,73 @@ function persistSelfAssessment(message = "تم حفظ التقييم الذات�
   saveRemoteState().catch(() => {
     if (selfAssessmentView.status) selfAssessmentView.status.textContent = "تم الحفظ محليا، وتعذر الحفظ في فايربيز حاليا.";
   });
+}
+
+function getTemplateValues() {
+  return Object.fromEntries(
+    Array.from(templatesView.fields?.querySelectorAll("[data-template-field]") || []).map((input) => [
+      input.dataset.templateField,
+      input.value.trim(),
+    ]),
+  );
+}
+
+function getActiveTemplate() {
+  return readyTemplates.find((template) => template.id === activeTemplate) || readyTemplates[0];
+}
+
+function renderTemplatePreview() {
+  const template = getActiveTemplate();
+  if (!template || !templatesView.preview) return "";
+  const text = template.body(getTemplateValues()).trim();
+  templatesView.preview.innerHTML = text
+    .split("\n")
+    .map((line) => (line.trim() ? `<p>${escapeHtml(line)}</p>` : "<br />"))
+    .join("");
+  return text;
+}
+
+function renderTemplates() {
+  if (!templatesView.list || !templatesView.fields) return;
+  const template = getActiveTemplate();
+  if (!template) return;
+
+  if (templatesView.count) templatesView.count.textContent = readyTemplates.length;
+  templatesView.list.innerHTML = readyTemplates
+    .map(
+      (item) => `
+        <button class="${item.id === template.id ? "active" : ""}" type="button" data-template-id="${item.id}">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.description)}</span>
+        </button>
+      `,
+    )
+    .join("");
+
+  if (templatesView.category) templatesView.category.textContent = template.category;
+  if (templatesView.title) templatesView.title.textContent = template.title;
+  templatesView.fields.innerHTML = template.fields
+    .map(
+      ([key, label]) => `
+        <label>
+          <span>${escapeHtml(label)}</span>
+          <input type="text" data-template-field="${key}" placeholder="${escapeHtml(label)}" />
+        </label>
+      `,
+    )
+    .join("");
+  if (templatesView.status) templatesView.status.textContent = "";
+  renderTemplatePreview();
+}
+
+async function copyCurrentTemplate() {
+  const text = renderTemplatePreview();
+  try {
+    await navigator.clipboard.writeText(text);
+    if (templatesView.status) templatesView.status.textContent = "تم نسخ النموذج.";
+  } catch {
+    if (templatesView.status) templatesView.status.textContent = "تعذر النسخ التلقائي، يمكن تحديد النص من المعاينة.";
+  }
 }
 
 function exportBackup() {
@@ -3064,6 +3390,14 @@ saveSystemSettingsButton?.addEventListener("click", saveSystemSettings);
 exportBackupButton?.addEventListener("click", exportBackup);
 addDevelopmentGoalButton?.addEventListener("click", () => addDevelopmentPlanItem());
 saveSelfAssessmentButton?.addEventListener("click", () => persistSelfAssessment());
+copyTemplateTextButton?.addEventListener("click", copyCurrentTemplate);
+templatesView.list?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-template-id]");
+  if (!button) return;
+  activeTemplate = button.dataset.templateId;
+  renderTemplates();
+});
+templatesView.fields?.addEventListener("input", renderTemplatePreview);
 selfAssessmentView.grid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-self-score]");
   const rating = event.target.closest("[data-self-criterion]");
@@ -3255,6 +3589,7 @@ renderProfileDetails();
 renderSystemSettings();
 renderDevelopmentPlan();
 renderSelfAssessment();
+renderTemplates();
 renderPortfolioQr();
 renderHomeMetrics();
 renderAwards();

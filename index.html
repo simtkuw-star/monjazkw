@@ -40,7 +40,7 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=33" />
+    <link rel="stylesheet" href="styles.css?v=34" />
   </head>
   <body>
     <div class="scene">
@@ -65,6 +65,7 @@
             <a href="#portfolio" data-page-link="portfolio"><span>□</span>ملف الإنجاز</a>
             <a href="#developmentPlan" data-page-link="developmentPlan"><span>▤</span>خطة التطوير</a>
             <a href="#selfAssessment" data-page-link="selfAssessment"><span>◈</span>التقييم الذاتي</a>
+            <a href="#templates" data-page-link="templates"><span>▦</span>القوالب</a>
             <a href="#share" data-page-link="share"><span>◇</span>المشاركة</a>
             <a href="#learners" data-page-link="learners"><span>◎</span>بطاقات الطلبة</a>
             <a href="#reports" data-page-link="reports"><span>▥</span>التقارير</a>
@@ -635,6 +636,42 @@
             </div>
           </section>
 
+          <section class="view" data-page="templates">
+            <div class="page-head with-actions">
+              <div>
+                <p>القوالب الجاهزة</p>
+                <h2>نماذج قابلة للتعبئة</h2>
+              </div>
+              <button class="print-button" type="button" data-print="templates">تحميل / طباعة</button>
+            </div>
+            <div class="templates-workspace printable-card" data-print-section="templates">
+              <section class="templates-hero">
+                <div>
+                  <span>مكتبة النماذج</span>
+                  <h3>قوالب مختصرة تساعدك على البدء بسرعة</h3>
+                  <p>اختر النموذج، عبئ البيانات الأساسية، ثم انسخ النص أو اطبعه كمسودة جاهزة للتعديل.</p>
+                </div>
+                <strong id="templateCount">8</strong>
+              </section>
+
+              <section class="templates-layout">
+                <aside class="template-list" id="templateList"></aside>
+                <section class="template-builder">
+                  <div class="template-builder-head">
+                    <div>
+                      <span id="templateCategory">نموذج</span>
+                      <h3 id="templateTitle">قالب جاهز</h3>
+                    </div>
+                    <button id="copyTemplateText" type="button">نسخ النص</button>
+                  </div>
+                  <div class="template-fields" id="templateFields"></div>
+                  <article class="template-preview" id="templatePreview"></article>
+                  <small id="templateStatus"></small>
+                </section>
+              </section>
+            </div>
+          </section>
+
           <section class="view" data-page="developmentPlan">
             <div class="page-head with-actions">
               <div>
@@ -1166,6 +1203,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=54"></script>
+    <script type="module" src="app.js?v=55"></script>
   </body>
 </html>
