@@ -3919,46 +3919,46 @@ reportButtons.forEach((button) => {
   button.addEventListener("click", () => renderReport(button.dataset.reportType));
 });
 
-evidenceFiles.addEventListener("change", () => {
+evidenceFiles?.addEventListener("change", () => {
   addEvidenceFiles(evidenceFiles.files);
   evidenceFiles.value = "";
 });
 
-addEvidenceLink.addEventListener("click", addEvidenceUrl);
+addEvidenceLink?.addEventListener("click", addEvidenceUrl);
 
-evidenceLink.addEventListener("keydown", (event) => {
+evidenceLink?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
     addEvidenceUrl();
   }
 });
 
-selectedEvidence.addEventListener("click", async (event) => {
+selectedEvidence?.addEventListener("click", async (event) => {
   const index = event.target.dataset.removeEvidence;
   if (index === undefined) return;
   currentEvidence.splice(Number(index), 1);
   renderSelectedEvidence();
 });
 
-savedAchievements.addEventListener("click", (event) => {
+savedAchievements?.addEventListener("click", (event) => {
   const id = event.target.dataset.deleteAchievement;
   if (!id) return;
   deleteAchievement(id);
 });
 
-prevMonth.addEventListener("click", () => {
+prevMonth?.addEventListener("click", () => {
   calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
   renderCalendar();
   renderReport(activeReport);
 });
 
-nextMonth.addEventListener("click", () => {
+nextMonth?.addEventListener("click", () => {
   calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
   renderCalendar();
   renderReport(activeReport);
 });
 
-calendarCells.addEventListener("click", (event) => {
+calendarCells?.addEventListener("click", (event) => {
   const eventChip = event.target.closest("[data-event-id]");
   if (eventChip) {
     event.stopPropagation();
@@ -3974,7 +3974,7 @@ calendarCells.addEventListener("click", (event) => {
   renderCalendar();
 });
 
-selectedDayEvents.addEventListener("click", (event) => {
+selectedDayEvents?.addEventListener("click", (event) => {
   const id = event.target.dataset.deleteEvent;
   if (!id) return;
   deleteCalendarEvent(id);
@@ -3989,7 +3989,7 @@ reminderButtons.forEach((button) => {
 
 eventReminder?.addEventListener("change", syncReminderPills);
 
-addCalendarEvent.addEventListener("click", addCalendarEventItem);
+addCalendarEvent?.addEventListener("click", addCalendarEventItem);
 
 excellentDaysGrid?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-excellent-day]");

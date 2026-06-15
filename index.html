@@ -219,6 +219,152 @@
         });
 
         if (templatePreview && !templatePreview.textContent.trim()) renderTemplatePreviewFallback();
+
+        const reportButtons = document.querySelectorAll("[data-report-type]");
+        const reportTitle = document.querySelector("#reportTitle");
+        const reportGeneratedAt = document.querySelector("#reportGeneratedAt");
+        const reportStats = document.querySelector("#reportStats");
+        const reportSections = document.querySelector("#reportSections");
+        const reportPreview = document.querySelector("#reportPreview");
+        const reportLabels = {
+          monthly: "تقرير شهري",
+          term: "تقرير فصل دراسي",
+          annual: "تقرير سنوي",
+          full: "ملف إنجاز كامل",
+        };
+        const readLocalArray = (key) => {
+          try {
+            const value = JSON.parse(localStorage.getItem(key) || "[]");
+            return Array.isArray(value) ? value : [];
+          } catch {
+            return [];
+          }
+        };
+        const readLocalObject = (key) => {
+          try {
+            const value = JSON.parse(localStorage.getItem(key) || "{}");
+            return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+          } catch {
+            return {};
+          }
+        };
+        const renderReportFallback = (type = "monthly") => {
+          if (!reportTitle || !reportStats || !reportSections) return;
+          const achievements = readLocalArray("munjaz.achievements");
+          const events = readLocalArray("munjaz.calendarEvents");
+          const awards = readLocalArray("munjaz.awards");
+          const excellentDays = readLocalArray("munjaz.excellentDays");
+          const profile = readLocalObject("munjaz.profileDetails");
+          const evidenceCount = achievements.reduce((sum, item) => sum + ((item.evidence || []).length || 0), 0);
+          const today = new Date().toLocaleDateString("ar", { day: "numeric", month: "long", year: "numeric" });
+
+          reportButtons.forEach((button) => button.classList.toggle("active", button.dataset.reportType === type));
+          reportPreview?.classList.toggle("official-pdf-report", type === "full");
+          reportTitle.textContent = `${reportLabels[type] || "تقرير"} - ${type === "monthly" ? "الشهر الحالي" : "السنة الدراسية"}`;
+          reportGeneratedAt.textContent = `آخر تحديث: ${today}`;
+          reportStats.innerHTML = [
+            ["إجمالي الإنجازات", achievements.length, "إنجاز"],
+            ["الشواهد", evidenceCount, "ملف / رابط"],
+            ["الرزنامة", events.length, "موعد"],
+            ["الجوائز", awards.length, "جائزة"],
+          ]
+            .map(([label, value, note]) => `<article><span>${label}</span><strong>${value}</strong><small>${note}</small></article>`)
+            .join("");
+
+          if (type === "full") {
+            const rows = achievements.length
+              ? achievements
+                  .slice(0, 18)
+                  .map(
+                    (item, index) => `
+                      <tr>
+                        <td>${String(index + 1).padStart(2, "0")}</td>
+                        <td>${item.title || "إنجاز مهني"}</td>
+                        <td>${item.date || "غير محدد"}</td>
+                        <td>${(item.evidence || []).length || 0}</td>
+                      </tr>
+                    `,
+                  )
+                  .join("")
+              : `<tr><td colspan="4">لا توجد إنجازات محفوظة حتى الآن.</td></tr>`;
+            reportSections.innerHTML = `
+              <section class="official-pdf-document">
+                <article class="official-pdf-page official-cover">
+                  <div class="official-cover-mark"><img src="assets/munjaz-logo-cropped.png" onerror="this.onerror=null;this.src='assets/munjaz-logo.png';" alt="شعار منجز" /></div>
+                  <span>منصة منجز</span>
+                  <h1>ملف الإنجاز المهني الكامل</h1>
+                  <p>نسخة رسمية منظمة للتقديم والطباعة بصيغة PDF</p>
+                  <div class="official-cover-meta">
+                    <strong>${profile.fullName || "اسم المعلم/المعلمة"}</strong>
+                    <small>${profile.school || "اسم المدرسة"}</small>
+                    <small>تاريخ الإصدار: ${today}</small>
+                  </div>
+                </article>
+                <article class="official-pdf-page">
+                  <header class="official-page-head"><span>01</span><h2>الفهرس</h2></header>
+                  <ol class="official-toc">
+                    <li><b>01</b><span>الغلاف وبيانات الإصدار</span></li>
+                    <li><b>02</b><span>بيانات المعلم والمؤشرات</span></li>
+                    <li><b>03</b><span>سجل الإنجازات</span></li>
+                    <li><b>04</b><span>التواقيع والاعتماد</span></li>
+                  </ol>
+                </article>
+                <article class="official-pdf-page">
+                  <header class="official-page-head"><span>02</span><h2>بيانات ومؤشرات</h2></header>
+                  <div class="official-profile-grid">
+                    <div><span>اسم المعلم/ـة</span><strong>${profile.fullName || "غير محدد"}</strong></div>
+                    <div><span>المدرسة</span><strong>${profile.school || "غير محدد"}</strong></div>
+                    <div><span>المرحلة</span><strong>${profile.stage || "غير محدد"}</strong></div>
+                    <div><span>المنطقة التعليمية</span><strong>${profile.district || "غير محدد"}</strong></div>
+                  </div>
+                  <div class="official-metrics">
+                    <article><span>الإنجازات</span><strong>${achievements.length}</strong><small>إجمالي محفوظ</small></article>
+                    <article><span>الشواهد</span><strong>${evidenceCount}</strong><small>ملف / رابط</small></article>
+                    <article><span>الأيام الفعلية</span><strong>${excellentDays.length}/140</strong><small>للأعمال الممتازة</small></article>
+                    <article><span>الجوائز</span><strong>${awards.length}</strong><small>جائزة / تكريم</small></article>
+                  </div>
+                </article>
+                <article class="official-pdf-page">
+                  <header class="official-page-head"><span>03</span><h2>سجل الإنجازات</h2></header>
+                  <table class="official-table"><thead><tr><th>#</th><th>عنوان الإنجاز</th><th>التاريخ</th><th>الشواهد</th></tr></thead><tbody>${rows}</tbody></table>
+                </article>
+                <article class="official-pdf-page official-signature-page">
+                  <header class="official-page-head"><span>04</span><h2>اعتماد الملف</h2></header>
+                  <p>تم إعداد هذا الملف إلكترونيًا عبر منصة منجز ليكون مرجعًا منظمًا لإنجازات المعلم/المعلمة.</p>
+                  <div class="official-signatures">
+                    <div><span>اسم المعلم/المعلمة</span><strong>${profile.fullName || "................"}</strong></div>
+                    <div><span>رئيس القسم</span><strong>................</strong></div>
+                    <div><span>مدير المدرسة</span><strong>................</strong></div>
+                  </div>
+                </article>
+              </section>
+            `;
+            return;
+          }
+
+          reportSections.innerHTML = `
+            <article class="report-official-card">
+              <div class="report-official-title"><span>نسخة للطباعة</span><h4>${reportLabels[type]}</h4><p>ملخص مرتب قابل للطباعة.</p></div>
+              <div class="report-identity-grid">
+                <div><span>اسم المعلم/ـة</span><strong>${profile.fullName || "غير محدد"}</strong></div>
+                <div><span>المدرسة</span><strong>${profile.school || "غير محدد"}</strong></div>
+                <div><span>المرحلة</span><strong>${profile.stage || "غير محدد"}</strong></div>
+                <div><span>تاريخ الإصدار</span><strong>${today}</strong></div>
+              </div>
+            </article>
+            <article class="report-summary"><h4>ملخص التقرير</h4><p>تم رصد ${achievements.length} إنجاز و${events.length} موعد و${evidenceCount} شاهد.</p></article>
+            <article><h4>آخر الإنجازات</h4>${
+              achievements.length
+                ? `<ul>${achievements.slice(0, 5).map((item) => `<li><span>${item.title || "إنجاز مهني"}</span><small>${item.date || "بدون تاريخ"}</small></li>`).join("")}</ul>`
+                : `<p class="report-empty">لا توجد إنجازات محفوظة حتى الآن.</p>`
+            }</article>
+          `;
+        };
+
+        reportButtons.forEach((button) => {
+          button.addEventListener("click", () => renderReportFallback(button.dataset.reportType));
+        });
+        if (reportSections && !reportSections.textContent.trim()) renderReportFallback("monthly");
       });
     </script>
     <div class="scene">
@@ -1416,6 +1562,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=60"></script>
+    <script type="module" src="app.js?v=61"></script>
   </body>
 </html>
