@@ -19,7 +19,7 @@
     <meta property="og:title" content="منجز الكويت | ملف الإنجاز المهني الذكي" />
     <meta property="og:description" content="منصة كويتية تساعد المعلم والمعلمة على توثيق الإنجازات المهنية وإدارة الرزنامة والتقارير ومؤشرات الأداء." />
     <meta property="og:url" content="https://monjazkw.com/" />
-    <meta property="og:image" content="https://monjazkw.com/assets/munjaz-logo-cropped.png" />
+    <meta property="og:image" content="https://monjazkw.com/assets/monjaz-logo-cropped.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="منجز الكويت" />
     <meta name="twitter:description" content="ملف الإنجاز المهني الذكي للمعلم والمعلمة في الكويت." />
@@ -66,13 +66,13 @@
         window.addEventListener("hashchange", () => showPage(window.location.hash.replace("#", "") || "home"));
         showPage(window.location.hash.replace("#", "") || "home");
 
-        document.querySelectorAll('img[src*="munjaz-logo"]').forEach((image) => {
+        document.querySelectorAll('img[src*="monjaz-logo"]').forEach((image) => {
           image.addEventListener(
             "error",
             () => {
               if (!image.dataset.logoFallback) {
                 image.dataset.logoFallback = "true";
-                image.src = "./assets/munjaz-logo.png?v=6";
+                image.src = "./assets/monjaz-logo.png?v=7";
               }
             },
             { once: true },
@@ -289,7 +289,7 @@
             reportSections.innerHTML = `
               <section class="official-pdf-document">
                 <article class="official-pdf-page official-cover">
-                  <div class="official-cover-mark"><img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" /></div>
+                  <div class="official-cover-mark"><img src="./assets/monjaz-logo-cropped.png?v=7" onerror="this.onerror=null;this.src='./assets/monjaz-logo.png?v=7';" alt="شعار منجز" /></div>
                   <span>منصة منجز</span>
                   <h1>ملف الإنجاز المهني الكامل</h1>
                   <p>نسخة رسمية منظمة للتقديم والطباعة بصيغة PDF</p>
@@ -370,7 +370,7 @@
       <main class="app-window">
         <aside class="sidebar">
           <div class="sidebar-logo">
-            <img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" />
+            <img src="./assets/monjaz-logo-cropped.png?v=7" onerror="this.onerror=null;this.src='./assets/monjaz-logo.png?v=7';" alt="شعار منجز" />
             <h1>منجز</h1>
           </div>
           <div class="sidebar-user" id="sidebarUser" hidden>
@@ -413,7 +413,7 @@
               </div>
             </div>
             <div class="welcome-card" aria-label="ملخص منصة منجز">
-              <img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" />
+              <img src="./assets/monjaz-logo-cropped.png?v=7" onerror="this.onerror=null;this.src='./assets/monjaz-logo.png?v=7';" alt="شعار منجز" />
               <div>
                 <strong>ملف إنجاز ذكي</strong>
                 <span>توثيق، تقارير، QR، وأرشيف سنوي</span>
@@ -581,7 +581,7 @@
             </div>
             <div class="profile-dashboard printable-card" data-print-section="profile">
               <aside class="identity-card">
-              <img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" />
+              <img src="./assets/monjaz-logo-cropped.png?v=7" onerror="this.onerror=null;this.src='./assets/monjaz-logo.png?v=7';" alt="شعار منجز" />
                 <span>بطاقة مهنية</span>
                 <h3>ملف الإنجاز الذكي</h3>
                 <p>بيانات أساسية تظهر في التقارير وملف الإنجاز النهائي.</p>
@@ -656,7 +656,7 @@
                   <p id="shareMeta">المدرسة - المرحلة - المنطقة التعليمية</p>
                   <small id="shareUpdated">آخر تحديث: اليوم</small>
                 </div>
-                <img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" />
+                <img src="./assets/monjaz-logo-cropped.png?v=7" onerror="this.onerror=null;this.src='./assets/monjaz-logo.png?v=7';" alt="شعار منجز" />
               </section>
 
               <section class="share-score-card">
@@ -1526,7 +1526,7 @@
 
     <dialog class="login-dialog" id="loginDialog">
       <form class="login-card" id="loginForm">
-        <img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" />
+        <img src="./assets/monjaz-logo-cropped.png?v=7" onerror="this.onerror=null;this.src='./assets/monjaz-logo.png?v=7';" alt="شعار منجز" />
         <h2>تسجيل الدخول</h2>
         <p>ادخل بياناتك لبدء جلسة آمنة داخل منصة منجز.</p>
         <label>البريد الإلكتروني<input id="usernameInput" type="email" autocomplete="email" placeholder="example@moe.edu.kw" /></label>
@@ -1561,6 +1561,6 @@
     </footer>
 
     <script src="qrcode.min.js?v=1"></script>
-    <script type="module" src="app.js?v=63"></script>
+    <script type="module" src="app.js?v=64"></script>
   </body>
 </html>
