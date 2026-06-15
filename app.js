@@ -3305,9 +3305,178 @@ function renderFullPortfolioReport(filteredAchievements, filteredEvents, evidenc
   `;
 }
 
+function renderOfficialFullPdfReport(filteredAchievements, filteredEvents, evidenceCount, generatedAt) {
+  const groupedAchievements = Object.entries(
+    countBy(filteredAchievements, (item) => portfolioConfig[item.type]?.title || "إنجاز آخر"),
+  ).sort((a, b) => b[1] - a[1]);
+  const evidenceAchievements = filteredAchievements.filter((item) => item.evidence?.length);
+  const sickRecords = normalizeLeaveStats(leaveStats).sickRecords;
+  const profileRows = [
+    ["اسم المعلم/ـة", getPublicProfileName("غير محدد")],
+    ["الرقم الوظيفي", profileDetails.employeeId || "غير محدد"],
+    ["التخصص", profileDetails.specialty || "غير محدد"],
+    ["المرحلة", profileDetails.stage || "غير محدد"],
+    ["المنطقة التعليمية", profileDetails.district || "غير محدد"],
+    ["المدرسة", profileDetails.school || "غير محدد"],
+    ["القسم", profileDetails.department || "غير محدد"],
+    ["البريد الإلكتروني", profileDetails.email || currentUser?.email || "غير محدد"],
+  ];
+  const tocItems = [
+    ["01", "الغلاف وبيانات الإصدار"],
+    ["02", "بيانات المعلم/المعلمة"],
+    ["03", "ملخص مؤشرات الأداء"],
+    ["04", "فهرس مجالات الإنجاز"],
+    ["05", "سجل الإنجازات"],
+    ["06", "الرزنامة والأعمال الممتازة"],
+    ["07", "الشواهد والجوائز"],
+    ["08", "التوصيات والتواقيع"],
+  ];
+  const metrics = [
+    ["إجمالي الإنجازات", filteredAchievements.length, "إنجاز موثق"],
+    ["الشواهد", evidenceCount, "ملف / رابط"],
+    ["مواعيد الرزنامة", filteredEvents.length, "موعد"],
+    ["الأيام الفعلية", `${excellentDays.length}/140`, "للأعمال الممتازة"],
+    ["الإجازات الطبية", `${sickRecords.length}/15`, "خلال السنة الدراسية"],
+    ["الجوائز", awards.length, "جائزة / تكريم"],
+  ];
+  const profileHtml = profileRows
+    .map(([label, value]) => `<div><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`)
+    .join("");
+  const tocHtml = tocItems
+    .map(([number, title]) => `<li><b>${number}</b><span>${title}</span></li>`)
+    .join("");
+  const metricsHtml = metrics
+    .map(([label, value, note]) => `<article><span>${label}</span><strong>${escapeHtml(value)}</strong><small>${note}</small></article>`)
+    .join("");
+  const groupsHtml = groupedAchievements.length
+    ? groupedAchievements.map(([label, total]) => `<li><span>${escapeHtml(label)}</span><b>${total}</b></li>`).join("")
+    : `<p class="report-empty">لا توجد إنجازات محفوظة حتى الآن.</p>`;
+  const achievementRows = filteredAchievements.length
+    ? filteredAchievements
+        .slice(0, 18)
+        .map(
+          (item, index) => `
+            <tr>
+              <td>${String(index + 1).padStart(2, "0")}</td>
+              <td>${escapeHtml(item.title || "إنجاز مهني")}</td>
+              <td>${escapeHtml(portfolioConfig[item.type]?.title || "إنجاز")}</td>
+              <td>${item.date || "غير محدد"}</td>
+              <td>${item.evidence?.length || 0}</td>
+            </tr>
+          `,
+        )
+        .join("")
+    : `<tr><td colspan="5">لا توجد إنجازات محفوظة حتى الآن.</td></tr>`;
+  const eventRows = filteredEvents.length
+    ? filteredEvents
+        .slice(0, 12)
+        .map(
+          (item, index) => `
+            <tr>
+              <td>${String(index + 1).padStart(2, "0")}</td>
+              <td>${escapeHtml(item.title || "موعد")}</td>
+              <td>${formatArabicDate(item.date)}</td>
+              <td>${item.time || "غير محدد"}</td>
+            </tr>
+          `,
+        )
+        .join("")
+    : `<tr><td colspan="4">لا توجد مواعيد محفوظة حتى الآن.</td></tr>`;
+  const evidenceRows = evidenceAchievements.length
+    ? evidenceAchievements
+        .slice(0, 10)
+        .map((item) => `<li><span>${escapeHtml(item.title)}</span><small>${item.evidence.length} شاهد</small></li>`)
+        .join("")
+    : `<p class="report-empty">لا توجد شواهد مرتبطة بالإنجازات حتى الآن.</p>`;
+  const awardRows = awards.length
+    ? awards
+        .slice(0, 8)
+        .map((award) => `<li><span>${escapeHtml(award.title)}</span><small>${escapeHtml(award.level || "غير محدد")} - ${award.date || "بدون تاريخ"}</small></li>`)
+        .join("")
+    : `<p class="report-empty">لا توجد جوائز محفوظة حتى الآن.</p>`;
+
+  return `
+    <section class="official-pdf-document">
+      <article class="official-pdf-page official-cover">
+        <div class="official-cover-mark">
+          <img src="assets/munjaz-logo-cropped.png" onerror="this.onerror=null;this.src='assets/munjaz-logo.png';" alt="شعار منجز" />
+        </div>
+        <span>منصة منجز</span>
+        <h1>ملف الإنجاز المهني الكامل</h1>
+        <p>نسخة رسمية منظمة للتقديم والطباعة بصيغة PDF</p>
+        <div class="official-cover-meta">
+          <strong>${escapeHtml(getPublicProfileName("اسم المعلم/المعلمة"))}</strong>
+          <small>${escapeHtml(profileDetails.school || "اسم المدرسة")} - ${escapeHtml(appSettings.schoolYear || "السنة الدراسية")}</small>
+          <small>تاريخ الإصدار: ${generatedAt}</small>
+        </div>
+      </article>
+
+      <article class="official-pdf-page">
+        <header class="official-page-head"><span>01</span><h2>الفهرس</h2></header>
+        <ol class="official-toc">${tocHtml}</ol>
+      </article>
+
+      <article class="official-pdf-page">
+        <header class="official-page-head"><span>02</span><h2>بيانات المعلم/المعلمة</h2></header>
+        <div class="official-profile-grid">${profileHtml}</div>
+        <div class="official-note">تعتمد هذه البيانات على صفحة بياناتي داخل منصة منجز، ويمكن تعديلها قبل الطباعة.</div>
+      </article>
+
+      <article class="official-pdf-page">
+        <header class="official-page-head"><span>03</span><h2>ملخص مؤشرات الأداء</h2></header>
+        <div class="official-metrics">${metricsHtml}</div>
+        <section class="official-two-col">
+          <div><h3>توزيع مجالات الإنجاز</h3><ul class="report-bars">${groupsHtml}</ul></div>
+          <div><h3>قراءة مختصرة</h3><p>${getReportReadinessNote(filteredAchievements.length, evidenceCount)}</p></div>
+        </section>
+      </article>
+
+      <article class="official-pdf-page">
+        <header class="official-page-head"><span>04</span><h2>سجل الإنجازات</h2></header>
+        <table class="official-table">
+          <thead><tr><th>#</th><th>عنوان الإنجاز</th><th>المجال</th><th>التاريخ</th><th>الشواهد</th></tr></thead>
+          <tbody>${achievementRows}</tbody>
+        </table>
+      </article>
+
+      <article class="official-pdf-page">
+        <header class="official-page-head"><span>05</span><h2>الرزنامة والأعمال الممتازة</h2></header>
+        <table class="official-table">
+          <thead><tr><th>#</th><th>الموعد</th><th>التاريخ</th><th>الوقت</th></tr></thead>
+          <tbody>${eventRows}</tbody>
+        </table>
+        <div class="official-progress">
+          <span>الأيام الفعلية المنجزة</span>
+          <strong>${excellentDays.length} من 140</strong>
+          <i style="--progress:${Math.min(100, (excellentDays.length / 140) * 100)}%"></i>
+        </div>
+      </article>
+
+      <article class="official-pdf-page">
+        <header class="official-page-head"><span>06</span><h2>الشواهد والجوائز</h2></header>
+        <section class="official-two-col">
+          <div><h3>إنجازات لها شواهد</h3><ul>${evidenceRows}</ul></div>
+          <div><h3>الجوائز والتكريم</h3><ul>${awardRows}</ul></div>
+        </section>
+      </article>
+
+      <article class="official-pdf-page official-signature-page">
+        <header class="official-page-head"><span>07</span><h2>اعتماد الملف</h2></header>
+        <p>تم إعداد هذا الملف إلكترونيًا عبر منصة منجز ليكون مرجعًا منظمًا لإنجازات المعلم/المعلمة وشواهد الأداء المهني خلال السنة الدراسية.</p>
+        <div class="official-signatures">
+          <div><span>اسم المعلم/المعلمة</span><strong>${escapeHtml(getPublicProfileName("................"))}</strong></div>
+          <div><span>رئيس القسم</span><strong>................</strong></div>
+          <div><span>مدير المدرسة</span><strong>................</strong></div>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
 function renderReport(type = activeReport) {
   if (!reportTitle || !reportStats || !reportSections) return;
   activeReport = type;
+  document.querySelector("#reportPreview")?.classList.toggle("official-pdf-report", type === "full");
 
   reportButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.reportType === type);
@@ -3372,6 +3541,11 @@ function renderReport(type = activeReport) {
         `,
       )
       .join("");
+  }
+
+  if (type === "full") {
+    reportSections.innerHTML = renderOfficialFullPdfReport(filteredAchievements, filteredEvents, evidenceCount, generatedAt);
+    return;
   }
 
   reportSections.innerHTML = `

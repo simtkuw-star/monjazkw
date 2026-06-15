@@ -4748,6 +4748,304 @@ body {
   background: #f8fafb;
 }
 
+.official-pdf-report .report-preview-head,
+.official-pdf-report .report-stats {
+  display: none;
+}
+
+.official-pdf-report {
+  padding: 0;
+  background: #eef2f5;
+}
+
+.official-pdf-document {
+  display: grid;
+  gap: 22px;
+  counter-reset: official-page;
+}
+
+.official-pdf-page {
+  position: relative;
+  min-height: 880px;
+  padding: 42px;
+  border: 1px solid rgba(30, 42, 68, 0.1);
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(201, 162, 39, 0.18), transparent 18%) top right / 100% 7px no-repeat,
+    #fff;
+  box-shadow: 0 18px 45px rgba(30, 42, 68, 0.08);
+  counter-increment: official-page;
+}
+
+.official-pdf-page::after {
+  content: "صفحة " counter(official-page);
+  position: absolute;
+  inset-inline-start: 42px;
+  bottom: 24px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.official-cover {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  text-align: center;
+  color: #fff;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(201, 162, 39, 0.28), transparent 30%),
+    linear-gradient(145deg, var(--brand-navy), #243856);
+}
+
+.official-cover::after {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.official-cover-mark {
+  display: grid;
+  place-items: center;
+  width: 138px;
+  height: 138px;
+  border-radius: 34px;
+  background: #fff;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.22);
+}
+
+.official-cover-mark img {
+  width: 116px;
+  height: 116px;
+  object-fit: contain;
+}
+
+.official-cover span,
+.official-page-head span {
+  color: var(--brand-gold);
+  font-weight: 950;
+}
+
+.official-cover h1 {
+  margin: 0;
+  font-size: 2.4rem;
+}
+
+.official-cover p,
+.official-cover small {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.9;
+}
+
+.official-cover-meta {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 18px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.official-cover-meta strong {
+  color: #fff;
+  font-size: 1.35rem;
+}
+
+.official-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(30, 42, 68, 0.1);
+}
+
+.official-page-head h2 {
+  margin: 0;
+  color: var(--brand-navy);
+  font-size: 1.55rem;
+}
+
+.official-toc,
+.official-two-col ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.official-toc li,
+.official-two-col li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 14px;
+  background: #f8fafb;
+}
+
+.official-toc b {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: var(--brand-navy);
+  background: var(--brand-gold);
+}
+
+.official-profile-grid,
+.official-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.official-profile-grid div,
+.official-metrics article {
+  padding: 16px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 16px;
+  background: #f8fafb;
+}
+
+.official-profile-grid span,
+.official-metrics span,
+.official-metrics small {
+  display: block;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.official-profile-grid strong,
+.official-metrics strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--brand-navy);
+  font-size: 1.2rem;
+}
+
+.official-note {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 16px;
+  color: var(--brand-navy);
+  background: rgba(201, 162, 39, 0.12);
+  font-weight: 850;
+}
+
+.official-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.official-two-col > div {
+  padding: 18px;
+  border: 1px solid rgba(30, 42, 68, 0.08);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.official-two-col h3 {
+  margin: 0 0 14px;
+  color: var(--brand-navy);
+}
+
+.official-two-col p {
+  color: var(--ink);
+  line-height: 1.9;
+  font-weight: 800;
+}
+
+.official-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 14px;
+  font-size: 0.92rem;
+}
+
+.official-table th,
+.official-table td {
+  padding: 12px;
+  border: 1px solid rgba(30, 42, 68, 0.1);
+  text-align: right;
+}
+
+.official-table th {
+  color: #fff;
+  background: var(--brand-navy);
+}
+
+.official-table td {
+  color: var(--brand-navy);
+  background: #fff;
+  font-weight: 800;
+}
+
+.official-progress {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #f8fafb;
+}
+
+.official-progress span,
+.official-progress strong {
+  color: var(--brand-navy);
+  font-weight: 950;
+}
+
+.official-progress i {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, var(--brand-gold) var(--progress), #e8edf1 var(--progress));
+}
+
+.official-signature-page p {
+  color: var(--ink);
+  line-height: 2;
+  font-weight: 850;
+}
+
+.official-signatures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 60px;
+}
+
+.official-signatures div {
+  min-height: 120px;
+  padding: 16px;
+  border: 1px solid rgba(30, 42, 68, 0.14);
+  border-radius: 18px;
+  background: #f8fafb;
+}
+
+.official-signatures span {
+  display: block;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.official-signatures strong {
+  display: block;
+  margin-top: 28px;
+  color: var(--brand-navy);
+}
+
 .full-profile-grid span,
 .full-mini-metrics span,
 .full-mini-metrics small {
@@ -5173,6 +5471,49 @@ body {
 
   .report-summary p:first-of-type {
     color: #9a7418 !important;
+  }
+
+  .official-pdf-report {
+    background: white !important;
+  }
+
+  .official-pdf-document {
+    display: block !important;
+    counter-reset: official-page;
+  }
+
+  .official-pdf-page {
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 18mm 14mm !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .official-pdf-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .official-cover {
+    min-height: calc(100vh - 36mm) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .official-pdf-page::after {
+    bottom: 8mm !important;
+    inset-inline-start: 14mm !important;
+  }
+
+  .official-table th,
+  .official-cover,
+  .official-toc b {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .templates-hero,
