@@ -3399,7 +3399,7 @@ function renderOfficialFullPdfReport(filteredAchievements, filteredEvents, evide
     <section class="official-pdf-document">
       <article class="official-pdf-page official-cover">
         <div class="official-cover-mark">
-          <img src="assets/munjaz-logo-cropped.png" onerror="this.onerror=null;this.src='assets/munjaz-logo.png';" alt="شعار منجز" />
+          <img src="./assets/munjaz-logo-cropped.png?v=6" onerror="this.onerror=null;this.src='./assets/munjaz-logo.png?v=6';" alt="شعار منجز" />
         </div>
         <span>منصة منجز</span>
         <h1>ملف الإنجاز المهني الكامل</h1>

@@ -128,20 +128,6 @@ input, select, textarea { box-sizing: border-box; }
   line-height: 1;
 }
 
-.sidebar-logo::before {
-  content: "منجز";
-  display: none;
-  place-items: center;
-  width: 102px;
-  height: 102px;
-  border-radius: 22px;
-  color: var(--brand-navy);
-  background: #fff;
-  font-size: 1.25rem;
-  font-weight: 950;
-  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.2);
-}
-
 .sidebar-user {
   display: grid;
   grid-template-columns: 42px 1fr;
