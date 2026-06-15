@@ -142,14 +142,6 @@ input, select, textarea { box-sizing: border-box; }
   box-shadow: 0 20px 36px rgba(0, 0, 0, 0.2);
 }
 
-.sidebar-logo:has(img.logo-fallback-loading)::before {
-  display: grid;
-}
-
-.sidebar-logo img.logo-fallback-loading {
-  display: none;
-}
-
 .sidebar-user {
   display: grid;
   grid-template-columns: 42px 1fr;
